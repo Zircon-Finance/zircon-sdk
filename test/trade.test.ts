@@ -1,11 +1,11 @@
 import JSBI from 'jsbi'
-import { ChainId, DEV, CurrencyAmount, Pair, Percent, Route, Token, TokenAmount, Trade, TradeType, WETH } from '../src'
+import { ChainId, DEV, CurrencyAmount, Pair, Percent, Route, Token, TokenAmount, Trade, TradeType, WDEV } from '../src'
 
 describe('Trade', () => {
-  const token0 = new Token(ChainId.MAINNET, '0x0000000000000000000000000000000000000001', 18, 't0')
-  const token1 = new Token(ChainId.MAINNET, '0x0000000000000000000000000000000000000002', 18, 't1')
-  const token2 = new Token(ChainId.MAINNET, '0x0000000000000000000000000000000000000003', 18, 't2')
-  const token3 = new Token(ChainId.MAINNET, '0x0000000000000000000000000000000000000004', 18, 't3')
+  const token0 = new Token(ChainId.STANDALONE, '0x0000000000000000000000000000000000000001', 18, 't0')
+  const token1 = new Token(ChainId.STANDALONE, '0x0000000000000000000000000000000000000002', 18, 't1')
+  const token2 = new Token(ChainId.STANDALONE, '0x0000000000000000000000000000000000000003', 18, 't2')
+  const token3 = new Token(ChainId.STANDALONE, '0x0000000000000000000000000000000000000004', 18, 't3')
 
   const pair_0_1 = new Pair(new TokenAmount(token0, JSBI.BigInt(1000)), new TokenAmount(token1, JSBI.BigInt(1000)))
   const pair_0_2 = new Pair(new TokenAmount(token0, JSBI.BigInt(1000)), new TokenAmount(token2, JSBI.BigInt(1100)))
@@ -13,8 +13,8 @@ describe('Trade', () => {
   const pair_1_2 = new Pair(new TokenAmount(token1, JSBI.BigInt(1200)), new TokenAmount(token2, JSBI.BigInt(1000)))
   const pair_1_3 = new Pair(new TokenAmount(token1, JSBI.BigInt(1200)), new TokenAmount(token3, JSBI.BigInt(1300)))
 
-  const pair_weth_0 = new Pair(
-    new TokenAmount(WETH[ChainId.MAINNET], JSBI.BigInt(1000)),
+  const pair_WDEV_0 = new Pair(
+    new TokenAmount(WDEV[ChainId.STANDALONE], JSBI.BigInt(1000)),
     new TokenAmount(token0, JSBI.BigInt(1000))
   )
 
@@ -22,7 +22,7 @@ describe('Trade', () => {
 
   it('can be constructed with DEV as input', () => {
     const trade = new Trade(
-      new Route([pair_weth_0], DEV),
+      new Route([pair_WDEV_0], DEV),
       CurrencyAmount.ether(JSBI.BigInt(100)),
       TradeType.EXACT_INPUT
     )
@@ -31,7 +31,7 @@ describe('Trade', () => {
   })
   it('can be constructed with DEV as input for exact output', () => {
     const trade = new Trade(
-      new Route([pair_weth_0], DEV, token0),
+      new Route([pair_WDEV_0], DEV, token0),
       new TokenAmount(token0, JSBI.BigInt(100)),
       TradeType.EXACT_OUTPUT
     )
@@ -41,7 +41,7 @@ describe('Trade', () => {
 
   it('can be constructed with DEV as output', () => {
     const trade = new Trade(
-      new Route([pair_weth_0], token0, DEV),
+      new Route([pair_WDEV_0], token0, DEV),
       CurrencyAmount.ether(JSBI.BigInt(100)),
       TradeType.EXACT_OUTPUT
     )
@@ -50,7 +50,7 @@ describe('Trade', () => {
   })
   it('can be constructed with DEV as output for exact input', () => {
     const trade = new Trade(
-      new Route([pair_weth_0], token0, DEV),
+      new Route([pair_WDEV_0], token0, DEV),
       new TokenAmount(token0, JSBI.BigInt(100)),
       TradeType.EXACT_INPUT
     )
@@ -137,30 +137,30 @@ describe('Trade', () => {
 
     it('works for DEV currency input', () => {
       const result = Trade.bestTradeExactIn(
-        [pair_weth_0, pair_0_1, pair_0_3, pair_1_3],
+        [pair_WDEV_0, pair_0_1, pair_0_3, pair_1_3],
         CurrencyAmount.ether(JSBI.BigInt(100)),
         token3
       )
       expect(result).toHaveLength(2)
       expect(result[0].inputAmount.currency).toEqual(DEV)
-      expect(result[0].route.path).toEqual([WETH[ChainId.MAINNET], token0, token1, token3])
+      expect(result[0].route.path).toEqual([WDEV[ChainId.STANDALONE], token0, token1, token3])
       expect(result[0].outputAmount.currency).toEqual(token3)
       expect(result[1].inputAmount.currency).toEqual(DEV)
-      expect(result[1].route.path).toEqual([WETH[ChainId.MAINNET], token0, token3])
+      expect(result[1].route.path).toEqual([WDEV[ChainId.STANDALONE], token0, token3])
       expect(result[1].outputAmount.currency).toEqual(token3)
     })
     it('works for DEV currency output', () => {
       const result = Trade.bestTradeExactIn(
-        [pair_weth_0, pair_0_1, pair_0_3, pair_1_3],
+        [pair_WDEV_0, pair_0_1, pair_0_3, pair_1_3],
         new TokenAmount(token3, JSBI.BigInt(100)),
         DEV
       )
       expect(result).toHaveLength(2)
       expect(result[0].inputAmount.currency).toEqual(token3)
-      expect(result[0].route.path).toEqual([token3, token0, WETH[ChainId.MAINNET]])
+      expect(result[0].route.path).toEqual([token3, token0, WDEV[ChainId.STANDALONE]])
       expect(result[0].outputAmount.currency).toEqual(DEV)
       expect(result[1].inputAmount.currency).toEqual(token3)
-      expect(result[1].route.path).toEqual([token3, token1, token0, WETH[ChainId.MAINNET]])
+      expect(result[1].route.path).toEqual([token3, token1, token0, WDEV[ChainId.STANDALONE]])
       expect(result[1].outputAmount.currency).toEqual(DEV)
     })
   })
@@ -362,30 +362,30 @@ describe('Trade', () => {
 
     it('works for DEV currency input', () => {
       const result = Trade.bestTradeExactOut(
-        [pair_weth_0, pair_0_1, pair_0_3, pair_1_3],
+        [pair_WDEV_0, pair_0_1, pair_0_3, pair_1_3],
         DEV,
         new TokenAmount(token3, JSBI.BigInt(100))
       )
       expect(result).toHaveLength(2)
       expect(result[0].inputAmount.currency).toEqual(DEV)
-      expect(result[0].route.path).toEqual([WETH[ChainId.MAINNET], token0, token1, token3])
+      expect(result[0].route.path).toEqual([WDEV[ChainId.STANDALONE], token0, token1, token3])
       expect(result[0].outputAmount.currency).toEqual(token3)
       expect(result[1].inputAmount.currency).toEqual(DEV)
-      expect(result[1].route.path).toEqual([WETH[ChainId.MAINNET], token0, token3])
+      expect(result[1].route.path).toEqual([WDEV[ChainId.STANDALONE], token0, token3])
       expect(result[1].outputAmount.currency).toEqual(token3)
     })
     it('works for DEV currency output', () => {
       const result = Trade.bestTradeExactOut(
-        [pair_weth_0, pair_0_1, pair_0_3, pair_1_3],
+        [pair_WDEV_0, pair_0_1, pair_0_3, pair_1_3],
         token3,
         CurrencyAmount.ether(JSBI.BigInt(100))
       )
       expect(result).toHaveLength(2)
       expect(result[0].inputAmount.currency).toEqual(token3)
-      expect(result[0].route.path).toEqual([token3, token0, WETH[ChainId.MAINNET]])
+      expect(result[0].route.path).toEqual([token3, token0, WDEV[ChainId.STANDALONE]])
       expect(result[0].outputAmount.currency).toEqual(DEV)
       expect(result[1].inputAmount.currency).toEqual(token3)
-      expect(result[1].route.path).toEqual([token3, token1, token0, WETH[ChainId.MAINNET]])
+      expect(result[1].route.path).toEqual([token3, token1, token0, WDEV[ChainId.STANDALONE]])
       expect(result[1].outputAmount.currency).toEqual(DEV)
     })
   })

@@ -1,10 +1,11 @@
-import { ChainId, Token, TokenAmount, Pair, InsufficientInputAmountError } from '../src'
+import { ChainId, Token, TokenAmount, Pair, InsufficientInputAmountError, Pylon } from '../src'
 import { sortedInsert } from '../src/utils'
+import {JSBI} from "../dist";
 
 describe('miscellaneous', () => {
   it('getLiquidityMinted:0', async () => {
-    const tokenA = new Token(ChainId.RINKEBY, '0x0000000000000000000000000000000000000001', 18)
-    const tokenB = new Token(ChainId.RINKEBY, '0x0000000000000000000000000000000000000002', 18)
+    const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
+    const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
     const pair = new Pair(new TokenAmount(tokenA, '0'), new TokenAmount(tokenB, '0'))
 
     expect(() => {
@@ -33,8 +34,8 @@ describe('miscellaneous', () => {
   })
 
   it('getLiquidityMinted:!0', async () => {
-    const tokenA = new Token(ChainId.RINKEBY, '0x0000000000000000000000000000000000000001', 18)
-    const tokenB = new Token(ChainId.RINKEBY, '0x0000000000000000000000000000000000000002', 18)
+    const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
+    const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
     const pair = new Pair(new TokenAmount(tokenA, '10000'), new TokenAmount(tokenB, '10000'))
 
     expect(
@@ -48,9 +49,34 @@ describe('miscellaneous', () => {
     ).toEqual('2000')
   })
 
+  it('getFloatSyncLiquidityMinted:!0', async () => {
+    const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
+    const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
+    const pair = new Pair(new TokenAmount(tokenA, '10000'), new TokenAmount(tokenB, '10000'))
+    const pylon = new Pylon(pair)
+    let fAsync = pylon.getFloatAsyncLiquidityMinted(
+        new TokenAmount(pair.liquidityToken, '10000'),
+        new TokenAmount(pylon.floatLiquidityToken, '10000'),
+        new TokenAmount(tokenA, '2000'),
+        new TokenAmount(tokenB, '2000'),
+        JSBI.BigInt(2),
+    )
+    console.log(fAsync)
+
+    // expect(
+    //   pair
+    //     .getLiquidityMinted(
+    //       new TokenAmount(pair.liquidityToken, '10000'),
+    //       new TokenAmount(tokenA, '2000'),
+    //       new TokenAmount(tokenB, '2000'),
+    //     )
+    //     .raw.toString()
+    // ).toEqual('2000')
+  })
+
   it('getLiquidityValue:!feeOn', async () => {
-    const tokenA = new Token(ChainId.RINKEBY, '0x0000000000000000000000000000000000000001', 18)
-    const tokenB = new Token(ChainId.RINKEBY, '0x0000000000000000000000000000000000000002', 18)
+    const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
+    const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
     const pair = new Pair(new TokenAmount(tokenA, '1000'), new TokenAmount(tokenB, '1000'))
 
     {
@@ -90,8 +116,8 @@ describe('miscellaneous', () => {
   })
 
   it('getLiquidityValue:feeOn', async () => {
-    const tokenA = new Token(ChainId.RINKEBY, '0x0000000000000000000000000000000000000001', 18)
-    const tokenB = new Token(ChainId.RINKEBY, '0x0000000000000000000000000000000000000002', 18)
+    const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
+    const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
     const pair = new Pair(new TokenAmount(tokenA, '1000'), new TokenAmount(tokenB, '1000'))
 
     const liquidityValue = pair.getLiquidityValue(
