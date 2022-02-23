@@ -1,4 +1,4 @@
-import { ChainId, Token, TokenAmount, Pair, InsufficientInputAmountError, Pylon } from '../src'
+import {ChainId, Token, TokenAmount, Pair, InsufficientInputAmountError, Pylon} from '../src'
 import { sortedInsert } from '../src/utils'
 import {JSBI} from "../dist";
 
@@ -49,29 +49,63 @@ describe('miscellaneous', () => {
     ).toEqual('2000')
   })
 
+  it('getAnchorSyncLiquidityMinted:!0', async () => {
+    const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
+    const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
+    const pair = new Pair(new TokenAmount(tokenA, '12866889738045730064'), new TokenAmount(tokenB, '117003201248779581880'))
+    const pylon = new Pylon(pair, new TokenAmount(tokenA, '47201171045179026'), new TokenAmount(tokenB, '425209926505030123'))
+    let fSync = pylon.getAnchorSyncLiquidityMinted(
+            new TokenAmount(pair.liquidityToken, '37258980980455003931'),
+            new TokenAmount(pylon.anchorLiquidityToken, '9090909090909090909'),
+            new TokenAmount(tokenB, '5000000000000000'),
+            //new TokenAmount(tokenB, '2000000000000000000000'),
+            JSBI.BigInt("9394220164340522812"),
+            JSBI.BigInt("947728772470068004"),
+            JSBI.BigInt("475687425453480295"),
+            JSBI.BigInt("1269795190837184468477014317641265640320"),
+            new TokenAmount(tokenA, '2740478858540395822'),
+            new TokenAmount(tokenA, '34363255460224189141'),
+    )
+    expect(fSync.raw.toString(10)).toEqual("4820877360075378")
+  })
+
   it('getFloatSyncLiquidityMinted:!0', async () => {
     const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
     const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
-    const pair = new Pair(new TokenAmount(tokenA, '10000'), new TokenAmount(tokenB, '10000'))
-    const pylon = new Pylon(pair)
-    let fAsync = pylon.getFloatAsyncLiquidityMinted(
-        new TokenAmount(pair.liquidityToken, '10000'),
-        new TokenAmount(pylon.floatLiquidityToken, '10000'),
-        new TokenAmount(tokenA, '2000'),
-        new TokenAmount(tokenB, '2000'),
-        JSBI.BigInt(2),
+    const pair = new Pair(new TokenAmount(tokenA, '12866889738045730064'), new TokenAmount(tokenB, '117003201248779581880'))
+    const pylon = new Pylon(pair, new TokenAmount(tokenA, '47201171045179026'), new TokenAmount(tokenB, '425209926505030123'))
+    let fSync = pylon.getFloatSyncLiquidityMinted(
+            new TokenAmount(pair.liquidityToken, '37258980980455003931'),
+            new TokenAmount(pylon.floatLiquidityToken, '913912502191907675'),
+            new TokenAmount(tokenA, '5000000000000000'),
+            //new TokenAmount(tokenB, '2000000000000000000000'),
+            JSBI.BigInt("9394220164340522812"),
+            JSBI.BigInt("947728772470068004"),
+            JSBI.BigInt("475687425453480295"),
+            JSBI.BigInt("1269795190837184468477014317641265640320"),
+            new TokenAmount(tokenA, '2740478858540395822'),
+            new TokenAmount(tokenA, '34363255460224189141'),
     )
-    console.log(fAsync)
-
-    // expect(
-    //   pair
-    //     .getLiquidityMinted(
-    //       new TokenAmount(pair.liquidityToken, '10000'),
-    //       new TokenAmount(tokenA, '2000'),
-    //       new TokenAmount(tokenB, '2000'),
-    //     )
-    //     .raw.toString()
-    // ).toEqual('2000')
+    expect(fSync.raw.toString(10)).toEqual("4800431590087814")
+  })
+  it('getFloatSyncLiquidityMinted:!0', async () => {
+    const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
+    const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
+    const pair = new Pair(new TokenAmount(tokenA, '12866889738045730064'), new TokenAmount(tokenB, '117003201248779581880'))
+    const pylon = new Pylon(pair, new TokenAmount(tokenA, '47201171045179026'), new TokenAmount(tokenB, '425209926505030123'))
+    let fSync = pylon.getFloatAsyncLiquidityMinted(
+            new TokenAmount(pair.liquidityToken, '37258980980455003931'),
+            new TokenAmount(pylon.floatLiquidityToken, '913912502191907675'),
+            new TokenAmount(tokenA, '5000000000000000'),
+            new TokenAmount(tokenB, '5000000000000000'),
+            JSBI.BigInt("9394220164340522812"),
+            JSBI.BigInt("947728772470068004"),
+            JSBI.BigInt("475687425453480295"),
+            JSBI.BigInt("1269795190837184468477014317641265640320"),
+            new TokenAmount(tokenA, '2740478858540395822'),
+            new TokenAmount(tokenA, '34363255460224189141'),
+    )
+    expect(fSync.raw.toString(10)).toEqual("4800431590087814")
   })
 
   it('getLiquidityValue:!feeOn', async () => {

@@ -13,7 +13,7 @@ import {
     FIVE,
     _997,
     _1000,
-    ChainId, PYLON_FACTORY_ADDRESS, TWO
+    ChainId, PYLON_FACTORY_ADDRESS, TWO, BASE
 } from '../constants'
 import { sqrt, parseBigintIsh } from '../utils'
 import { InsufficientReservesError, InsufficientInputAmountError } from '../errors'
@@ -49,10 +49,11 @@ export class Pylon {
         return PYLON_ADDRESS_CACHE[tokens[0].address][tokens[1].address]
     }
 
-    public constructor(pair: Pair) {
-        const tokenAmounts = [pair.reserve0, pair.reserve1];
+    public constructor(pair: Pair, tokenAmount0: TokenAmount, tokenAmount1: TokenAmount) {
+        const tokenAmounts = [tokenAmount0, tokenAmount1];
         const pylonAddress = Pylon.getAddress(tokenAmounts[0].token, tokenAmounts[1].token);
         this.pair = pair
+
         const floatLiquidityAddress = getCreate2Address(
             PYLON_FACTORY_ADDRESS[tokenAmounts[0].token.chainId],
             keccak256(["bytes"], [pack(['address', 'address'], [tokenAmounts[0].token.address, pylonAddress])]),
@@ -113,7 +114,7 @@ export class Pylon {
     }
 
     private sqrt(value: JSBI) {
-        invariant(JSBI.lessThanOrEqual(value, ZERO), 'NEGATIVW')
+        invariant(JSBI.greaterThan(value, ZERO), 'NEGATIVE')
         if (JSBI.lessThanOrEqual(value, TWO)) {
             return value;
         }
@@ -130,72 +131,85 @@ export class Pylon {
         return newtonIteration(value, ONE);
     }
 
-
-
     private translateToPylon(toTranslate: JSBI, ptb: TokenAmount, ptt: TokenAmount) {
-        return JSBI.multiply(JSBI.divide(ptb.raw, ptt.raw), toTranslate)
+        return JSBI.divide(JSBI.multiply(toTranslate, ptb.raw), ptt.raw)
     }
 
     private updateSync(lastK: JSBI, vabLast: JSBI, vfbLast: JSBI, gamma: JSBI, ptb: TokenAmount, ptt: TokenAmount, lpt: TokenAmount): [JSBI, JSBI] {
         let currentK =  this.sqrt(JSBI.multiply(this.pair.reserve0.raw, this.pair.reserve1.raw));
         let tpva = this.translateToPylon(JSBI.multiply(TWO, this.pair.reserve1.raw), ptb, ptt);
         let tpvf = this.translateToPylon(JSBI.multiply(TWO, this.pair.reserve0.raw), ptb, ptt)
-        let d = JSBI.subtract(ONE, JSBI.divide(JSBI.multiply(this.sqrt(lastK), ptt.raw), JSBI.multiply(currentK, lpt.raw)))
-        let feeValueAnchor = JSBI.multiply(d, tpva);
-        let feeValueFloat = JSBI.multiply(d, tpvf);
 
-        let vab = JSBI.add(vabLast, JSBI.multiply(feeValueAnchor, gamma);
-        let vfb = JSBI.add(vfbLast, JSBI.multiply(feeValueFloat, JSBI.subtract(ONE, gamma)));
+        let d = JSBI.subtract(BASE, JSBI.divide(JSBI.multiply(BASE,JSBI.multiply(this.sqrt(lastK), ptt.raw)), JSBI.multiply(currentK, lpt.raw)))
+        console.log(JSBI.divide(JSBI.multiply(BASE,JSBI.multiply(this.sqrt(lastK), ptt.raw)), JSBI.multiply(currentK, lpt.raw)).toString(10))
+        let feeValueAnchor = JSBI.divide(JSBI.multiply(d, tpva), BASE);
+        let feeValueFloat = JSBI.divide(JSBI.multiply(d, tpvf), BASE);
+
+        let vab = JSBI.add(vabLast, JSBI.divide(JSBI.multiply(feeValueAnchor, gamma), BASE));
+        let vfb = JSBI.add(vfbLast, JSBI.divide(JSBI.multiply(feeValueFloat, JSBI.subtract(BASE, gamma)), BASE));
+        console.log(this.pair.reserve1.raw.toString(10))
+        console.log(currentK.toString(10))
+        console.log(feeValueFloat.toString(10))
+        console.log(feeValueAnchor.toString(10))
+        console.log(currentK.toString(10))
+        console.log(tpva.toString(10))
+        console.log(tpvf.toString(10))
+        console.log(vab.toString(10))
+        console.log(vfb.toString(10))
+        console.log(feeValueAnchor.toString(10))
+        console.log(feeValueFloat.toString(10))
         let newGamma: JSBI;
         if (JSBI.lessThan(JSBI.subtract(vab, this.reserve1.raw), JSBI.divide(tpva, TWO))){
-            newGamma = JSBI.subtract(ONE, JSBI.divide(JSBI.subtract(vab, this.reserve1.raw), tpva))
+            newGamma = JSBI.subtract(BASE, JSBI.divide(JSBI.multiply(BASE,JSBI.subtract(vab, this.reserve1.raw)), tpva))
         }else {
-            newGamma = JSBI.subtract(ONE, JSBI.divide(JSBI.subtract(vfb, this.reserve0.raw), tpvf))
+            newGamma = JSBI.divide(JSBI.multiply(BASE,JSBI.subtract(vfb, this.reserve0.raw)), tpvf)
         }
 
         return [newGamma, vab];
     }
 
 
-    private calculatePTU(isAnchor: boolean, tokenAmount: TokenAmount, totalSupply: TokenAmount, anchorVirtualBalance?: JSBI, gamma?: JSBI): JSBI{
+    private calculatePTU(isAnchor: boolean, tokenAmount: TokenAmount, ptt: TokenAmount, ptb: TokenAmount, ptTotalSupply: TokenAmount, anchorVirtualBalance?: JSBI, gamma?: JSBI): JSBI{
+        invariant(ptTotalSupply.token.equals(this.anchorLiquidityToken) || ptTotalSupply.token.equals(this.floatLiquidityToken), 'NEGATIVE')
         let liquidity: JSBI
         if (isAnchor) {
-            if (JSBI.equal(totalSupply.raw, ZERO)) {
-                liquidity = JSBI.subtract(JSBI.divide(tokenAmount.raw, anchorVirtualBalance!), MINIMUM_LIQUIDITY)
+            if (JSBI.equal(ptTotalSupply.raw, ZERO)) {
+                liquidity = JSBI.subtract(tokenAmount.raw, MINIMUM_LIQUIDITY)
             } else {
-                liquidity = JSBI.subtract(JSBI.multiply(JSBI.divide(tokenAmount.raw, anchorVirtualBalance!), totalSupply.raw), MINIMUM_LIQUIDITY)
+                liquidity = JSBI.divide(JSBI.multiply(ptTotalSupply.raw, tokenAmount.raw), anchorVirtualBalance!)
             }
         }else{
-            let reserveTranslated: JSBI
-            if (JSBI.equal(this.pair!.reserve0.raw, ZERO)) {
-                reserveTranslated = JSBI.multiply(TWO, gamma!)
+            let denominator: JSBI
+            if (JSBI.equal(ptTotalSupply.raw, ZERO)) {
+                denominator = JSBI.multiply(TWO, gamma!)
             }else{
-                reserveTranslated = JSBI.add(JSBI.multiply(JSBI.multiply(this.pair!.reserve0.raw, gamma!), TWO), this.reserve0.raw)
+                let pairReserveTranslated = this.translateToPylon(this.pair!.reserve0.raw, ptb, ptt);
+                denominator = JSBI.add(JSBI.divide(JSBI.multiply(JSBI.multiply(pairReserveTranslated, gamma!), TWO), BASE), this.reserve0.raw)
             }
 
-            if (JSBI.equal(totalSupply.raw, ZERO)) {
-                liquidity = JSBI.subtract(JSBI.divide(tokenAmount.raw, reserveTranslated), MINIMUM_LIQUIDITY)
+            if (JSBI.equal(ptTotalSupply.raw, ZERO)) {
+                liquidity = JSBI.subtract(JSBI.divide(JSBI.multiply(BASE, tokenAmount.raw), denominator), MINIMUM_LIQUIDITY)
             }else {
-                liquidity = JSBI.multiply(JSBI.divide(tokenAmount.raw, reserveTranslated), totalSupply.raw)
+                liquidity = JSBI.divide(JSBI.multiply(ptTotalSupply.raw, tokenAmount.raw), denominator)
             }
         }
 
         return liquidity
     }
 
-    private getLiquidityFromPoolTokensLiquidity(tokenAmountA: TokenAmount, tokenAmountB: TokenAmount, totalSupply: TokenAmount,
+    private getLiquidityFromPoolTokensLiquidity(tokenAmountA: TokenAmount, tokenAmountB: TokenAmount, totalSupply: TokenAmount, ptb: TokenAmount, ptTotalSupply: TokenAmount,
                                                 isAnchor: boolean, anchorVirtualBalance?: JSBI, gamma?: JSBI): JSBI {
         let amount: TokenAmount;
         if (isAnchor){
-            let amountA = JSBI.multiply(JSBI.divide(JSBI.multiply(tokenAmountA.raw, TWO), this.pair.reserve1.raw), this.pair.reserve0.raw);
+            let amountA = JSBI.multiply(JSBI.divide(JSBI.multiply(BASE, JSBI.multiply(tokenAmountA.raw, TWO)), this.pair.reserve1.raw), this.pair.reserve0.raw);
             let amountB = JSBI.multiply(tokenAmountB.raw, TWO);
             amount = new TokenAmount(tokenAmountA.token, JSBI.greaterThan(amountA, amountB) ? amountB : amountA);
         }else{
-            let amountA = JSBI.multiply(JSBI.divide(JSBI.multiply(tokenAmountB.raw, TWO), this.pair.reserve0.raw), this.pair.reserve1.raw);
+            let amountA = JSBI.multiply(JSBI.divide(JSBI.multiply(BASE, JSBI.multiply(tokenAmountB.raw, TWO)), this.pair.reserve0.raw), this.pair.reserve1.raw);
             let amountB = JSBI.multiply(tokenAmountA.raw, TWO);
             amount = new TokenAmount(tokenAmountB.token, JSBI.greaterThan(amountA, amountB) ? amountB : amountA);
         }
-        return this.calculatePTU(true, amount, totalSupply, anchorVirtualBalance, gamma);
+        return this.calculatePTU(true, amount, totalSupply, ptb,ptTotalSupply, anchorVirtualBalance, gamma);
     }
 
     public reserveOf(token: Token): TokenAmount {
@@ -244,21 +258,26 @@ export class Pylon {
         return [inputAmount, new Pair(inputReserve.add(inputAmount), outputReserve.subtract(outputAmount))]
     }
 
-
     public getAnchorAsync100LiquidityMinted(
         totalSupply: TokenAmount,
         anchorTotalSupply: TokenAmount,
         tokenAmount: TokenAmount,
-        anchorVirtualBalance: BigintIsh
+        anchorVirtualBalance: BigintIsh,
+        floatVirtualBalance: BigintIsh,
+        gamma: BigintIsh,
+        kLast: BigintIsh,
+        ptb: TokenAmount,
+        lastPoolToken: TokenAmount,
     ): TokenAmount {
         invariant(anchorTotalSupply.token.equals(this.anchorLiquidityToken), 'LIQUIDITY')
         invariant(totalSupply.token.equals(this.pair.liquidityToken), 'LIQUIDITY')
         invariant(tokenAmount.token.equals(this.token1), 'TOKEN')
 
+
         let halfAmountA = new TokenAmount(tokenAmount.token, JSBI.divide(tokenAmount.raw, TWO));
         let outputAmount = this.pair.getOutputAmount(halfAmountA)
 
-        let liquidity = this.getAnchorAsyncLiquidityMinted(totalSupply, anchorTotalSupply, halfAmountA, outputAmount[0], anchorVirtualBalance)
+        let liquidity = this.getAnchorAsyncLiquidityMinted(totalSupply, anchorTotalSupply, halfAmountA, outputAmount[0], anchorVirtualBalance, floatVirtualBalance, gamma, kLast, ptb, lastPoolToken)
         if (!JSBI.greaterThan(liquidity.raw, ZERO)) {
             throw new InsufficientInputAmountError()
         }
@@ -268,15 +287,21 @@ export class Pylon {
         totalSupply: TokenAmount,
         floatTotalSupply: TokenAmount,
         tokenAmount: TokenAmount,
-        gamma: BigintIsh
+        anchorVirtualBalance: BigintIsh,
+        floatVirtualBalance: BigintIsh,
+        gamma: BigintIsh,
+        kLast: BigintIsh,
+        ptb: TokenAmount,
+        lastPoolToken: TokenAmount,
     ): TokenAmount {
         invariant(floatTotalSupply.token.equals(this.floatLiquidityToken), 'LIQUIDITY')
         invariant(totalSupply.token.equals(this.pair.liquidityToken), 'LIQUIDITY')
         invariant(tokenAmount.token.equals(this.token0), 'TOKEN')
+
         let halfAmountA = new TokenAmount(tokenAmount.token, JSBI.divide(tokenAmount.raw, TWO));
         let outputAmount = this.pair.getOutputAmount(halfAmountA)
 
-        let liquidity = this.getFloatAsyncLiquidityMinted(totalSupply, floatTotalSupply, halfAmountA, outputAmount[0], gamma)
+        let liquidity = this.getFloatAsyncLiquidityMinted(totalSupply, floatTotalSupply, halfAmountA, outputAmount[0], anchorVirtualBalance, floatVirtualBalance, gamma, kLast, ptb, lastPoolToken)
         if (!JSBI.greaterThan(liquidity.raw, ZERO)) {
             throw new InsufficientInputAmountError()
         }
@@ -288,14 +313,20 @@ export class Pylon {
         anchorTotalSupply: TokenAmount,
         tokenAmountA: TokenAmount,
         tokenAmountB: TokenAmount,
-        anchorVirtualBalance: BigintIsh
+        anchorVirtualBalance: BigintIsh,
+        floatVirtualBalance: BigintIsh,
+        gamma: BigintIsh,
+        kLast: BigintIsh,
+        ptb: TokenAmount,
+        lastPoolToken: TokenAmount,
     ): TokenAmount {
         invariant(anchorTotalSupply.token.equals(this.anchorLiquidityToken), 'ANCHOR LIQUIDITY')
         invariant(totalSupply.token.equals(this.pair.liquidityToken), 'LIQUIDITY')
         const tokenAmounts =  [tokenAmountA, tokenAmountB];
         invariant(tokenAmounts[0].token.equals(this.token0) && tokenAmounts[1].token.equals(this.token1), 'TOKEN')
+        let results: [JSBI, JSBI] = this.updateSync(parseBigintIsh(kLast), parseBigintIsh(anchorVirtualBalance),  parseBigintIsh(floatVirtualBalance), parseBigintIsh(gamma), ptb, totalSupply, lastPoolToken)
 
-        let liquidity = this.getLiquidityFromPoolTokensLiquidity(tokenAmountA, tokenAmountB, totalSupply, true, parseBigintIsh(anchorVirtualBalance))
+        let liquidity = this.getLiquidityFromPoolTokensLiquidity(tokenAmountA, tokenAmountB, totalSupply, ptb, anchorTotalSupply, true, results[1])
 
         if (!JSBI.greaterThan(liquidity, ZERO)) {
             throw new InsufficientInputAmountError()
@@ -309,7 +340,12 @@ export class Pylon {
         floatTotalSupply: TokenAmount,
         tokenAmountA: TokenAmount,
         tokenAmountB: TokenAmount,
-        gamma: BigintIsh
+        anchorVirtualBalance: BigintIsh | JSBI,
+        floatVirtualBalance: BigintIsh,
+        gammaLast: BigintIsh,
+        kLast: BigintIsh,
+        ptb: TokenAmount,
+        lastPoolToken: TokenAmount,
     ): TokenAmount {
         invariant(floatTotalSupply.token.equals(this.floatLiquidityToken), 'FLOAT LIQUIDITY')
         invariant(totalSupply.token.equals(this.pair.liquidityToken), 'LIQUIDITY')
@@ -317,10 +353,11 @@ export class Pylon {
         invariant((this.pair.token0.equals(this.token0) && this.pair.token1.equals(this.token1)) ||
             (this.pair.token0.equals(this.token1) && this.pair.token1.equals(this.token0)), 'LIQUIDITY')
         const tokenAmounts =  [tokenAmountA, tokenAmountB];
+        let results: [JSBI, JSBI] = this.updateSync(parseBigintIsh(kLast), parseBigintIsh(anchorVirtualBalance),  parseBigintIsh(floatVirtualBalance), parseBigintIsh(gammaLast), ptb, totalSupply, lastPoolToken)
 
         invariant(tokenAmounts[0].token.equals(this.token0) && tokenAmounts[1].token.equals(this.token1), 'TOKEN')
         let pairTokenAmount: TokenAmount = this.pair.getLiquidityMinted(totalSupply, tokenAmountA, tokenAmountB);
-        let liquidity = this.getLiquidityFromPoolTokensLiquidity(tokenAmountA, tokenAmountB, floatTotalSupply, false, undefined, parseBigintIsh(gamma))
+        let liquidity = this.getLiquidityFromPoolTokensLiquidity(tokenAmountA, tokenAmountB, totalSupply, ptb, floatTotalSupply, false, results[1], results[0])
 
         if (!JSBI.greaterThan(pairTokenAmount.raw, ZERO)) {
             throw new InsufficientInputAmountError()
@@ -333,14 +370,20 @@ export class Pylon {
         totalSupply: TokenAmount,
         anchorTotalSupply: TokenAmount,
         tokenAmount: TokenAmount,
-        anchorVirtualBalance: BigintIsh
+        anchorVirtualBalance: BigintIsh,
+        floatVirtualBalance: BigintIsh,
+        gammaLast: BigintIsh,
+        kLast: BigintIsh,
+        ptb: TokenAmount,
+        lastPoolToken: TokenAmount,
     ): TokenAmount {
         invariant(anchorTotalSupply.token.equals(this.anchorLiquidityToken), 'ANCHOR LIQUIDITY')
         invariant(totalSupply.token.equals(this.pair.liquidityToken), 'LIQUIDITY')
         invariant(tokenAmount.token.equals(this.token1), 'TOKEN')
+        let results: [JSBI, JSBI] = this.updateSync(parseBigintIsh(kLast), parseBigintIsh(anchorVirtualBalance),  parseBigintIsh(floatVirtualBalance), parseBigintIsh(gammaLast), ptb, totalSupply, lastPoolToken)
 
-        let liquidity: JSBI = this.calculatePTU(true, tokenAmount, totalSupply, parseBigintIsh(anchorVirtualBalance));
-
+        let liquidity: JSBI = this.calculatePTU(true, tokenAmount,totalSupply, ptb, anchorTotalSupply, results[1]);
+        console.log(liquidity.toString(10))
 
         if (!JSBI.greaterThan(liquidity, ZERO)) {
             throw new InsufficientInputAmountError()
@@ -352,15 +395,23 @@ export class Pylon {
         totalSupply: TokenAmount,
         floatTotalSupply: TokenAmount,
         tokenAmount: TokenAmount,
-        gamma: BigintIsh,
-        pair: Pair
+        anchorVirtualBalance: BigintIsh,
+        floatVirtualBalance: BigintIsh,
+        gammaLast: BigintIsh,
+        kLast: BigintIsh,
+        ptb: TokenAmount,
+        lastPoolToken: TokenAmount
     ): TokenAmount {
         invariant(totalSupply.token.equals(this.pair.liquidityToken), 'LIQUIDITY')
         invariant(floatTotalSupply.token.equals(this.floatLiquidityToken), 'FLOAT LIQUIDITY')
-        invariant((pair.token0.equals(this.token0) && pair.token1.equals(this.token1)) || (pair.token0.equals(this.token1) && pair.token1.equals(this.token0)), 'LIQUIDITY')
+        //invariant((pair.token0.equals(this.token0) && pair.token1.equals(this.token1)) || (pair.token0.equals(this.token1) && pair.token1.equals(this.token0)), 'LIQUIDITY')
         invariant(tokenAmount.token.equals(this.token0), 'TOKEN')
+        let results: [JSBI, JSBI] = this.updateSync(parseBigintIsh(kLast), parseBigintIsh(anchorVirtualBalance),  parseBigintIsh(floatVirtualBalance), parseBigintIsh(gammaLast), ptb, totalSupply, lastPoolToken)
+        console.log(results[0].toString(10))
+        console.log(results[1].toString(10))
 
-        let liquidity: JSBI = this.calculatePTU(true, tokenAmount, totalSupply, undefined, parseBigintIsh(gamma));
+        let liquidity: JSBI = this.calculatePTU(false, tokenAmount,totalSupply, ptb, floatTotalSupply, results[1], results[0]);
+        console.log(liquidity.toString(10))
 
         if (!JSBI.greaterThan(liquidity, ZERO)) {
             throw new InsufficientInputAmountError()
