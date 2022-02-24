@@ -275,10 +275,10 @@ export class Pylon {
         invariant(tokenAmount.token.equals(this.token1), 'TOKEN')
 
 
-        let halfAmountA = new TokenAmount(tokenAmount.token, JSBI.divide(tokenAmount.raw, TWO));
+        let halfAmountA = new TokenAmount(this.pair.token1, JSBI.divide(tokenAmount.raw, TWO));
         let outputAmount = this.pair.getOutputAmount(halfAmountA)
 
-        let liquidity = this.getAnchorAsyncLiquidityMinted(totalSupply, anchorTotalSupply, halfAmountA, outputAmount[0], anchorVirtualBalance, floatVirtualBalance, gamma, kLast, ptb, lastPoolToken)
+        let liquidity = this.getAnchorAsyncLiquidityMinted(totalSupply, anchorTotalSupply, outputAmount[0], halfAmountA, anchorVirtualBalance, floatVirtualBalance, gamma, kLast, ptb, lastPoolToken)
         if (!JSBI.greaterThan(liquidity.raw, ZERO)) {
             throw new InsufficientInputAmountError()
         }
@@ -360,9 +360,9 @@ export class Pylon {
         //let pairTokenAmount: TokenAmount = this.pair.getLiquidityMinted(totalSupply, tokenAmountA, tokenAmountB);
         //console.log("Liquidity Minted", pairTokenAmount.raw)
         let liquidity = this.getLiquidityFromPoolTokensLiquidity(tokenAmountA, tokenAmountB, totalSupply, ptb, floatTotalSupply, false, result.vab, result.gamma)
-        // if (!JSBI.greaterThan(pairTokenAmount.raw, ZERO)) {
-        //     throw new InsufficientInputAmountError()
-        // }
+        if (!JSBI.greaterThan(liquidity, ZERO)) {
+            throw new InsufficientInputAmountError()
+        }
 
         return new TokenAmount(this.anchorLiquidityToken, liquidity)
     }
