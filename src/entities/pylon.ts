@@ -188,6 +188,7 @@ export class Pylon {
             }
 
             if (JSBI.equal(ptTotalSupply.raw, ZERO)) {
+                console.log("denominator::", denominator.toString(10));
                 liquidity = JSBI.subtract(JSBI.divide(JSBI.multiply(BASE, tokenAmount.raw), denominator), MINIMUM_LIQUIDITY)
             }else {
                 liquidity = JSBI.divide(JSBI.multiply(ptTotalSupply.raw, tokenAmount.raw), denominator)
@@ -263,22 +264,22 @@ export class Pylon {
         totalSupply: TokenAmount,
         tokenAmountA: TokenAmount,
         tokenAmountB: TokenAmount,
-        ): [TokenAmount, TokenAmount] {
-        let vab = tokenAmountA.raw
-        let vfb = tokenAmountB.raw
+        ): [JSBI, JSBI] {
+        let vab = tokenAmountB.raw
+        let vfb = tokenAmountA.raw
         let denominator;
 
-        if (JSBI.equal(this.pair.reserve0.raw, ZERO)) {
+        if (JSBI.notEqual(this.pair.reserve0.raw, ZERO)) {
             denominator = JSBI.divide(JSBI.multiply(vab, this.pair.reserve0.raw), this.pair.reserve1.raw)
         } else {
             denominator = JSBI.divide(JSBI.multiply(vab, tokenAmountA.raw), tokenAmountB.raw)
         }
-        let gamma = JSBI.divide(vfb, JSBI.add(vfb, denominator));
-
-        let float = this.getFloatSyncLiquidityMinted(totalSupply, new TokenAmount(this.anchorLiquidityToken, ZERO), tokenAmountA,vab,vfb, gamma, ZERO, new TokenAmount(tokenAmountA.token, ZERO), new TokenAmount(tokenAmountA.token, ZERO));
-        let anchor = this.getAnchorSyncLiquidityMinted(totalSupply, new TokenAmount(this.floatLiquidityToken, ZERO), tokenAmountB,vab,vfb, gamma, ZERO, new TokenAmount(tokenAmountB.token, ZERO), new TokenAmount(tokenAmountB.token, ZERO));
-
-        return [float, anchor];
+        let gamma = JSBI.divide(JSBI.multiply(BASE, vfb), JSBI.add(vfb, denominator));
+        console.log("denominator", denominator.toString(10))
+        console.log("gamma", gamma.toString(10))
+        let liquidityFloat: JSBI = this.calculatePTU(false,  tokenAmountA, totalSupply, new TokenAmount(tokenAmountA.token, ZERO), new TokenAmount(this.floatLiquidityToken, ZERO), vab, gamma);
+        let liquidityAnchor: JSBI = this.calculatePTU(true,  tokenAmountB, totalSupply, new TokenAmount(tokenAmountA.token, ZERO), new TokenAmount(this.anchorLiquidityToken, ZERO), vab, gamma);
+        return [liquidityFloat, liquidityAnchor];
     }
 
     public getAnchorAsync100LiquidityMinted(

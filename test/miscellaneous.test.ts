@@ -56,34 +56,13 @@ describe('miscellaneous', () => {
     const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
     const pair = new Pair(new TokenAmount(tokenA, '0'), new TokenAmount(tokenB, '0'))
     const pylon = new Pylon(pair, new TokenAmount(tokenA, '0'), new TokenAmount(tokenB, '0'))
-    let aSync = pylon.getAnchorSyncLiquidityMinted(
-        new TokenAmount(pair.liquidityToken, '37258980980455003931'),
-        new TokenAmount(pylon.anchorLiquidityToken, '9090909090909090909'),
-        new TokenAmount(tokenB, '5000000000000000'),
-        //new TokenAmount(tokenB, '2000000000000000000000'),
-        JSBI.BigInt("9394220164340522812"),
-        JSBI.BigInt("947728772470068004"),
-        JSBI.BigInt("475687425453480295"),
-        JSBI.BigInt("1269795190837184468477014317641265640320"),
-        new TokenAmount(tokenA, '2740478858540395822'),
-        new TokenAmount(tokenA, '34363255460224189141'),
+    let init = pylon.initializeValues(
+        new TokenAmount(pair.liquidityToken, "3001666203960726876344"),
+        new TokenAmount(tokenA, "481818181818181818181"),
+        new TokenAmount(tokenB, "154545454545454545454")
     )
-
-    let fSync = pylon.getFloatSyncLiquidityMinted(
-        new TokenAmount(pair.liquidityToken, '37258980980455003931'),
-        new TokenAmount(pylon.floatLiquidityToken, '913912502191907675'),
-        new TokenAmount(tokenA, '5000000000000000'),
-        //new TokenAmount(tokenB, '2000000000000000000000'),
-        JSBI.BigInt("9394220164340522812"),
-        JSBI.BigInt("947728772470068004"),
-        JSBI.BigInt("475687425453480295"),
-        JSBI.BigInt("1269795190837184468477014317641265640320"),
-        new TokenAmount(tokenA, '2740478858540395822'),
-        new TokenAmount(tokenA, '34363255460224189141'),
-    )
-
-    expect(fSync.raw.toString(10)).toEqual("4820877360075378")
-    expect(aSync.raw.toString(10)).toEqual("4820877360075378")
+    expect(init[0].toString(10)).toEqual('481818181818181817181')
+    expect(init[1].toString(10)).toEqual('154545454545454544454')
   })
 
   it('getAnchorSyncLiquidityMinted:!0', async () => {
