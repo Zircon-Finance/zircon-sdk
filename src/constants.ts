@@ -38,7 +38,7 @@ export const PYLON_FACTORY_ADDRESS: { [key: string]: string } = {
 }
 
 export const INIT_CODE_HASH = '0x67a162f6e3634be7a81e58f73c97b461b1d268f03444493d0f80098a2299d00f'
-export const PYLON_CODE_HASH = '0x7e1d2d64e9b8dbe904b28a266087b2f1271a43d0af0274805d89b6ced5da57dd'
+export const PYLON_CODE_HASH = '0xcbde427958933e902032b5337b746f94be82aec616708c78cccd4fb5ba0f5563'
 
 export const MINIMUM_LIQUIDITY = JSBI.BigInt(1000)
 

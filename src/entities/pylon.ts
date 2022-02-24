@@ -259,6 +259,28 @@ export class Pylon {
         return [inputAmount, new Pair(inputReserve.add(inputAmount), outputReserve.subtract(outputAmount))]
     }
 
+    public initializeValues(
+        totalSupply: TokenAmount,
+        tokenAmountA: TokenAmount,
+        tokenAmountB: TokenAmount,
+        ): [TokenAmount, TokenAmount] {
+        let vab = tokenAmountA.raw
+        let vfb = tokenAmountB.raw
+        let denominator;
+
+        if (JSBI.equal(this.pair.reserve0.raw, ZERO)) {
+            denominator = JSBI.divide(JSBI.multiply(vab, this.pair.reserve0.raw), this.pair.reserve1.raw)
+        } else {
+            denominator = JSBI.divide(JSBI.multiply(vab, tokenAmountA.raw), tokenAmountB.raw)
+        }
+        let gamma = JSBI.divide(vfb, JSBI.add(vfb, denominator));
+
+        let float = this.getFloatSyncLiquidityMinted(totalSupply, new TokenAmount(this.anchorLiquidityToken, ZERO), tokenAmountA,vab,vfb, gamma, ZERO, new TokenAmount(tokenAmountA.token, ZERO), new TokenAmount(tokenAmountA.token, ZERO));
+        let anchor = this.getAnchorSyncLiquidityMinted(totalSupply, new TokenAmount(this.floatLiquidityToken, ZERO), tokenAmountB,vab,vfb, gamma, ZERO, new TokenAmount(tokenAmountB.token, ZERO), new TokenAmount(tokenAmountB.token, ZERO));
+
+        return [float, anchor];
+    }
+
     public getAnchorAsync100LiquidityMinted(
         totalSupply: TokenAmount,
         anchorTotalSupply: TokenAmount,
