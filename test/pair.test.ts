@@ -12,11 +12,11 @@ describe('Pair', () => {
     })
   })
 
-  describe('#getAddress', () => {
-    it('returns the correct address', () => {
-      expect(Pair.getAddress(USDC, DAI)).toEqual('0x9FA2dDF0E4cdB766509bE16FBeF4b94a4eaD12ad')
-    })
-  })
+  // describe('#getAddress', () => {
+  //   it('returns the correct address', () => {
+  //     expect(Pair.getAddress(USDC, DAI)).toEqual('0x9FA2dDF0E4cdB766509bE16FBeF4b94a4eaD12ad')
+  //   })
+  // })
 
   describe('#token0', () => {
     it('always is the token that sorts before', () => {
