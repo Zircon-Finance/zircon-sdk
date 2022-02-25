@@ -183,6 +183,82 @@ describe('miscellaneous', () => {
     )
     expect(fSync.raw.toString(10)).toEqual("4785103352571548")
   })
+  it('burnFloat:!0', async () => {
+    const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
+    const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
+    const pair = new Pair(new TokenAmount(tokenA, '12866889738045730064'), new TokenAmount(tokenB, '117003201248779581880'))
+    const pylon = new Pylon(pair, new TokenAmount(tokenA, '47201171045179026'), new TokenAmount(tokenB, '425209926505030123'))
+    let fSync = pylon.burnFloat(
+        new TokenAmount(pair.liquidityToken, '37258980980455003931'),
+        new TokenAmount(pylon.floatLiquidityToken, '913912502191907675'),
+        new TokenAmount(tokenA, '913912502191906675'),
+        JSBI.BigInt("9394220164340522812"),
+        JSBI.BigInt("947728772470068004"),
+        JSBI.BigInt("475687425453480295"),
+        JSBI.BigInt("1269795190837184468477014317641265640320"),
+        new TokenAmount(tokenA, '2740478858540395822'),
+        new TokenAmount(tokenA, '34363255460224189141'),
+    )
+    expect(fSync.toString(10)).toEqual("891475774490905442")
+  })
+
+  it('burnAsyncFloat:!0', async () => {
+    const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
+    const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
+    const pair = new Pair(new TokenAmount(tokenA, '12866889738045730064'), new TokenAmount(tokenB, '117003201248779581880'))
+    const pylon = new Pylon(pair, new TokenAmount(tokenA, '47201171045179026'), new TokenAmount(tokenB, '425209926505030123'))
+    let fSync = pylon.burnAsyncFloat(
+        new TokenAmount(pair.liquidityToken, '37258980980455003931'),
+        new TokenAmount(pylon.floatLiquidityToken, '913912502191907675'),
+        new TokenAmount(tokenA, '913912502191906675'),
+        JSBI.BigInt("9394220164340522812"),
+        JSBI.BigInt("947728772470068004"),
+        JSBI.BigInt("475687425453480295"),
+        JSBI.BigInt("1269795190837184468477014317641265640320"),
+        new TokenAmount(tokenA, '2740478858540395822'),
+        new TokenAmount(tokenA, '34363255460224189141'),
+    )
+    expect(fSync[0].toString(10)).toEqual("452352714217688851")
+    expect(fSync[1].toString(10)).toEqual("4113403995415183163")
+  })
+  it('burnAnchor:!0', async () => {
+    const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
+    const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
+    const pair = new Pair(new TokenAmount(tokenA, '12866889738045730064'), new TokenAmount(tokenB, '117003201248779581880'))
+    const pylon = new Pylon(pair, new TokenAmount(tokenA, '47201171045179026'), new TokenAmount(tokenB, '425209926505030123'))
+    let fSync = pylon.burnAnchor(
+        new TokenAmount(pair.liquidityToken, '37258980980455003931'),
+        new TokenAmount(pylon.anchorLiquidityToken, '9090909090909090909'),
+        new TokenAmount(tokenB, '9090909090909089909'),
+        JSBI.BigInt("9394220164340522812"),
+        JSBI.BigInt("947728772470068004"),
+        JSBI.BigInt("475687425453480295"),
+        JSBI.BigInt("1269795190837184468477014317641265640320"),
+        new TokenAmount(tokenA, '2740478858540395822'),
+        new TokenAmount(tokenA, '34363255460224189141'),
+    )
+    expect(fSync.toString(10)).toEqual("8852750133098824111")
+  })
+
+  it('burnAnchorAsync:!0', async () => {
+    const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
+    const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
+    const pair = new Pair(new TokenAmount(tokenA, '12866889738045730064'), new TokenAmount(tokenB, '117003201248779581880'))
+    const pylon = new Pylon(pair, new TokenAmount(tokenA, '47201171045179026'), new TokenAmount(tokenB, '425209926505030123'))
+    let fSync = pylon.burnAsyncAnchor(
+        new TokenAmount(pair.liquidityToken, '37258980980455003931'),
+        new TokenAmount(pylon.anchorLiquidityToken, '9090909090909090909'),
+        new TokenAmount(tokenB, '9090909090909089909'),
+        JSBI.BigInt("9394220164340522812"),
+        JSBI.BigInt("947728772470068004"),
+        JSBI.BigInt("475687425453480295"),
+        JSBI.BigInt("1269795190837184468477014317641265640320"),
+        new TokenAmount(tokenA, '2740478858540395822'),
+        new TokenAmount(tokenA, '34363255460224189141'),
+    )
+    expect(fSync[0].toString(10)).toEqual("495058042119213276")
+    expect(fSync[1].toString(10)).toEqual("4501738719391460508")
+  })
   it('getLiquidityValue:!feeOn', async () => {
     const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
     const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)

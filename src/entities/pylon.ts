@@ -264,7 +264,7 @@ export class Pylon {
         totalSupply: TokenAmount,
         tokenAmountA: TokenAmount,
         tokenAmountB: TokenAmount,
-        ): [JSBI, JSBI] {
+    ): [JSBI, JSBI] {
         let vab = tokenAmountB.raw
         let vfb = tokenAmountA.raw
         let denominator;
@@ -440,6 +440,177 @@ export class Pylon {
             throw new InsufficientInputAmountError()
         }
         return new TokenAmount(this.floatLiquidityToken, liquidity)
+    }
+
+    public calculatePTUToAmount(
+        totalSupply: TokenAmount,
+        floatTotalSupply: TokenAmount,
+        tokenAmount: TokenAmount,
+        anchorVirtualBalance: JSBI,
+        ptb: JSBI,
+        gamma: JSBI,
+        isAnchor: boolean): JSBI {
+        if(isAnchor) {
+            return JSBI.divide(JSBI.multiply(anchorVirtualBalance, tokenAmount.raw), floatTotalSupply.raw);
+        }else{
+            //(((_reserve0.mul(_gamma).mul(2)/1e18).add(_reservePylon0)).mul(_ptuAmount))/_totalSupply
+            return JSBI.divide(JSBI.multiply(JSBI.add(JSBI.divide(JSBI.multiply(JSBI.multiply(JSBI.divide(JSBI.multiply(this.pair.reserve0.raw, ptb), totalSupply.raw), gamma), TWO), BASE), this.reserve0.raw), tokenAmount.raw), floatTotalSupply.raw)
+        }
+    }
+
+    public calculateLPTU(
+        totalSupply: TokenAmount,
+        ptTotalSupply: TokenAmount,
+        tokenAmount: JSBI,
+        anchorVirtualBalance: JSBI,
+        gamma: JSBI,
+        ptb: TokenAmount,
+        isAnchor: boolean): JSBI {
+
+        let pylonShare: JSBI;
+        if(isAnchor) {
+            pylonShare = JSBI.divide(JSBI.multiply(totalSupply.raw, JSBI.subtract(anchorVirtualBalance, this.reserve1.raw)), JSBI.multiply(TWO, this.pair.reserve1.raw));
+
+        }else{
+            pylonShare = JSBI.divide(JSBI.multiply(gamma, ptb.raw), BASE)
+        }
+
+        return JSBI.divide(JSBI.multiply(pylonShare, tokenAmount), ptTotalSupply.raw)
+    }
+
+    public burnFloat(
+        totalSupply: TokenAmount,
+        floatTotalSupply: TokenAmount,
+        tokenAmountOut: TokenAmount,
+        anchorVirtualBalance: JSBI,
+        floatVirtualBalance: JSBI,
+        gammaLast: JSBI,
+        kLast: JSBI,
+        ptb: TokenAmount,
+        lastPoolToken: TokenAmount,
+    ): JSBI {
+        let result = this.updateSync(parseBigintIsh(kLast), parseBigintIsh(anchorVirtualBalance),  parseBigintIsh(floatVirtualBalance), parseBigintIsh(gammaLast), ptb, totalSupply, lastPoolToken)
+        let reservesPTU = this.calculatePTU(false, this.reserve0, totalSupply, ptb, floatTotalSupply, result.vab, result.gamma);
+        let minAmount = JSBI.greaterThan(reservesPTU, tokenAmountOut.raw) ? tokenAmountOut.raw : reservesPTU;
+
+        let amount = this.calculatePTUToAmount(
+            totalSupply,
+            floatTotalSupply,
+            new TokenAmount(tokenAmountOut.token, minAmount),
+            result.vab,
+            result.gamma,
+            ptb.raw,
+            false
+        )
+        //TODO: Add Omega Slashing
+
+        if (JSBI.lessThan(reservesPTU, amount)) {
+            let adjustedLiq = JSBI.subtract(tokenAmountOut.raw, reservesPTU);
+            let lptu = this.calculateLPTU(totalSupply, floatTotalSupply, adjustedLiq, result.vab, result.gamma, ptb, false);
+            let amount0 = JSBI.divide(JSBI.multiply(lptu, this.pair.reserve0.raw), totalSupply.raw);
+            let amount1 = JSBI.divide(JSBI.multiply(lptu, this.pair.reserve1.raw), totalSupply.raw);
+            let newPair = new Pair(this.pair.reserve0.subtract(new TokenAmount(this.token0, amount0)), this.pair.reserve1.subtract(new TokenAmount(this.token1, amount1)));
+
+            let amountTransformed = newPair.getOutputAmount(new TokenAmount(this.token1, amount1));
+            amount = JSBI.add(amount, JSBI.add(amount0, amountTransformed[0].raw));
+        }
+        return amount;
+    }
+    public burnAnchor(
+        totalSupply: TokenAmount,
+        anchorTotalSupply: TokenAmount,
+        tokenAmountOut: TokenAmount,
+        anchorVirtualBalance: JSBI,
+        floatVirtualBalance: JSBI,
+        gammaLast: JSBI,
+        kLast: JSBI,
+        ptb: TokenAmount,
+        lastPoolToken: TokenAmount,
+    ): JSBI {
+        let result = this.updateSync(parseBigintIsh(kLast), parseBigintIsh(anchorVirtualBalance),  parseBigintIsh(floatVirtualBalance), parseBigintIsh(gammaLast), ptb, totalSupply, lastPoolToken)
+        let reservesPTU = this.calculatePTU(true, this.reserve1, totalSupply, ptb, anchorTotalSupply, result.vab, result.gamma);
+        let minAmount = JSBI.greaterThan(reservesPTU, tokenAmountOut.raw) ? tokenAmountOut.raw : reservesPTU;
+        console.log("reservePTU", reservesPTU.toString(10), minAmount.toString(10))
+        let amount = this.calculatePTUToAmount(
+            totalSupply,
+            anchorTotalSupply,
+            new TokenAmount(tokenAmountOut.token, minAmount),
+            result.vab,
+            result.gamma,
+            ptb.raw,
+            true
+        )
+        console.log("amount", amount.toString(10))
+
+        //TODO: Add Omega Slashing
+
+        if (JSBI.lessThan(reservesPTU, amount)) {
+            let adjustedLiq = JSBI.subtract(tokenAmountOut.raw, reservesPTU);
+            let lptu = this.calculateLPTU(totalSupply, anchorTotalSupply, adjustedLiq, result.vab, result.gamma, ptb, true);
+            console.log("lptu", lptu.toString(10))
+            let amount0 = JSBI.divide(JSBI.multiply(lptu, this.pair.reserve0.raw), totalSupply.raw);
+            let amount1 = JSBI.divide(JSBI.multiply(lptu, this.pair.reserve1.raw), totalSupply.raw);
+            let newPair = new Pair(this.pair.reserve0.subtract(new TokenAmount(this.token0, amount0)), this.pair.reserve1.subtract(new TokenAmount(this.token1, amount1)));
+            console.log("amount", amount0.toString(10), amount1.toString(10))
+
+            let amountTransformed = newPair.getOutputAmount(new TokenAmount(this.token0, amount0));
+            console.log("amountTransformed", amountTransformed[0].raw.toString(10))
+
+            amount = JSBI.add(amount, JSBI.add(amount1, amountTransformed[0].raw));
+        }
+        return amount;
+    }
+
+    public burnAsyncAnchor(
+        totalSupply: TokenAmount,
+        anchorTotalSupply: TokenAmount,
+        tokenAmountOut: TokenAmount,
+        anchorVirtualBalance: JSBI,
+        floatVirtualBalance: JSBI,
+        gammaLast: JSBI,
+        kLast: JSBI,
+        ptb: TokenAmount,
+        lastPoolToken: TokenAmount,
+    ): [JSBI, JSBI] {
+        let result = this.updateSync(parseBigintIsh(kLast), parseBigintIsh(anchorVirtualBalance),  parseBigintIsh(floatVirtualBalance), parseBigintIsh(gammaLast), ptb, totalSupply, lastPoolToken)
+
+        //TODO: Add Omega Slashing
+
+        let lptu = this.calculateLPTU(totalSupply, anchorTotalSupply, tokenAmountOut.raw, result.vab, result.gamma, ptb, true);
+        console.log("lptu", lptu.toString(10))
+        let amount0 = JSBI.divide(JSBI.multiply(lptu, this.pair.reserve0.raw), totalSupply.raw);
+        let amount1 = JSBI.divide(JSBI.multiply(lptu, this.pair.reserve1.raw), totalSupply.raw);
+        console.log("amount0", amount0.toString(10))
+        console.log("amount1", amount1.toString(10))
+
+        return [amount0, amount1];
+    }
+    public burnAsyncFloat(
+        totalSupply: TokenAmount,
+        floatTotalSupply: TokenAmount,
+        tokenAmountOut: TokenAmount,
+        anchorVirtualBalance: JSBI,
+        floatVirtualBalance: JSBI,
+        gammaLast: JSBI,
+        kLast: JSBI,
+        ptb: TokenAmount,
+        lastPoolToken: TokenAmount,
+    ): [JSBI, JSBI] {
+        let result = this.updateSync(parseBigintIsh(kLast), parseBigintIsh(anchorVirtualBalance),  parseBigintIsh(floatVirtualBalance), parseBigintIsh(gammaLast), ptb, totalSupply, lastPoolToken)
+
+        //TODO: Add Omega Slashing
+        console.log("gamma", result.gamma.toString(10))
+        console.log("vab", result.vab.toString(10))
+        console.log("floatTotalSupply", floatTotalSupply.raw.toString(10))
+        console.log("ptb", ptb.raw.toString(10))
+        let lptu = this.calculateLPTU(totalSupply, floatTotalSupply, tokenAmountOut.raw, result.vab, result.gamma, ptb, false);
+        console.log("lptu", lptu.toString(10))
+        let amount0 = JSBI.divide(JSBI.multiply(lptu, this.pair.reserve0.raw), totalSupply.raw);
+        let amount1 = JSBI.divide(JSBI.multiply(lptu, this.pair.reserve1.raw), totalSupply.raw);
+        console.log("amount0", amount0.toString(10))
+        console.log("amount1", amount1.toString(10))
+
+        return [amount0, amount1];
     }
 
     public getLiquidityValue(
