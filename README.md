@@ -9,9 +9,23 @@
 
 In-depth documentation on this SDK is available at [uniswap.org](https://uniswap.org/docs/v2/SDK/getting-started/), and the documentation on pylon at [zircon.finance](https://docs.zircon.finance)
 
+
+## Links
+  - [Website](https://www.zircon.finance/)
+  - [Beta](https://beta.zircon.finance/)
+  - [Docs](https://docs.zircon.finance/)
+ 
+  Socials:
+  - [Discord](https://discord.gg/wbqNAqvvTg)
+  - [Twitter](https://twitter.com/Zircon_Finance)
+  - [Email](mailto:hello@zircon.finance)
+  - [Reddit](https://www.reddit.com/r/zirconfinance)
+
 ## Pylon Enhancements
 
 This SDK supports the Pylon features to calculate minting and burning tranched liquidity for Float and Anchor.
+
+
 
 ## Running tests
 
