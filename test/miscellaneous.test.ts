@@ -80,7 +80,7 @@ describe('miscellaneous', () => {
             JSBI.BigInt("475687425453480295"),
             JSBI.BigInt("1269795190837184468477014317641265640320"),
             new TokenAmount(tokenA, '2740478858540395822'),
-            new TokenAmount(tokenA, '34363255460224189141'),
+        JSBI.BigInt('34363255460224189141'),
     )
     expect(fSync.raw.toString(10)).toEqual("4820877360075378")
   })
@@ -100,7 +100,7 @@ describe('miscellaneous', () => {
             JSBI.BigInt("475687425453480295"),
             JSBI.BigInt("1269795190837184468477014317641265640320"),
             new TokenAmount(tokenA, '2740478858540395822'),
-            new TokenAmount(tokenA, '34363255460224189141'),
+        JSBI.BigInt( '34363255460224189141'),
     )
     expect(fSync.raw.toString(10)).toEqual("4800431590087814")
     //1055810837745529
@@ -121,7 +121,7 @@ describe('miscellaneous', () => {
             JSBI.BigInt("475687425453480295"),
             JSBI.BigInt("1269795190837184468477014317641265640320"),
             new TokenAmount(tokenA, '2740478858540395822'),
-            new TokenAmount(tokenA, '34363255460224189141'),
+        JSBI.BigInt( '34363255460224189141'),
     )
     expect(fSync.raw.toString(10)).toEqual("1055810837745529")
   })
@@ -141,7 +141,7 @@ describe('miscellaneous', () => {
         JSBI.BigInt("475687425453480295"),
         JSBI.BigInt("1269795190837184468477014317641265640320"),
         new TokenAmount(tokenA, '2740478858540395822'),
-        new TokenAmount(tokenA, '34363255460224189141'),
+        JSBI.BigInt( '34363255460224189141'),
     )
     expect(fSync.raw.toString(10)).toEqual("9641754720150756")
   })
@@ -160,7 +160,7 @@ describe('miscellaneous', () => {
         JSBI.BigInt("475687425453480295"),
         JSBI.BigInt("1269795190837184468477014317641265640320"),
         new TokenAmount(tokenA, '2740478858540395822'),
-        new TokenAmount(tokenA, '34363255460224189141'),
+        JSBI.BigInt('34363255460224189141'),
     )
     expect(fSync.raw.toString(10)).toEqual("4806312339911913")
   })
@@ -179,7 +179,7 @@ describe('miscellaneous', () => {
         JSBI.BigInt("475687425453480295"),
         JSBI.BigInt("1269795190837184468477014317641265640320"),
         new TokenAmount(tokenA, '2740478858540395822'),
-        new TokenAmount(tokenA, '34363255460224189141'),
+        JSBI.BigInt('34363255460224189141'),
     )
     expect(fSync.raw.toString(10)).toEqual("4785103352571548")
   })
@@ -191,15 +191,15 @@ describe('miscellaneous', () => {
     let fSync = pylon.burnFloat(
         new TokenAmount(pair.liquidityToken, '37258980980455003931'),
         new TokenAmount(pylon.floatLiquidityToken, '913912502191907675'),
-        new TokenAmount(tokenA, '913912502191906675'),
+        new TokenAmount(tokenA, '456956251095953337'),
         JSBI.BigInt("9394220164340522812"),
         JSBI.BigInt("947728772470068004"),
         JSBI.BigInt("475687425453480295"),
         JSBI.BigInt("1269795190837184468477014317641265640320"),
         new TokenAmount(tokenA, '2740478858540395822'),
-        new TokenAmount(tokenA, '34363255460224189141'),
+        JSBI.BigInt('34363255460224189141'),
     )
-    expect(fSync.toString(10)).toEqual("891475774490905442")
+    expect(fSync.raw.toString(10)).toEqual("460859521680556948")
   })
 
   it('burnAsyncFloat:!0', async () => {
@@ -216,10 +216,10 @@ describe('miscellaneous', () => {
         JSBI.BigInt("475687425453480295"),
         JSBI.BigInt("1269795190837184468477014317641265640320"),
         new TokenAmount(tokenA, '2740478858540395822'),
-        new TokenAmount(tokenA, '34363255460224189141'),
+        JSBI.BigInt( '34363255460224189141'),
     )
-    expect(fSync[0].toString(10)).toEqual("452352714217688851")
-    expect(fSync[1].toString(10)).toEqual("4113403995415183163")
+    expect(fSync[0].raw.toString(10)).toEqual("463633280868619738")
+    expect(fSync[1].raw.toString(10)).toEqual("4215982197057533101")
   })
   it('burnAnchor:!0', async () => {
     const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
@@ -229,15 +229,15 @@ describe('miscellaneous', () => {
     let fSync = pylon.burnAnchor(
         new TokenAmount(pair.liquidityToken, '37258980980455003931'),
         new TokenAmount(pylon.anchorLiquidityToken, '9090909090909090909'),
-        new TokenAmount(tokenB, '9090909090909089909'),
+        new TokenAmount(tokenB, '4545454545454544954'),
         JSBI.BigInt("9394220164340522812"),
         JSBI.BigInt("947728772470068004"),
         JSBI.BigInt("475687425453480295"),
-        JSBI.BigInt("1269795190837184468477014317641265640320"),
+        JSBI.BigInt("1505467289466421350997014317641265640320"),
         new TokenAmount(tokenA, '2740478858540395822'),
-        new TokenAmount(tokenA, '34363255460224189141'),
+        JSBI.BigInt('37258980980455003931'),
     )
-    expect(fSync.toString(10)).toEqual("8852750133098824111")
+    expect(fSync.raw.toString(10)).toEqual("4585750993050115947")
   })
 
   it('burnAnchorAsync:!0', async () => {
@@ -254,10 +254,10 @@ describe('miscellaneous', () => {
         JSBI.BigInt("475687425453480295"),
         JSBI.BigInt("1269795190837184468477014317641265640320"),
         new TokenAmount(tokenA, '2740478858540395822'),
-        new TokenAmount(tokenA, '34363255460224189141'),
+        JSBI.BigInt('34363255460224189141'),
     )
-    expect(fSync[0].toString(10)).toEqual("495058042119213276")
-    expect(fSync[1].toString(10)).toEqual("4501738719391460508")
+    expect(fSync[0].raw.toString(10)).toEqual("506239933052771499")
+    expect(fSync[1].raw.toString(10)).toEqual("4603419627666635373")
   })
   it('getLiquidityValue:!feeOn', async () => {
     const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)

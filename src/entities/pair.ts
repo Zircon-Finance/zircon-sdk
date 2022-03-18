@@ -126,6 +126,8 @@ export class Pair {
     }
     const inputReserve = this.reserveOf(inputAmount.token)
     const outputReserve = this.reserveOf(inputAmount.token.equals(this.token0) ? this.token1 : this.token0)
+    // console.log("reserve0", inputReserve.raw.toString())
+    // console.log("reserve1", outputReserve.raw.toString())
     const inputAmountWithFee = JSBI.multiply(inputAmount.raw, _997)
     const numerator = JSBI.multiply(inputAmountWithFee, outputReserve.raw)
     const denominator = JSBI.add(JSBI.multiply(inputReserve.raw, _1000), inputAmountWithFee)

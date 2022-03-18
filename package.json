@@ -1,7 +1,7 @@
 {
-  "name": "vittswap",
+  "name": "zircon-sdk",
   "license": "MIT",
-  "version": "1.0.6",
+  "version": "1.0.2",
   "description": "🛠 An example SDK for building applications on top of Uniswap in Moonbeam.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -30,7 +30,7 @@
     "tiny-invariant": "^1.1.0",
     "tiny-warning": "^1.0.3",
     "toformat": "^2.0.0",
-    "vitt-protocol": "^1.0.1"
+    "zircon-protocol": "^1.0.0"
   },
   "peerDependencies": {
     "@ethersproject/address": "^5.0.0-beta",
