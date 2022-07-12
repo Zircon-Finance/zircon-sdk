@@ -37,9 +37,9 @@ export const PYLON_FACTORY_ADDRESS: { [key: string]: string } = {
   [ChainId.MOONSHADOW]: pylonFactory
 }
 
-export const INIT_CODE_HASH = '0x286e699900f11d3219a9d5e39197c131407cb544fc25535d625b13f9b2d96a10'
-export const PYLON_CODE_HASH = '0x4738c476478847cb3795428a7ce8997135bdc92448533f5ab19ed91b521914de'
-export const PT_CODE_HASH = '0x54b11b3b85fb25c1e7295c1f069af681299b52ac08379ca6bbfef4bb29daf2ed'
+export const INIT_CODE_HASH = '0x329b2552c58a4152d353ccd1a4c1ef40a65c42c04acff73af036498dc3060b1c'
+export const PYLON_CODE_HASH = '0xddad0eac4d55df88dc4ad7e739a068c994a11e6f36b76e12bb8fdd3b1b395e8c'
+export const PT_CODE_HASH = '0x9d48a58c279366838bc32a0283dce84c543f84aaef300a6127a1b849768b97ec'
 
 export const MINIMUM_LIQUIDITY = JSBI.BigInt(1000)
 
