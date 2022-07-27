@@ -1,5 +1,5 @@
 import { INIT_CODE_HASH } from '../src/constants'
-import { bytecode } from 'zircon-protocol/artifacts/contracts/core/ZirconPair.sol/ZirconPair.json'
+import { bytecode } from '../src/abis/ZirconPair.json'
 
 import { keccak256 } from '@ethersproject/solidity'
 

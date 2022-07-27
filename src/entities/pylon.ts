@@ -13,7 +13,7 @@ import {
     FIVE,
     _997,
     _1000,
-    ChainId, PYLON_FACTORY_ADDRESS, TWO, BASE, PT_CODE_HASH
+    ChainId, PYLON_FACTORY_ADDRESS, TWO, BASE, PT_CODE_HASH, PT_FACTORY_ADDRESS
 } from '../constants'
 import { sqrt, parseBigintIsh } from '../utils'
 import { InsufficientReservesError, InsufficientInputAmountError } from '../errors'
@@ -60,12 +60,12 @@ export class Pylon {
     public static getLiquidityAddresses(tokenA: Token, tokenB: Token): [string, string] {
         const pylonAddress = Pylon.getAddress(tokenA, tokenB);
         const floatLiquidityAddress = getCreate2Address(
-            PYLON_FACTORY_ADDRESS[tokenA.chainId],
+            PT_FACTORY_ADDRESS[tokenA.chainId],
             keccak256(["bytes"], [pack(['address', 'address'], [tokenA.address, pylonAddress])]),
             PT_CODE_HASH
         )
         const anchorLiquidityAddress = getCreate2Address(
-            PYLON_FACTORY_ADDRESS[tokenB.chainId],
+            PT_FACTORY_ADDRESS[tokenB.chainId],
             keccak256(["bytes"], [pack(['address', 'address'], [tokenB.address, pylonAddress])]),
             PT_CODE_HASH
         )
@@ -80,12 +80,12 @@ export class Pylon {
         this.pair = pair
 
         const floatLiquidityAddress = getCreate2Address(
-            PYLON_FACTORY_ADDRESS[tokenAmounts[0].token.chainId],
+            PT_FACTORY_ADDRESS[tokenAmounts[0].token.chainId],
             keccak256(["bytes"], [pack(['address', 'address'], [tokenAmounts[0].token.address, this.address])]),
             PT_CODE_HASH
         )
         const anchorLiquidityAddress = getCreate2Address(
-            PYLON_FACTORY_ADDRESS[tokenAmounts[1].token.chainId],
+            PT_FACTORY_ADDRESS[tokenAmounts[1].token.chainId],
             keccak256(["bytes"], [pack(['address', 'address'], [tokenAmounts[1].token.address, this.address])]),
             PT_CODE_HASH
         )

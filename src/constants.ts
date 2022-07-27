@@ -1,5 +1,5 @@
 import JSBI from 'jsbi'
-import { factory, pylonFactory } from './moonbase_address.json'
+import { factory, pylonFactory, ptFactory } from './moonbase_address.json'
 
 // exports for external consumption
 export type BigintIsh = JSBI | bigint | string
@@ -36,10 +36,16 @@ export const PYLON_FACTORY_ADDRESS: { [key: string]: string } = {
   [ChainId.MOONBASE]: pylonFactory,
   [ChainId.MOONSHADOW]: pylonFactory
 }
+export const PT_FACTORY_ADDRESS: { [key: string]: string } = {
+  [ChainId.STANDALONE]: '0x5c4242beB94dE30b922f57241f1D02f36e906915',
+  [ChainId.MOONROCK]: ptFactory,
+  [ChainId.MOONBASE]: ptFactory,
+  [ChainId.MOONSHADOW]: ptFactory
+}
 
-export const INIT_CODE_HASH = '0x329b2552c58a4152d353ccd1a4c1ef40a65c42c04acff73af036498dc3060b1c'
-export const PYLON_CODE_HASH = '0xddad0eac4d55df88dc4ad7e739a068c994a11e6f36b76e12bb8fdd3b1b395e8c'
-export const PT_CODE_HASH = '0x9d48a58c279366838bc32a0283dce84c543f84aaef300a6127a1b849768b97ec'
+export const INIT_CODE_HASH = '0x56dc0fd33f86964624c6b1dc95716cc706e4a7bd715f3f01589b510655b33ae2'
+export const PYLON_CODE_HASH = '0xe9f29a32ecac75732f474db4cc8a5f7200df9570f98d23ea3e38151c6d21d16c'
+export const PT_CODE_HASH = '0x76d70bb4b33576e895f22f07f4493a4ec0beec4051cc56a2586110867e2a6a78'
 
 export const MINIMUM_LIQUIDITY = JSBI.BigInt(1000)
 
