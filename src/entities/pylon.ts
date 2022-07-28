@@ -22,6 +22,7 @@ import { Token } from './token'
 import {Pair} from "../entities";
 
 // let PYLON_ADDRESS_CACHE: { [token0Address: string]: { [token1Address: string]: string } } = {}
+let PT_ADDRESS_CACHE: { [tokenAddress: string]: { [pylonAddress: string]: string } } = {}
 
 export class Pylon {
     public readonly floatLiquidityToken: Token
@@ -30,51 +31,38 @@ export class Pylon {
     private readonly tokenAmounts: [TokenAmount, TokenAmount]
     public readonly address: string
 
-
     public static getAddress(tokenA: Token, tokenB: Token): string {
         const pairAddress: string = Pair.getAddress(tokenA, tokenB);
-        //console.log(tokenA, tokenB, pairAddress)
-        console.log("pair", pairAddress)
-
         return getCreate2Address(
             PYLON_FACTORY_ADDRESS[tokenA.chainId],
             keccak256(['bytes'], [pack(['address', 'address', 'address'], [tokenA.address, tokenB.address, pairAddress])]),
             PYLON_CODE_HASH
         )
-
-        // if (PYLON_ADDRESS_CACHE?.[tokens[0].address]?.[tokens[1].address] === undefined) {
-        //     PYLON_ADDRESS_CACHE = {
-        //         ...PYLON_ADDRESS_CACHE,
-        //         [tokens[0].address]: {
-        //             ...PYLON_ADDRESS_CACHE?.[tokens[0].address],
-        //             [tokens[1].address]: getCreate2Address(
-        //                 PYLON_FACTORY_ADDRESS[tokens[0].chainId],
-        //                 keccak256(['bytes'], [pack(['address', 'address', 'address'], [tokens[0].address, tokens[1].address, pairAddress])]),
-        //                 PYLON_CODE_HASH
-        //             )
-        //         }
-        //     }
-        // }
-        //
-        // return PYLON_ADDRESS_CACHE[tokens[0].address][tokens[1].address]
     }
     public static ptCodeHash = (token: Token): string => keccak256(["bytes"], [pack(['bytes', 'bytes'], [ptBytecode,  new AbiCoder().encode(["address"], [PYLON_FACTORY_ADDRESS[token.chainId]]) ])])
 
+    private static getPTAddress(token: Token, pylonAddress: string): string {
+        if (PT_ADDRESS_CACHE?.[token.address]?.[pylonAddress] === undefined) {
+            PT_ADDRESS_CACHE = {
+                ...PT_ADDRESS_CACHE,
+                [token.address]: {
+                    ...PT_ADDRESS_CACHE?.[token.address],
+                    [pylonAddress]: getCreate2Address(
+                        PT_FACTORY_ADDRESS[token.chainId],
+                        keccak256(["bytes"], [pack(['address', 'address'], [token.address, pylonAddress])]),
+                        Pylon.ptCodeHash(token)
+                    )
+                }
+            }
+        }
+
+        return PT_ADDRESS_CACHE[token.address][pylonAddress]
+    }
     public static getLiquidityAddresses(tokenA: Token, tokenB: Token): [string, string] {
         const pylonAddress = Pylon.getAddress(tokenA, tokenB);
 
-        const floatLiquidityAddress = getCreate2Address(
-            PT_FACTORY_ADDRESS[tokenA.chainId],
-            keccak256(["bytes"], [pack(['address', 'address'], [tokenA.address, pylonAddress])]),
-            Pylon.ptCodeHash(tokenA)
-
-        )
-        const anchorLiquidityAddress = getCreate2Address(
-            PT_FACTORY_ADDRESS[tokenB.chainId],
-            keccak256(["bytes"], [pack(['address', 'address'], [tokenB.address, pylonAddress])]),
-            Pylon.ptCodeHash(tokenB)
-        )
-
+        const floatLiquidityAddress = Pylon.getPTAddress(tokenA, pylonAddress);
+        const anchorLiquidityAddress = Pylon.getPTAddress(tokenB, pylonAddress);
         return [floatLiquidityAddress, anchorLiquidityAddress]
     }
 
@@ -84,17 +72,8 @@ export class Pylon {
         this.address = Pylon.getAddress(tokenAmounts[0].token, tokenAmounts[1].token);
         this.pair = pair
 
-        const floatLiquidityAddress = getCreate2Address(
-            PT_FACTORY_ADDRESS[tokenAmounts[0].token.chainId],
-            keccak256(["bytes"], [pack(['address', 'address'], [tokenAmounts[0].token.address, this.address])]),
-            Pylon.ptCodeHash(tokenAmounts[0].token)
-
-        )
-        const anchorLiquidityAddress = getCreate2Address(
-            PT_FACTORY_ADDRESS[tokenAmounts[1].token.chainId],
-            keccak256(["bytes"], [pack(['address', 'address'], [tokenAmounts[1].token.address, this.address])]),
-            Pylon.ptCodeHash(tokenAmounts[1].token)
-        )
+        const floatLiquidityAddress = Pylon.getPTAddress(tokenAmount0.token, this.address);
+        const anchorLiquidityAddress = Pylon.getPTAddress(tokenAmount1.token, this.address);
 
         this.floatLiquidityToken = new Token(
             tokenAmounts[0].token.chainId,
