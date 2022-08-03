@@ -28,7 +28,23 @@ export function parseBigintIsh(bigintIsh: BigintIsh): JSBI {
     ? JSBI.BigInt(bigintIsh.toString())
     : JSBI.BigInt(bigintIsh)
 }
-
+// private sqrt(value: JSBI) {
+//     invariant(JSBI.greaterThan(value, ZERO), 'NEGATIVE')
+//     if (JSBI.lessThanOrEqual(value, TWO)) {
+//         return value;
+//     }
+//
+//     function newtonIteration(n: JSBI, x0: JSBI): JSBI {
+//         const x1 = JSBI.signedRightShift(JSBI.add(JSBI.divide(n, x0), x0), ONE);
+//
+//         if (JSBI.equal(x0, x1) || JSBI.equal(x0, JSBI.subtract(x1, ONE))) {
+//             return x0;
+//         }
+//         return newtonIteration(n, x1);
+//     }
+//
+//     return newtonIteration(value, ONE);
+// }
 // mock the on-chain sqrt function
 export function sqrt(y: JSBI): JSBI {
   validateSolidityTypeInstance(y, SolidityType.uint256)
