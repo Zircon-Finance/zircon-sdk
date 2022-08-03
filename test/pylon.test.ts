@@ -1,4 +1,4 @@
-import {ChainId, Token, Pylon, Pair, TokenAmount, PylonFactory} from '../src'
+import {ChainId, Token, Pylon, Pair, TokenAmount, PylonFactory, ZERO} from '../src'
 import JSBI from "jsbi";
 
 describe('Pylon', () => {
@@ -7,6 +7,7 @@ describe('Pylon', () => {
     const FP = new Token(ChainId.MOONBASE, '0x821309aBA1372bfeF9F31FD23d8788876EB2E311', 18, 'ZR-FT', 'Zircon FT')
     const AP = new Token(ChainId.MOONBASE, '0x47E80813e669864E9C96d395A4e7AD6264412627', 18, 'ZR-AT', 'Zircon AT')
     // const PT = new Token(ChainId.MOONBASE, '0x10AD3b25F0CD7Ed4EA01A95d2f1bf9E4bE987161', 18, 'ZR-AT', 'Zircon AT')
+    const pylonFactory = new PylonFactory(JSBI.BigInt(4e16), JSBI.BigInt(100), JSBI.BigInt(1), JSBI.BigInt(50), JSBI.BigInt(10), JSBI.BigInt(30), JSBI.BigInt(2), JSBI.BigInt(240), JSBI.BigInt(3));
 
 
     describe('Pool tokens', () => {
@@ -75,24 +76,37 @@ describe('Pylon', () => {
     // strikeBlock:  0
     // blockNumber:  22
     // END VALUES
+
     describe('Async Minting', () => {
-        it('Calculating async minting', () => {
-            const pylonFactory = new PylonFactory(JSBI.BigInt(4e16), JSBI.BigInt(100), JSBI.BigInt(1), JSBI.BigInt(50), JSBI.BigInt(10), JSBI.BigInt(30), JSBI.BigInt(2), JSBI.BigInt(240), JSBI.BigInt(3));
+        const mintTestCases = [
+            ['1846818181818181818181', '5757727272727272727272', '7727272727272727273', '24090909090909090909',
+                '3260901012484607833844','259234808523880957500', "154545454545454545763", '25000000000000000000', '25000000000000000000', "481818181818181818181", "499999999999999999",
+            "499999999999999999", 0, 0, 1517, 1, 0, 0, '16036132075471698175', 0],
+        ].map(a => a.map(n => (JSBI.BigInt(n))))
+        mintTestCases.forEach((mintCase, i) => {
+            it('Calculating async minting' + i , () => {
+                const pylon = new Pylon(new Pair(new TokenAmount(USDC, mintCase[0]), new TokenAmount(DAI, mintCase[1])), new TokenAmount(USDC, mintCase[2]), new TokenAmount(DAI, mintCase[3]))
 
-            const pylon = new Pylon(new Pair(new TokenAmount(USDC, '1846818181818181818181'), new TokenAmount(DAI, '5757727272727272727272')), new TokenAmount(USDC, '7727272727272727273'), new TokenAmount(DAI, '24090909090909090909'))
+                let totalSupply = new TokenAmount(pylon.pair.liquidityToken, mintCase[4])
+                let ptb = new TokenAmount(pylon.pair.liquidityToken, mintCase[5])
+                const isFloat = JSBI.equal(mintCase[19], ZERO)
+                let ptTotalSupply = new TokenAmount(isFloat ? FP : AP, mintCase[6])
+                let floatSupply = new TokenAmount(USDC, mintCase[7])
+                let anchorSupply = new TokenAmount(DAI, mintCase[8])
+                let liquidity: TokenAmount
+                if (isFloat) {
+                    liquidity = pylon.getFloatAsyncLiquidityMinted(totalSupply, ptTotalSupply, floatSupply, anchorSupply,
+                        mintCase[9], mintCase[10], mintCase[11],
+                        ptb, mintCase[12], mintCase[13], mintCase[14], pylonFactory, mintCase[15], mintCase[16], mintCase[17])
+                }else{
+                    liquidity = pylon.getAnchorAsyncLiquidityMinted(totalSupply, ptTotalSupply, floatSupply, anchorSupply,
+                        mintCase[9], mintCase[10], mintCase[11],
+                        ptb, mintCase[12], mintCase[13], mintCase[14], pylonFactory, mintCase[15], mintCase[16], mintCase[17])
+                }
 
-            let totalSupply = new TokenAmount(pylon.pair.liquidityToken, '3260901012484607833844')
-            let ptb = new TokenAmount(pylon.pair.liquidityToken, '259234808523880957500')
-            //let anchorTotalSupply = new TokenAmount(AP, '481818181818181818181')
-            let floatTotalSupply = new TokenAmount(FP, '154545454545454545763')
-            let floatSupply = new TokenAmount(USDC, '25000000000000000000')
-            let anchorSupply = new TokenAmount(DAI, '25000000000000000000')
 
-            let liquidity = pylon.getFloatAsyncLiquidityMinted(totalSupply, floatTotalSupply, floatSupply, anchorSupply,
-                JSBI.BigInt("481818181818181818181"), JSBI.BigInt("499999999999999999"), JSBI.BigInt("499999999999999999"),
-                ptb, JSBI.BigInt(0), JSBI.BigInt(0), JSBI.BigInt(1517), pylonFactory, JSBI.BigInt(1), JSBI.BigInt(0), JSBI.BigInt(0))
-
-            console.log("liquidity", liquidity.raw.toString())
+                expect(liquidity.raw.toString()).toEqual(mintCase[18].toString())
+            })
         })
     })
 })
