@@ -141,10 +141,8 @@ export class Pylon {
     private updateSync(vabLast: JSBI, ptb: TokenAmount, ptt: TokenAmount, feeValueAnchor: JSBI, muMulDecimals: JSBI): {gamma: JSBI, vab:JSBI} {
         // Calculating Total Pool Value Anchor Prime
         let tpva = this.translateToPylon(JSBI.multiply(TWO, this.getPairReserves()[1].raw), ptb, ptt);
-        console.log('tpva', ptb.raw.toString(), ptt.raw.toString(), tpva.toString())
         // Here is the Virtual Anchor Balance
         let multiplier = JSBI.divide(JSBI.multiply(feeValueAnchor, JSBI.subtract(BASE, muMulDecimals)), BASE)
-        console.log("multiplier", vabLast.toString(), multiplier.toString())
         let vab = JSBI.add(vabLast, multiplier);
 
         let gamma: JSBI;
@@ -153,7 +151,6 @@ export class Pylon {
         }else{
             gamma = JSBI.divide(JSBI.multiply(BASE, tpva), JSBI.multiply(JSBI.subtract(vab, this.reserve1.raw), FOUR))
         }
-        console.log("gamma, vab", gamma.toString(), vab.toString())
         return {gamma, vab};
     }
 
@@ -165,7 +162,6 @@ export class Pylon {
         let ta0 = new TokenAmount(this.token0, JSBI.add(reserves[0].raw, fee))
         let ta1 = new TokenAmount(this.token1, JSBI.subtract(reserves[1].raw, outputAmount[0].raw))
 
-        console.log("new reserves: ", ta0.raw.toString(), ta1.raw.toString())
         this.pair = new Pair(isFloatR0 ? ta0 : ta1,isFloatR0 ? ta1 : ta0 )
     }
 
@@ -235,16 +231,12 @@ export class Pylon {
                 bleed = JSBI.divide(blockDiff, TEN)
             }
             let newGammaEMA = JSBI.divide(JSBI.add(JSBI.multiply(gammaEMA, EMASamples), thisBlockEMA), JSBI.add(JSBI.add(EMASamples, ONE), bleed));
-            console.log(`newGammaEMA: ${newGammaEMA.toString()}`)
             let blockEMA: JSBI;
             if(JSBI.greaterThan(gamma, oldGamma)){
                 blockEMA = JSBI.subtract(gamma, oldGamma);
             }else{
                 blockEMA = JSBI.subtract(oldGamma, gamma);
             }
-            console.log(`oldGamma: ${oldGamma.toString()}`)
-            console.log(`gamma: ${gamma.toString()}`)
-            console.log(`blockEMA: ${blockEMA.toString()}`)
 
             if (JSBI.greaterThan(newGammaEMA, blockEMA)){
                 return newGammaEMA;
@@ -314,10 +306,8 @@ export class Pylon {
         let minThreshold = JSBI.BigInt(45e16);
         let maxThreshold = JSBI.BigInt(55e16);
         if(JSBI.lessThanOrEqual(gamma, minThreshold) || JSBI.greaterThanOrEqual(gamma, maxThreshold)){
-            console.log("1")
             return JSBI.divide(JSBI.multiply(JSBI.multiply(maxFee, x), x), JSBI.BigInt(25e36));
         }else{
-            console.log("2")
             return JSBI.add(JSBI.divide(JSBI.multiply(JSBI.multiply(JSBI.multiply(minFee, x), x), JSBI.BigInt(36)), DOUBLE_BASE), minFee);
         }
     }
@@ -327,7 +317,6 @@ export class Pylon {
         let getFeeByGamma = this.getFeeByGamma(gamma, pylonFactory.minFee, pylonFactory.maxFee);
 
         if(JSBI.greaterThanOrEqual(maxDerivative, pylonFactory.deltaGammaThreshold)){
-            console.log("2")
             let strikeDiff = JSBI.subtract(blockNumber, strikeBlock);
             let cooldownBlocks = JSBI.divide(BASE, pylonFactory.deltaGammaThreshold);
             if  (JSBI.lessThanOrEqual(strikeDiff, cooldownBlocks)) {
@@ -352,7 +341,6 @@ export class Pylon {
         }
 
         let fee = JSBI.divide(JSBI.multiply(getFeeByGamma, amount), _10000);
-        console.log("1", fee.toString());
         return {newAmount: JSBI.subtract(amount, fee), fee, deltaApplied: false, blocked: false}
     }
 
@@ -420,38 +408,6 @@ export class Pylon {
         )
         return [inputAmount, new Pair(inputReserve.add(inputAmount), outputReserve.subtract(outputAmount))]
     }
-//
-//     uint balance0 = IUniswapV2ERC20(pylonToken.float).balanceOf(address(this));
-//     uint balance1 = IUniswapV2ERC20(pylonToken.anchor).balanceOf(address(this));
-//     notZero(balance0);
-//     notZero(balance1);
-//
-//     // Let's get the balances so we can see what the user send us
-//     // As we are initializing the reserves are going to be null
-//     // Let's see if the pair contains some reserves
-// (uint112 _reservePair0, uint112 _reservePair1) = getPairReservesNormalized();
-//     //        lastPoolTokens = IZirconPair(pairAddress).totalSupply();
-//     //        lastK = _reservePair0.mul(_reservePair1);
-//     // If pair contains reserves we have to use the ratio of the Pair so...
-//     virtualAnchorBalance = balance1;
-//
-//     if (_reservePair0 > 0 && _reservePair1 > 0) {
-//     uint tpvAnchorPrime = (virtualAnchorBalance.add(balance0.mul(_reservePair1)/_reservePair0));
-//
-//     if (virtualAnchorBalance < tpvAnchorPrime/2) {
-//     gammaMulDecimals = 1e18 - (virtualAnchorBalance.mul(1e18)/(tpvAnchorPrime));
-// } else {
-//     gammaMulDecimals = tpvAnchorPrime.mul(1e18)/(virtualAnchorBalance.mul(4)); // Subflow already checked by if statement
-// }
-// // This is gamma formula when FTV <= 50%
-// } else {
-//     // When Pair is not initialized let's start gamma to 0.5
-//     gammaMulDecimals = 500000000000000000;
-// }
-//
-// // Time to mint some tokens
-// (anchorLiquidity) = _calculateSyncLiquidity(balance1, 0, _reservePair1, anchorPoolTokenAddress, true);
-// (floatLiquidity) = _calculateSyncLiquidity(balance0, 0, _reservePair0, floatPoolTokenAddress, false);
 
 public initializeValues(
         totalSupply: TokenAmount,
@@ -667,7 +623,6 @@ public initializeValues(
         invariant(anchorTotalSupply.token.equals(this.anchorLiquidityToken), 'ANCHOR LIQUIDITY')
         invariant(totalSupply.token.equals(this.pair.liquidityToken), 'LIQUIDITY')
         invariant(tokenAmount.token.equals(this.token1), 'TOKEN')
-        console.log(anchorTotalSupply.token.equals(this.anchorLiquidityToken));
         let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), ptb, totalSupply, parseBigintIsh(feeValueAnchor), parseBigintIsh(muMulDecimals))
         let ema = this.calculateEMA(parseBigintIsh(emaBlockNumber), parseBigintIsh(blockNumber), parseBigintIsh(strikeBlock),
             parseBigintIsh(gammaEMA), parseBigintIsh(factory.EMASamples), parseBigintIsh(thisBlockEMA), parseBigintIsh(gamma), parseBigintIsh(result.gamma))
@@ -719,7 +674,6 @@ public initializeValues(
         //invariant((pair.token0.equals(this.token0) && pair.token1.equals(this.token1)) || (pair.token0.equals(this.token1) && pair.token1.equals(this.token0)), 'LIQUIDITY')
         invariant(tokenAmount.token.equals(this.token0), 'TOKEN')
         let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), ptb, totalSupply, parseBigintIsh(feeValueAnchor), parseBigintIsh(muMulDecimals))
-        console.log("gamma and vab: ", result.gamma.toString(), result.vab.toString())
 
         let ema = this.calculateEMA(parseBigintIsh(emaBlockNumber), parseBigintIsh(blockNumber), parseBigintIsh(strikeBlock),
             parseBigintIsh(gammaEMA), factory.EMASamples, parseBigintIsh(thisBlockEMA), parseBigintIsh(gamma), parseBigintIsh(result.gamma))
@@ -730,11 +684,8 @@ public initializeValues(
         }
         let pairReserveTranslated = this.translateToPylon(this.pair!.reserve0.raw, ptb, totalSupply);
         let amountsToInvest = this.handleSyncAndAsync(factory.maxSync, pairReserveTranslated, this.reserve0.raw, fee.newAmount)
-        console.log("sync and async: ", amountsToInvest.sync.toString(), amountsToInvest.async.toString())
         let syncLiquidity: JSBI = ZERO
         if (JSBI.greaterThan(amountsToInvest.sync, ZERO)) {
-            console.log("sync liquidity", amountsToInvest.sync.toString())
-
             syncLiquidity = this.calculatePTU(false, amountsToInvest.sync, totalSupply, ptb, floatTotalSupply, result.vab, result.gamma);
         }
         let asyncLiquidity: JSBI = ZERO;
