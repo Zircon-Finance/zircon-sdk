@@ -17,6 +17,21 @@ describe('Pylon', () => {
         })
     })
 
+
+    it('initPylon:!1', async () => {
+        const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
+        const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
+        const pair = new Pair(new TokenAmount(tokenA, '5000000000000000000'), new TokenAmount(tokenB, '10000000000000000000'))
+        const pylon = new Pylon(pair, new TokenAmount(tokenA, '0'), new TokenAmount(tokenB, '0'))
+        let init = pylon.initializeValues(
+            new TokenAmount(pair.liquidityToken, "7071067811865475244"),
+            new TokenAmount(tokenA, "50000000000000000"),
+            new TokenAmount(tokenB, "100000000000000000")
+        )
+        expect(init[0].toString(10)).toEqual('49999999999999000')
+        expect(init[1].toString(10)).toEqual('99999999999999000')
+    })
+
     describe('Async Minting', () => {
         const mintTestCases = [
             ['1846818181818181818181', '5757727272727272727272', '7727272727272727273', '24090909090909090909',

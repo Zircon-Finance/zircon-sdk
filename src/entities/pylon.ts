@@ -420,22 +420,58 @@ export class Pylon {
         )
         return [inputAmount, new Pair(inputReserve.add(inputAmount), outputReserve.subtract(outputAmount))]
     }
+//
+//     uint balance0 = IUniswapV2ERC20(pylonToken.float).balanceOf(address(this));
+//     uint balance1 = IUniswapV2ERC20(pylonToken.anchor).balanceOf(address(this));
+//     notZero(balance0);
+//     notZero(balance1);
+//
+//     // Let's get the balances so we can see what the user send us
+//     // As we are initializing the reserves are going to be null
+//     // Let's see if the pair contains some reserves
+// (uint112 _reservePair0, uint112 _reservePair1) = getPairReservesNormalized();
+//     //        lastPoolTokens = IZirconPair(pairAddress).totalSupply();
+//     //        lastK = _reservePair0.mul(_reservePair1);
+//     // If pair contains reserves we have to use the ratio of the Pair so...
+//     virtualAnchorBalance = balance1;
+//
+//     if (_reservePair0 > 0 && _reservePair1 > 0) {
+//     uint tpvAnchorPrime = (virtualAnchorBalance.add(balance0.mul(_reservePair1)/_reservePair0));
+//
+//     if (virtualAnchorBalance < tpvAnchorPrime/2) {
+//     gammaMulDecimals = 1e18 - (virtualAnchorBalance.mul(1e18)/(tpvAnchorPrime));
+// } else {
+//     gammaMulDecimals = tpvAnchorPrime.mul(1e18)/(virtualAnchorBalance.mul(4)); // Subflow already checked by if statement
+// }
+// // This is gamma formula when FTV <= 50%
+// } else {
+//     // When Pair is not initialized let's start gamma to 0.5
+//     gammaMulDecimals = 500000000000000000;
+// }
+//
+// // Time to mint some tokens
+// (anchorLiquidity) = _calculateSyncLiquidity(balance1, 0, _reservePair1, anchorPoolTokenAddress, true);
+// (floatLiquidity) = _calculateSyncLiquidity(balance0, 0, _reservePair0, floatPoolTokenAddress, false);
 
-    public initializeValues(
+public initializeValues(
         totalSupply: TokenAmount,
         tokenAmountA: TokenAmount,
         tokenAmountB: TokenAmount,
     ): [JSBI, JSBI] {
+        let balance0 = tokenAmountA.raw;
         let vab = tokenAmountB.raw
-        let vfb = tokenAmountA.raw
-        let denominator;
+        let gamma;
 
-        if (JSBI.notEqual(this.getPairReserves()[0].raw, ZERO)) {
-            denominator = JSBI.divide(JSBI.multiply(vab, this.getPairReserves()[0].raw), this.getPairReserves()[1].raw)
-        } else {
-            denominator = JSBI.divide(JSBI.multiply(vab, tokenAmountA.raw), tokenAmountB.raw)
+        if(JSBI.equal(this.getPairReserves()[1].raw, ZERO)) {
+            gamma = JSBI.BigInt("500000000000000000");
+        }else{
+            let tpva = JSBI.add(vab, JSBI.multiply(balance0, JSBI.divide(this.getPairReserves()[1].raw, this.getPairReserves()[0].raw)))
+            if (JSBI.lessThan(vab, JSBI.divide(tpva, TWO))) {
+                gamma = JSBI.subtract(BASE, JSBI.divide(JSBI.multiply(vab, JSBI.multiply(vab, BASE)), tpva))
+            }else{
+                gamma = JSBI.divide(JSBI.multiply(tpva, BASE), JSBI.multiply(vab, FOUR))
+            }
         }
-        let gamma = JSBI.divide(JSBI.multiply(BASE, vfb), JSBI.add(vfb, denominator));
 
         let liquidityFloat: JSBI = this.calculatePTU(false,  tokenAmountA.raw, totalSupply, new TokenAmount(tokenAmountA.token, ZERO), new TokenAmount(this.floatLiquidityToken, ZERO), vab, gamma);
         let liquidityAnchor: JSBI = this.calculatePTU(true,  tokenAmountB.raw, totalSupply, new TokenAmount(tokenAmountA.token, ZERO), new TokenAmount(this.anchorLiquidityToken, ZERO), vab, gamma);
