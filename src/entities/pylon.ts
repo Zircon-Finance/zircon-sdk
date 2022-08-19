@@ -14,7 +14,17 @@ import {
     FIVE,
     _997,
     _1000,
-    ChainId, PYLON_FACTORY_ADDRESS, TWO, BASE, PT_FACTORY_ADDRESS, FOUR, TEN, _100, _10000, DOUBLE_BASE
+    ChainId,
+    PYLON_FACTORY_ADDRESS,
+    TWO,
+    BASE,
+    PT_FACTORY_ADDRESS,
+    FOUR,
+    TEN,
+    _100,
+    _10000,
+    DOUBLE_BASE,
+    FACTORY_ADDRESS,
 } from '../constants'
 import { sqrt, parseBigintIsh } from '../utils'
 import { InsufficientReservesError, InsufficientInputAmountError } from '../errors'
@@ -22,7 +32,7 @@ import { Token } from './token'
 import {Pair} from "../entities";
 import {PylonFactory} from "entities/pylonFactory";
 
-// let PYLON_ADDRESS_CACHE: { [token0Address: string]: { [token1Address: string]: string } } = {}
+let PYLON_ADDRESS_CACHE: {[pair: string] : {[tokenAddress: string]: string}} = {}
 let PT_ADDRESS_CACHE: { [tokenAddress: string]: { [pylonAddress: string]: string } } = {}
 
 export class Pylon {
@@ -34,11 +44,20 @@ export class Pylon {
 
     public static getAddress(tokenA: Token, tokenB: Token): string {
         const pairAddress: string = Pair.getAddress(tokenA, tokenB);
-        return getCreate2Address(
-            PYLON_FACTORY_ADDRESS[tokenA.chainId],
-            keccak256(['bytes'], [pack(['address', 'address', 'address'], [tokenA.address, tokenB.address, pairAddress])]),
-            PYLON_CODE_HASH
-        )
+        if (PYLON_ADDRESS_CACHE?.[pairAddress]?.[tokenA.address] === undefined) {
+            PYLON_ADDRESS_CACHE = {
+                ...PYLON_ADDRESS_CACHE,
+                [pairAddress]: {
+                    ...PYLON_ADDRESS_CACHE?.[pairAddress],
+                    [tokenA.address]: getCreate2Address(
+                        FACTORY_ADDRESS[tokenA.chainId],
+                        keccak256(['bytes'], [pack(['address', 'address', 'address'], [tokenA.address, tokenB.address, pairAddress])]),
+                        PYLON_CODE_HASH
+                    )
+                }
+            }
+        }
+        return PYLON_ADDRESS_CACHE[pairAddress][tokenA.address]
     }
     public static ptCodeHash = (token: Token): string => keccak256(["bytes"], [pack(['bytes', 'bytes'], [ptBytecode,  new AbiCoder().encode(["address"], [PYLON_FACTORY_ADDRESS[token.chainId]]) ])])
     private static getPTAddress(token: Token, pylonAddress: string): string {
@@ -163,6 +182,22 @@ export class Pylon {
         let ta1 = new TokenAmount(this.token1, JSBI.subtract(reserves[1].raw, outputAmount[0].raw))
 
         this.pair = new Pair(isFloatR0 ? ta0 : ta1,isFloatR0 ? ta1 : ta0 )
+    }
+
+    private calculatePTUToAmount(
+        totalSupply: TokenAmount,
+        floatTotalSupply: TokenAmount,
+        tokenAmount: TokenAmount,
+        anchorVirtualBalance: JSBI,
+        ptb: JSBI,
+        gamma: JSBI,
+        isAnchor: boolean): JSBI {
+        if(isAnchor) {
+            return JSBI.divide(JSBI.multiply(anchorVirtualBalance, tokenAmount.raw), floatTotalSupply.raw);
+        }else{
+            //(((_reserve0.mul(_gamma).mul(2)/1e18).add(_reservePylon0)).mul(_ptuAmount))/_totalSupply
+            return JSBI.divide(JSBI.multiply(JSBI.add(JSBI.divide(JSBI.multiply(JSBI.multiply(JSBI.divide(JSBI.multiply(this.getPairReserves()[0].raw, ptb), totalSupply.raw), gamma), TWO), BASE), this.reserve0.raw), tokenAmount.raw), floatTotalSupply.raw)
+        }
     }
 
     // private updateMU(blockNumber: JSBI, muBlockNumber: JSBI, factory: PylonFactory, gamma: JSBI, muOldGamma: JSBI, muMulDecimals: JSBI): JSBI {
@@ -345,6 +380,27 @@ export class Pylon {
     }
 
 
+    private calculateLPTU(
+        totalSupply: TokenAmount,
+        ptTotalSupply: TokenAmount,
+        tokenAmount: JSBI,
+        anchorVirtualBalance: JSBI,
+        gamma: JSBI,
+        ptb: TokenAmount,
+        isAnchor: boolean): JSBI {
+
+        let pylonShare: JSBI;
+        if(isAnchor) {
+            pylonShare = JSBI.divide(JSBI.multiply(ptb.raw, JSBI.subtract(anchorVirtualBalance, this.reserve1.raw)), JSBI.multiply(TWO, this.translateToPylon(this.getPairReserves()[1].raw, ptb, totalSupply)));
+            pylonShare = JSBI.add(pylonShare, JSBI.divide(JSBI.multiply(pylonShare, this.reserve1.raw), this.translateToPylon(JSBI.multiply(this.getPairReserves()[1].raw, TWO), ptb, totalSupply) ))
+        }else{
+            pylonShare = JSBI.divide(JSBI.multiply(gamma, ptb.raw), BASE)
+            pylonShare =  JSBI.add(pylonShare, JSBI.divide(JSBI.multiply(pylonShare, this.reserve0.raw), this.translateToPylon(JSBI.multiply(this.getPairReserves()[0].raw, TWO), ptb, totalSupply) ))
+
+        }
+
+        return JSBI.divide(JSBI.multiply(pylonShare, tokenAmount), ptTotalSupply.raw)
+    }
 
     private getLiquidityFromPoolTokensLiquidity(tokenAmountA: JSBI, tokenAmountB: JSBI, totalSupply: TokenAmount, ptb: TokenAmount, ptTotalSupply: TokenAmount,
                                                 isAnchor: boolean, anchorVirtualBalance?: JSBI, gamma?: JSBI): JSBI {
@@ -361,6 +417,10 @@ export class Pylon {
             amount = JSBI.greaterThan(amountA, amountB) ? amountB : amountA;
         }
         return this.calculatePTU(isAnchor, amount, totalSupply, ptb, ptTotalSupply, anchorVirtualBalance, gamma);
+    }
+
+    private getOmegaSlashing(gamma: JSBI, vab: JSBI, ptb: TokenAmount, ptt: TokenAmount ) {
+        return JSBI.divide(JSBI.multiply(this.translateToPylon(JSBI.multiply(this.getPairReserves()[1].raw, TWO), ptb, ptt), JSBI.subtract(BASE, gamma)), JSBI.subtract(vab, this.reserve1.raw))
     }
 
     public reserveOf(token: Token): TokenAmount {
@@ -409,7 +469,7 @@ export class Pylon {
         return [inputAmount, new Pair(inputReserve.add(inputAmount), outputReserve.subtract(outputAmount))]
     }
 
-public initializeValues(
+    public initializeValues(
         totalSupply: TokenAmount,
         tokenAmountA: TokenAmount,
         tokenAmountB: TokenAmount,
@@ -701,120 +761,149 @@ public initializeValues(
         }
 
         return {liquidity: new TokenAmount(this.anchorLiquidityToken, liquidity), blocked: false, fee: new TokenAmount(this.anchorLiquidityToken, fee.fee), deltaApplied: fee.deltaApplied}
-
     }
 
+    public burnFloat(
+        totalSupply: TokenAmount,
+        floatTotalSupply: TokenAmount,
+        tokenAmountOut: TokenAmount,
+        anchorVirtualBalance: BigintIsh | JSBI,
+        muMulDecimals: BigintIsh,
+        gamma: BigintIsh,
+        ptb: TokenAmount,
+        feeValueAnchor: BigintIsh,
+        strikeBlock: BigintIsh,
+        blockNumber: BigintIsh,
+        factory: PylonFactory,
+        emaBlockNumber: BigintIsh,
+        gammaEMA: BigintIsh,
+        thisBlockEMA: BigintIsh
+    ): TokenAmount {
+        let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), ptb, totalSupply, parseBigintIsh(feeValueAnchor), parseBigintIsh(muMulDecimals))
+        let ema = this.calculateEMA(parseBigintIsh(emaBlockNumber), parseBigintIsh(blockNumber), parseBigintIsh(strikeBlock),
+            parseBigintIsh(gammaEMA), factory.EMASamples, parseBigintIsh(thisBlockEMA), parseBigintIsh(gamma), parseBigintIsh(result.gamma))
 
+        let reservesPTU = this.calculatePTU(false, this.reserve0.raw, totalSupply, ptb, floatTotalSupply, result.vab, result.gamma);
+        let minAmount = JSBI.greaterThan(reservesPTU, tokenAmountOut.raw) ? tokenAmountOut.raw : reservesPTU;
 
-    // public burnFloat(
-    //     totalSupply: TokenAmount,
-    //     floatTotalSupply: TokenAmount,
-    //     tokenAmountOut: TokenAmount,
-    //     anchorVirtualBalance: BigintIsh,
-    //     muMulDecimals: BigintIsh,
-    //     gammaLast: BigintIsh,
-    //     kLast: BigintIsh,
-    //     ptb: TokenAmount,
-    //     feeValueAnchor: BigintIsh,
-    // ): TokenAmount {
-    //     let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), ptb, totalSupply, parseBigintIsh(feeValueAnchor), parseBigintIsh(muMulDecimals))
-    //
-    //     let reservesPTU = this.calculatePTU(false, this.reserve0, totalSupply, ptb, floatTotalSupply, result.vab, result.gamma);
-    //     let minAmount = JSBI.greaterThan(reservesPTU, tokenAmountOut.raw) ? tokenAmountOut.raw : reservesPTU;
-    //
-    //     let amount = this.calculatePTUToAmount(
-    //         totalSupply,
-    //         floatTotalSupply,
-    //         new TokenAmount(tokenAmountOut.token, minAmount),
-    //         result.vab,
-    //         result.gamma,
-    //         ptb.raw,
-    //         false
-    //     )
-    //     if (JSBI.lessThan(reservesPTU, tokenAmountOut.raw)) {
-    //         let adjustedLiq = JSBI.subtract(tokenAmountOut.raw, reservesPTU);
-    //         // console.log("adjustedLiq", adjustedLiq.toString(10))
-    //         let lptu = this.calculateLPTU(totalSupply, floatTotalSupply, adjustedLiq, result.vab, result.gamma, ptb, false);
-    //         // console.log("lptu", lptu.toString(10))
-    //
-    //         //604705541361411447
-    //         let amount0 = JSBI.divide(JSBI.multiply(lptu, this.getPairReserves()[0].raw), totalSupply.raw);
-    //         let amount1 = JSBI.divide(JSBI.multiply(lptu, this.getPairReserves()[1].raw), totalSupply.raw);
-    //         let newPair = new Pair(new TokenAmount(this.getPairReserves()[0].token, JSBI.subtract(this.getPairReserves()[0].raw, amount0)),
-    //             new TokenAmount(this.getPairReserves()[1].token, JSBI.subtract(this.getPairReserves()[1].raw, amount1)));
-    //
-    //         let amountTransformed = newPair.getOutputAmount(new TokenAmount(this.token1, amount1));
-    //         // console.log("amount", amount.toString(10))
-    //
-    //         amount = JSBI.add(amount, JSBI.add(amount0, amountTransformed[0].raw));
-    //         // console.log("amount", amount.toString(10))
-    //
-    //     }
-    //     return  new TokenAmount(tokenAmountOut.token, amount);
-    // }
-    // public burnAnchor(
-    //     totalSupply: TokenAmount,
-    //     anchorTotalSupply: TokenAmount,
-    //     tokenAmountOut: TokenAmount,
-    //     anchorVirtualBalance: BigintIsh,
-    //     muMulDecimals: BigintIsh,
-    //     gammaLast: BigintIsh,
-    //     kLast: BigintIsh,
-    //     ptb: TokenAmount,
-    //     feeValueAnchor: BigintIsh,
-    // ): TokenAmount {
-    //     let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), ptb, totalSupply, parseBigintIsh(feeValueAnchor), parseBigintIsh(muMulDecimals))
-    //
-    //     let reservesPTU = this.calculatePTU(true, this.reserve1, totalSupply, ptb, anchorTotalSupply, result.vab, result.gamma);
-    //     let minAmount = JSBI.greaterThan(reservesPTU, tokenAmountOut.raw) ? tokenAmountOut.raw : reservesPTU;
-    //     let amount = this.calculatePTUToAmount(
-    //         totalSupply,
-    //         anchorTotalSupply,
-    //         new TokenAmount(tokenAmountOut.token, minAmount),
-    //         result.vab,
-    //         result.gamma,
-    //         ptb.raw,
-    //         true
-    //     )
-    //     // console.log("reservesPTU", reservesPTU.toString(10), tokenAmountOut.raw.toString(10))
-    //
-    //     if (JSBI.lessThan(reservesPTU, tokenAmountOut.raw)) {
-    //         // console.log("here")
-    //         let omega = this.getOmegaSlashing(result.gamma, result.vab, ptb, totalSupply);
-    //         console.log("omega", omega.toString(10))
-    //
-    //         let adjustedLiq = JSBI.divide(JSBI.multiply(omega, JSBI.subtract(tokenAmountOut.raw, reservesPTU)), BASE);
-    //         let lptu = this.calculateLPTU(totalSupply, anchorTotalSupply, adjustedLiq, result.vab, result.gamma, ptb, true);
-    //         // console.log("lptu", lptu.toString(10))
-    //
-    //         let amount0 = JSBI.divide(JSBI.multiply(lptu, this.getPairReserves()[0].raw), totalSupply.raw);
-    //         let amount1 = JSBI.divide(JSBI.multiply(lptu, this.getPairReserves()[1].raw), totalSupply.raw);
-    //         // console.log(amount0.toString(10), amount1.toString(10))
-    //         let newPair = new Pair(new TokenAmount(this.getPairReserves()[0].token, JSBI.subtract(this.getPairReserves()[0].raw, amount0)),
-    //             new TokenAmount(this.getPairReserves()[1].token, JSBI.subtract(this.getPairReserves()[1].raw, amount1)));
-    //
-    //         let amountTransformed = newPair.getOutputAmount(new TokenAmount(this.token0, amount0));
-    //         // console.log("amount", amount.toString(10))
-    //
-    //         amount = JSBI.add(amount, JSBI.add(amount1, amountTransformed[0].raw));
-    //         // console.log("amount", amount.toString(10))
-    //
-    //     }
-    //     return new TokenAmount(tokenAmountOut.token, amount);
-    // }
-    //
+        let ptuAmount = this.calculatePTUToAmount(
+            totalSupply,
+            floatTotalSupply,
+            new TokenAmount(tokenAmountOut.token, minAmount),
+            result.vab,
+            result.gamma,
+            ptb.raw,
+            false
+        )
+        let fee1 = this.applyDeltaAndGammaTax(ptuAmount, parseBigintIsh(strikeBlock), parseBigintIsh(blockNumber), result.gamma, factory, ema);
+        let amount = fee1.newAmount
+        this.changePairReserveonFloatSwap(fee1.fee)
+
+        if (JSBI.lessThan(reservesPTU, tokenAmountOut.raw)) {
+            let adjustedLiq = JSBI.subtract(tokenAmountOut.raw, reservesPTU);
+            // console.log("adjustedLiq", adjustedLiq.toString(10))
+            let lptu = this.calculateLPTU(totalSupply, floatTotalSupply, adjustedLiq, result.vab, result.gamma, ptb, false);
+            // console.log("lptu", lptu.toString(10))
+            let fee = this.applyDeltaAndGammaTax(lptu, parseBigintIsh(strikeBlock), parseBigintIsh(blockNumber), result.gamma, factory, ema);
+            this.changePairReserveonFloatSwap(fee.fee)
+
+            //604705541361411447
+            let amount0 = JSBI.divide(JSBI.multiply(fee.newAmount, this.getPairReserves()[0].raw), totalSupply.raw);
+            let amount1 = JSBI.divide(JSBI.multiply(fee.newAmount, this.getPairReserves()[1].raw), totalSupply.raw);
+            let newPair = new Pair(new TokenAmount(this.getPairReserves()[0].token, JSBI.subtract(this.getPairReserves()[0].raw, amount0)),
+                new TokenAmount(this.getPairReserves()[1].token, JSBI.subtract(this.getPairReserves()[1].raw, amount1)));
+
+            let amountTransformed = newPair.getOutputAmount(new TokenAmount(this.token1, amount1));
+            // console.log("amount", amount.toString(10))
+
+            amount = JSBI.add(amount, JSBI.add(amount0, amountTransformed[0].raw));
+            // console.log("amount", amount.toString(10))
+
+        }
+        return  new TokenAmount(tokenAmountOut.token, amount);
+    }
+    public burnAnchor(
+        totalSupply: TokenAmount,
+        anchorTotalSupply: TokenAmount,
+        tokenAmountOut: TokenAmount,
+        anchorVirtualBalance: BigintIsh | JSBI,
+        muMulDecimals: BigintIsh,
+        gamma: BigintIsh,
+        ptb: TokenAmount,
+        feeValueAnchor: BigintIsh,
+        strikeBlock: BigintIsh,
+        blockNumber: BigintIsh,
+        factory: PylonFactory,
+        emaBlockNumber: BigintIsh,
+        gammaEMA: BigintIsh,
+        thisBlockEMA: BigintIsh
+    ): TokenAmount {
+        let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), ptb, totalSupply, parseBigintIsh(feeValueAnchor), parseBigintIsh(muMulDecimals))
+        let ema = this.calculateEMA(parseBigintIsh(emaBlockNumber), parseBigintIsh(blockNumber), parseBigintIsh(strikeBlock),
+            parseBigintIsh(gammaEMA), factory.EMASamples, parseBigintIsh(thisBlockEMA), parseBigintIsh(gamma), parseBigintIsh(result.gamma))
+
+        let reservesPTU = this.calculatePTU(true, this.reserve1.raw, totalSupply, ptb, anchorTotalSupply, result.vab, result.gamma);
+        let minAmount = JSBI.greaterThan(reservesPTU, tokenAmountOut.raw) ? tokenAmountOut.raw : reservesPTU;
+        let ptuAmount = this.calculatePTUToAmount(
+            totalSupply,
+            anchorTotalSupply,
+            new TokenAmount(tokenAmountOut.token, minAmount),
+            result.vab,
+            result.gamma,
+            ptb.raw,
+            true
+        )
+        let fee1 = this.applyDeltaAndGammaTax(ptuAmount, parseBigintIsh(strikeBlock), parseBigintIsh(blockNumber), result.gamma, factory, ema);
+        let amount = fee1.newAmount
+        // console.log("reservesPTU", reservesPTU.toString(10), tokenAmountOut.raw.toString(10))
+
+        if (JSBI.lessThan(reservesPTU, tokenAmountOut.raw)) {
+            // console.log("here")
+
+            let omega = this.getOmegaSlashing(result.gamma, result.vab, ptb, totalSupply);
+            console.log("omega", omega.toString(10))
+
+            let adjustedLiq = JSBI.divide(JSBI.multiply(omega, JSBI.subtract(tokenAmountOut.raw, reservesPTU)), BASE);
+            let lptu = this.calculateLPTU(totalSupply, anchorTotalSupply, adjustedLiq, result.vab, result.gamma, ptb, true);
+            let fee = this.applyDeltaAndGammaTax(lptu, parseBigintIsh(strikeBlock), parseBigintIsh(blockNumber), result.gamma, factory, ema);
+
+            // console.log("lptu", lptu.toString(10))
+
+            let amount0 = JSBI.divide(JSBI.multiply(fee.newAmount, this.getPairReserves()[0].raw), totalSupply.raw);
+            let amount1 = JSBI.divide(JSBI.multiply(fee.newAmount, this.getPairReserves()[1].raw), totalSupply.raw);
+            // console.log(amount0.toString(10), amount1.toString(10))
+            let newPair = new Pair(new TokenAmount(this.getPairReserves()[0].token, JSBI.subtract(this.getPairReserves()[0].raw, amount0)),
+                new TokenAmount(this.getPairReserves()[1].token, JSBI.subtract(this.getPairReserves()[1].raw, amount1)));
+
+            let amountTransformed = newPair.getOutputAmount(new TokenAmount(this.token0, amount0));
+            // console.log("amount", amount.toString(10))
+
+            amount = JSBI.add(fee1.newAmount, JSBI.add(amount1, amountTransformed[0].raw));
+            // console.log("amount", amount.toString(10))
+
+        }
+        return new TokenAmount(tokenAmountOut.token, amount);
+    }
+
     // public burnAsyncAnchor(
     //     totalSupply: TokenAmount,
     //     anchorTotalSupply: TokenAmount,
     //     tokenAmountOut: TokenAmount,
-    //     anchorVirtualBalance: BigintIsh,
+    //     anchorVirtualBalance: BigintIsh | JSBI,
     //     muMulDecimals: BigintIsh,
-    //     gammaLast: BigintIsh,
-    //     kLast: BigintIsh,
+    //     gamma: BigintIsh,
     //     ptb: TokenAmount,
     //     feeValueAnchor: BigintIsh,
+    //     strikeBlock: BigintIsh,
+    //     blockNumber: BigintIsh,
+    //     factory: PylonFactory,
+    //     emaBlockNumber: BigintIsh,
+    //     gammaEMA: BigintIsh,
+    //     thisBlockEMA: BigintIsh
     // ): [TokenAmount, TokenAmount] {
     //     let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), ptb, totalSupply, parseBigintIsh(feeValueAnchor), parseBigintIsh(muMulDecimals))
+    //     let ema = this.calculateEMA(parseBigintIsh(emaBlockNumber), parseBigintIsh(blockNumber), parseBigintIsh(strikeBlock),
+    //         parseBigintIsh(gammaEMA), factory.EMASamples, parseBigintIsh(thisBlockEMA), parseBigintIsh(gamma), parseBigintIsh(result.gamma))
     //
     //     let omega = this.getOmegaSlashing(result.gamma, result.vab, ptb, totalSupply);
     //     console.log("omega", omega.toString(10))
