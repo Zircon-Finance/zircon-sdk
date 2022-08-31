@@ -24,28 +24,28 @@ export enum Rounding {
 }
 
 export const FACTORY_ADDRESS: { [key: string]: string } = {
-  [ChainId.STANDALONE]: '0x5c4242beB94dE30b922f57241f1D02f36e906915',
+  [ChainId.STANDALONE]: '0x2E2Ed0Cfd3AD2f1d34481277b3204d807Ca2F8c2',
   [ChainId.MOONROCK]: factory,
   [ChainId.MOONBASE]: factory,
   [ChainId.MOONSHADOW]: factory
 }
 
 export const PYLON_FACTORY_ADDRESS: { [key: string]: string } = {
-  [ChainId.STANDALONE]: '0x5c4242beB94dE30b922f57241f1D02f36e906915',
+  [ChainId.STANDALONE]: '0xDC11f7E700A4c898AE5CAddB1082cFfa76512aDD',
   [ChainId.MOONROCK]: pylonFactory,
   [ChainId.MOONBASE]: pylonFactory,
   [ChainId.MOONSHADOW]: pylonFactory
 }
 export const PT_FACTORY_ADDRESS: { [key: string]: string } = {
-  [ChainId.STANDALONE]: '0x5c4242beB94dE30b922f57241f1D02f36e906915',
+  [ChainId.STANDALONE]: '0xD8a5a9b31c3C0232E196d518E89Fd8bF83AcAd43',
   [ChainId.MOONROCK]: ptFactory,
   [ChainId.MOONBASE]: ptFactory,
   [ChainId.MOONSHADOW]: ptFactory
 }
 
-export const INIT_CODE_HASH = '0x56dc0fd33f86964624c6b1dc95716cc706e4a7bd715f3f01589b510655b33ae2'
-export const PYLON_CODE_HASH = '0xe9f29a32ecac75732f474db4cc8a5f7200df9570f98d23ea3e38151c6d21d16c'
-export const PT_CODE_HASH = '0x76d70bb4b33576e895f22f07f4493a4ec0beec4051cc56a2586110867e2a6a78'
+export const INIT_CODE_HASH = '0x6fd79b0e91d87f0cbbde1ec083589fd3a329830864a4844a19a1dc8b2de2b73f'
+export const PYLON_CODE_HASH = '0x554807f9720ae1c2a69723856d2a03a510f15ac0f349acb37f8e633d22811107'
+export const PT_CODE_HASH = '0x5e07577d6d3d5dde942bb46c56857a1e529a2cf21da6b7eaa4da096487af8069'
 
 export const MINIMUM_LIQUIDITY = JSBI.BigInt(1000)
 

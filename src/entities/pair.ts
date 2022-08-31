@@ -42,7 +42,6 @@ export class Pair {
         }
       }
     }
-
     return PAIR_ADDRESS_CACHE[tokens[0].address][tokens[1].address]
   }
 

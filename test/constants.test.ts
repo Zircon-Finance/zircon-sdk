@@ -22,7 +22,7 @@ describe('constants', () => {
       expect(COMPUTED_PT_CODE_HASH).toEqual(PT_CODE_HASH)
     })
   })
-  describe('INIT_CODE_HASH', () => {
+  describe('PYLON_CODE_HASH', () => {
     it('matches computed bytecode hash', () => {
       expect(COMPUTED_PYLON_CODE_HASH).toEqual(PYLON_CODE_HASH)
     })

@@ -4,7 +4,6 @@ import { parseBigintIsh } from '../utils'
 
 
 export class PylonFactory{
-
     public deltaGammaThreshold: JSBI;
     public deltaGammaFee: JSBI;
     public minFee: JSBI;
@@ -14,9 +13,10 @@ export class PylonFactory{
     public EMASamples: JSBI;
     public muUpdatePeriod: JSBI;
     public muChangeFactor: JSBI;
+    public dynamicRatio: JSBI;
 
     public constructor(deltaGammaTreshold: BigintIsh, deltaGammaFee: BigintIsh, minFee: BigintIsh, maxFee: BigintIsh, maxSync: BigintIsh,
-                       liquidityFee: BigintIsh, EMASamples: BigintIsh, muUpdatePeriod: BigintIsh, muChangeFactor: BigintIsh){
+                       liquidityFee: BigintIsh, EMASamples: BigintIsh, muUpdatePeriod: BigintIsh, muChangeFactor: BigintIsh, dynamicRatio: BigintIsh){
         this.deltaGammaThreshold = parseBigintIsh(deltaGammaTreshold);
         this.deltaGammaFee = parseBigintIsh(deltaGammaFee);
         this.minFee = parseBigintIsh(minFee);
@@ -26,5 +26,6 @@ export class PylonFactory{
         this.EMASamples = parseBigintIsh(EMASamples);
         this.muUpdatePeriod = parseBigintIsh(muUpdatePeriod);
         this.muChangeFactor = parseBigintIsh(muChangeFactor);
+        this.dynamicRatio = parseBigintIsh(dynamicRatio);
     }
 }
