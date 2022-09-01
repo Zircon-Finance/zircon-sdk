@@ -471,8 +471,17 @@ export class Pylon {
         return this.calculatePTU(isAnchor, amount, totalSupply, ptb, ptTotalSupply, anchorVirtualBalance, gamma);
     }
 
-    private getOmegaSlashing(gamma: JSBI, vab: JSBI, ptb: JSBI, ptt: JSBI ) {
-        return JSBI.divide(JSBI.multiply(this.translateToPylon(JSBI.multiply(this.getPairReserves()[1].raw, TWO), ptb, ptt), JSBI.subtract(BASE, gamma)), JSBI.subtract(vab, this.reserve1.raw))
+    private getOmegaSlashing(gamma: JSBI, vab: JSBI, ptb: JSBI, ptt: JSBI, amount: JSBI ) : JSBI {
+        let pairRSTR = this.translateToPylon(this.pair!.reserve1.raw, ptb, ptt);
+        let omegaSlashing = JSBI.divide(JSBI.multiply(JSBI.subtract(BASE, gamma), JSBI.multiply(pairRSTR, TWO)), JSBI.subtract(vab, this.reserve1.raw));
+        omegaSlashing = JSBI.lessThan(omegaSlashing, BASE) ? omegaSlashing : BASE;
+        console.log(amount.toString(), omegaSlashing.toString())
+
+
+        //Send slashing should send the extra PTUs to Uniswap.
+        //When burn calls the uniswap burn it will also give users the compensation
+        // (extraPercentage) = sendSlashing(omegaMulDecimals, ptu);
+        return  JSBI.divide(JSBI.multiply(amount, omegaSlashing), BASE)
     }
 
     public reserveOf(token: Token): TokenAmount {
@@ -1000,14 +1009,20 @@ export class Pylon {
 
         if (JSBI.lessThan(reservesPTU, tokenAmountOut.raw)) {
 
-            let omega = this.getOmegaSlashing(result.gamma, result.vab, ptb.raw, newTotalSupply);
-
-            let adjustedLiq = JSBI.divide(JSBI.multiply(omega, JSBI.subtract(tokenAmountOut.raw, reservesPTU)), BASE);
+            let adjustedLiq = JSBI.subtract(tokenAmountOut.raw, reservesPTU);
+            // console.log("adjustedLiq", adjustedLiq.toString(10))
             let lptu = this.calculateLPTU(newTotalSupply, anchorTotalSupply, adjustedLiq, result.vab, result.gamma, ptb.raw, true);
+            console.log("lptu", lptu.toString(10))
             let fee = this.applyDeltaAndGammaTax(lptu, parseBigintIsh(strikeBlock), parseBigintIsh(blockNumber), result.gamma, factory, ema);
 
-            let amount0 = JSBI.divide(JSBI.multiply(fee.newAmount, this.getPairReserves()[0].raw), totalSupply.raw);
-            let amount1 = JSBI.divide(JSBI.multiply(fee.newAmount, this.getPairReserves()[1].raw), totalSupply.raw);
+            let omegaPTU = this.getOmegaSlashing(result.gamma, result.vab, ptb.raw, newTotalSupply, fee.newAmount);
+            console.log("omegaPTU", omegaPTU.toString(10))
+            // let adjustedLiq = JSBI.divide(JSBI.multiply(omega, JSBI.subtract(tokenAmountOut.raw, reservesPTU)), BASE);
+            // let lptu = this.calculateLPTU(newTotalSupply, anchorTotalSupply, adjustedLiq, result.vab, result.gamma, ptb.raw, true);
+            // let fee = this.applyDeltaAndGammaTax(lptu, parseBigintIsh(strikeBlock), parseBigintIsh(blockNumber), result.gamma, factory, ema);
+
+            let amount0 = JSBI.divide(JSBI.multiply(omegaPTU, this.getPairReserves()[0].raw), totalSupply.raw);
+            let amount1 = JSBI.divide(JSBI.multiply(omegaPTU, this.getPairReserves()[1].raw), totalSupply.raw);
 
             let newPair = new Pair(new TokenAmount(this.getPairReserves()[0].token, JSBI.subtract(this.getPairReserves()[0].raw, amount0)),
                 new TokenAmount(this.getPairReserves()[1].token, JSBI.subtract(this.getPairReserves()[1].raw, amount1)));
@@ -1020,58 +1035,83 @@ export class Pylon {
         return {amount: new TokenAmount(tokenAmountOut.token, amount), blocked: false, fee: new TokenAmount(this.anchorLiquidityToken, fee1.fee), deltaApplied: fee1.deltaApplied}
     }
 
-    // public burnAsyncAnchor(
-    //     totalSupply: TokenAmount,
-    //     anchorTotalSupply: TokenAmount,
-    //     tokenAmountOut: TokenAmount,
-    //     anchorVirtualBalance: BigintIsh | JSBI,
-    //     muMulDecimals: BigintIsh,
-    //     gamma: BigintIsh,
-    //     ptb: TokenAmount,
-    //     feeValueAnchor: BigintIsh,
-    //     strikeBlock: BigintIsh,
-    //     blockNumber: BigintIsh,
-    //     factory: PylonFactory,
-    //     emaBlockNumber: BigintIsh,
-    //     gammaEMA: BigintIsh,
-    //     thisBlockEMA: BigintIsh
-    // ): [TokenAmount, TokenAmount] {
-    //     let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), ptb, totalSupply, parseBigintIsh(feeValueAnchor), parseBigintIsh(muMulDecimals))
-    //     let ema = this.calculateEMA(parseBigintIsh(emaBlockNumber), parseBigintIsh(blockNumber), parseBigintIsh(strikeBlock),
-    //         parseBigintIsh(gammaEMA), factory.EMASamples, parseBigintIsh(thisBlockEMA), parseBigintIsh(gamma), parseBigintIsh(result.gamma))
-    //
-    //     let omega = this.getOmegaSlashing(result.gamma, result.vab, ptb, totalSupply);
-    //     console.log("omega", omega.toString(10))
-    //     let adjustedLiq = JSBI.divide(JSBI.multiply(omega, tokenAmountOut.raw), BASE)
-    //     let lptu = this.calculateLPTU(totalSupply, anchorTotalSupply, adjustedLiq, result.vab, result.gamma, ptb, true);
-    //     let amount0 = JSBI.divide(JSBI.multiply(lptu, this.getPairReserves()[0].raw), totalSupply.raw);
-    //     let amount1 = JSBI.divide(JSBI.multiply(lptu, this.getPairReserves()[1].raw), totalSupply.raw);
-    //
-    //     return [new TokenAmount(this.token0, amount0), new TokenAmount(this.token1, amount1)];
-    // }
-    //
-    // public burnAsyncFloat(
-    //     totalSupply: TokenAmount,
-    //     floatTotalSupply: TokenAmount,
-    //     tokenAmountOut: TokenAmount,
-    //     anchorVirtualBalance: BigintIsh,
-    //     muMulDecimals: BigintIsh,
-    //     gammaLast: BigintIsh,
-    //     kLast: BigintIsh,
-    //     ptb: TokenAmount,
-    //     feeValueAnchor: BigintIsh,
-    // ): [TokenAmount, TokenAmount] {
-    //     let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), ptb, totalSupply, parseBigintIsh(feeValueAnchor), parseBigintIsh(muMulDecimals))
-    //
-    //
-    //
-    //     let lptu = this.calculateLPTU(totalSupply, floatTotalSupply, tokenAmountOut.raw, result.vab, result.gamma, ptb, false);
-    //     let amount0 = JSBI.divide(JSBI.multiply(lptu, this.getPairReserves()[0].raw), totalSupply.raw);
-    //     let amount1 = JSBI.divide(JSBI.multiply(lptu, this.getPairReserves()[1].raw), totalSupply.raw);
-    //
-    //
-    //     return [new TokenAmount(this.token0, amount0), new TokenAmount(this.token1, amount1)];
-    // }
+    public burnAsyncAnchor(
+        totalSupply: TokenAmount,
+        anchorTotalSupply: TokenAmount,
+        tokenAmountOut: TokenAmount,
+        anchorVirtualBalance: BigintIsh | JSBI,
+        muMulDecimals: BigintIsh,
+        gamma: BigintIsh,
+        ptb: TokenAmount,
+        strikeBlock: BigintIsh,
+        blockNumber: BigintIsh,
+        factory: PylonFactory,
+        emaBlockNumber: BigintIsh,
+        gammaEMA: BigintIsh,
+        thisBlockEMA: BigintIsh,
+        lastRootK: BigintIsh,
+        anchorKFactor: BigintIsh,
+        isLineFormula: boolean,
+        kLast: BigintIsh
+    ): {amountA: TokenAmount, amountB: TokenAmount, blocked: boolean, fee: TokenAmount, deltaApplied: boolean} {
+
+        let ptMinted = this.publicMintFeeCalc(parseBigintIsh(kLast), totalSupply.raw, factory)
+        let newTotalSupply = JSBI.add(totalSupply.raw, ptMinted);
+
+        let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), parseBigintIsh(lastRootK),
+            parseBigintIsh(anchorKFactor), isLineFormula,
+            ptb.raw, newTotalSupply, parseBigintIsh(muMulDecimals))
+
+        let ema = this.calculateEMA(parseBigintIsh(emaBlockNumber), parseBigintIsh(blockNumber), parseBigintIsh(strikeBlock),
+            parseBigintIsh(gammaEMA), factory.EMASamples, parseBigintIsh(thisBlockEMA), parseBigintIsh(gamma), parseBigintIsh(result.gamma))
+        let lptu = this.calculateLPTU(newTotalSupply, anchorTotalSupply, tokenAmountOut.raw, result.vab, result.gamma, ptb.raw, true);
+        let fee = this.applyDeltaAndGammaTax(lptu, parseBigintIsh(strikeBlock), parseBigintIsh(blockNumber), result.gamma, factory, ema);
+        let omegaPTU = this.getOmegaSlashing(result.gamma, result.vab, ptb.raw, newTotalSupply, fee.newAmount);
+
+        let amount0 = JSBI.divide(JSBI.multiply(omegaPTU, this.getPairReserves()[0].raw), newTotalSupply);
+        let amount1 = JSBI.divide(JSBI.multiply(omegaPTU, this.getPairReserves()[1].raw), newTotalSupply);
+
+        return {amountA: new TokenAmount(this.token0, amount0), amountB: new TokenAmount(this.token1, amount1), blocked: fee.blocked, fee: new TokenAmount(this.anchorLiquidityToken, fee.fee), deltaApplied: fee.deltaApplied};
+    }
+
+    public burnAsyncFloat(
+        totalSupply: TokenAmount,
+        floatTotalSupply: TokenAmount,
+        tokenAmountOut: TokenAmount,
+        anchorVirtualBalance: BigintIsh | JSBI,
+        muMulDecimals: BigintIsh,
+        gamma: BigintIsh,
+        ptb: TokenAmount,
+        strikeBlock: BigintIsh,
+        blockNumber: BigintIsh,
+        factory: PylonFactory,
+        emaBlockNumber: BigintIsh,
+        gammaEMA: BigintIsh,
+        thisBlockEMA: BigintIsh,
+        lastRootK: BigintIsh,
+        anchorKFactor: BigintIsh,
+        isLineFormula: boolean,
+        kLast: BigintIsh
+    ): {amountA: TokenAmount, amountB: TokenAmount, blocked: boolean, fee: TokenAmount, deltaApplied: boolean} {
+
+        let ptMinted = this.publicMintFeeCalc(parseBigintIsh(kLast), totalSupply.raw, factory)
+        let newTotalSupply = JSBI.add(totalSupply.raw, ptMinted);
+
+        let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), parseBigintIsh(lastRootK),
+            parseBigintIsh(anchorKFactor), isLineFormula,
+            ptb.raw, newTotalSupply, parseBigintIsh(muMulDecimals))
+
+        let ema = this.calculateEMA(parseBigintIsh(emaBlockNumber), parseBigintIsh(blockNumber), parseBigintIsh(strikeBlock),
+            parseBigintIsh(gammaEMA), factory.EMASamples, parseBigintIsh(thisBlockEMA), parseBigintIsh(gamma), parseBigintIsh(result.gamma))
+        let lptu = this.calculateLPTU(newTotalSupply, floatTotalSupply, tokenAmountOut.raw, result.vab, result.gamma, ptb.raw, false);
+        let fee = this.applyDeltaAndGammaTax(lptu, parseBigintIsh(strikeBlock), parseBigintIsh(blockNumber), result.gamma, factory, ema);
+        let omegaPTU = this.getOmegaSlashing(result.gamma, result.vab, ptb.raw, newTotalSupply, fee.newAmount);
+
+        let amount0 = JSBI.divide(JSBI.multiply(omegaPTU, this.getPairReserves()[0].raw), newTotalSupply);
+        let amount1 = JSBI.divide(JSBI.multiply(omegaPTU, this.getPairReserves()[1].raw), newTotalSupply);
+
+        return {amountA: new TokenAmount(this.token0, amount0), amountB: new TokenAmount(this.token1, amount1), blocked: fee.blocked, fee: new TokenAmount(this.anchorLiquidityToken, fee.fee), deltaApplied: fee.deltaApplied};
+    }
 
     public getLiquidityValue(
         token: Token,

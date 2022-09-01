@@ -36,74 +36,145 @@ describe('Pylon', () => {
 
 
 
-    // liquidityMinted:  45442261645859937
+    // balance send 99366473384711075
     // VALUES WE NEED
     //
-    // Pylon Sync Reserve0 after mint:  21590909090909090
-    // Pylon Sync Reserve1 after mint:  38653191671213737
-    // Pylon Pair Reserve0 after initPylon:  5432954545454545455
-    // Pylon Pair Reserve1 after initPylon:  10870450000000000001
-    // ptb:  613892907991983213
-    // ptt:  7684960719857458457
-    // ftt:  454545454545454545
-    // att:  909090909090909090
-    // gamma:  498799510977290185
-    // muuu:  498799510977290185
-    // vab:  909090909090909090
-    // gEMA:  0
-    // akv:  1000008578633132464
+    // Pylon Sync Reserve0 after mint:  4849879999999999
+    // Pylon Sync Reserve1 after mint:  4624999999999999
+    // Pylon Pair Reserve0 after initPylon:  10095250120000000001
+    // Pylon Pair Reserve1 after initPylon:  5145364939021672441
+    // ptb:  136023645905405573
+    // ptt:  7207091457792298087
+    // ftt:  100098082063856806
+    // att:  149366473384711075
+    // gamma:  254766399968124392
+    // muuu:  254766399968124392
+    // vab:  149366473384711075
+    // gEMA:  1
+    // akv:  1343255396566934696
     // fs:  false
-    // lrkt:  613893113145093460
-    // thisBlockEMA:  1200489022709813
-    // EMABlockNumber:  24
-    // strikeBlock:  0
-    // blockNumber:  25
-    // kLast:  59058660738636363646737704545454545455
+    // lrkt:  136025713050063288
+    // thisBlockEMA:  245233600031875597
+    // EMABlockNumber:  72
+    // strikeBlock:  72
+    // blockNumber:  121
+    // kLast:  51943746018102331397751307859021672441
 
+
+
+
+
+    // describe('Burning', () => {
+    //     const mintTestCases = [
+    //         ['5432954545454545455', '10870450000000000001', '21590909090909090', '84090909090909089',
+    //             '7684960719857458457','613892907991983213', "954533170736769027", '45442261645859937',
+    //             '954533170736769027', '499999999999999998', "499999999999999998",
+    //             0, 23, 22, 0, 2, "613893113145093460", "1000008578633132464", 1, "45437717419695352", 0, "59058660738636363646737704545454545455"],
+    //
+    //         ['5432954545454545455', '10870450000000000001', '21590909090909090', '38653191671213737',
+    //             '7684960719857458457','613892907991983213', "454545454545454545", '227272727272726772',
+    //             '909090909090909090', '498799510977290185', "498799510977290185",
+    //             0, 25, 24, 0, "1200489022709813", "613893113145093460", "1000008578633132464", 0, "225008320489675926", 0, "59058660738636363646737704545454545455"],
+    //
+    //         ['10095250120000000001', '5145364939021672441', '4849879999999999', '4624999999999999',
+    //             '7207091457792298087','136023645905405573', "149366473384711075", '99366473384711075',
+    //             '149366473384711075', '254766399968124392', "254766399968124392",
+    //             72, 121, 72, 1, "245233600031875597", "136025713050063288", "1343255396566934696", 1, "98672814499432621", 1, "51943746018102331397751307859021672441"],
+    //     ].map(a => a.map(n => (JSBI.BigInt(n))))
+    //     mintTestCases.forEach((mintCase, i) => {
+    //         it('Burning' + i , () => {
+    //             const pylon = new Pylon(new Pair(new TokenAmount(USDC, mintCase[0]), new TokenAmount(DAI, mintCase[1])), new TokenAmount(USDC, mintCase[2]), new TokenAmount(DAI, mintCase[3]))
+    //
+    //             let totalSupply = new TokenAmount(pylon.pair.liquidityToken, mintCase[4])
+    //             let ptb = new TokenAmount(pylon.pair.liquidityToken, mintCase[5])
+    //             const isFloat = JSBI.equal(mintCase[18], ZERO)
+    //             const isLineFormula = JSBI.equal(mintCase[20], ZERO)
+    //
+    //             let ptTotalSupply = new TokenAmount(isFloat ? FP : AP, mintCase[6])
+    //             let liquidity = new TokenAmount(USDC, mintCase[7])
+    //             let result: { amount: TokenAmount; blocked: boolean; fee: TokenAmount; deltaApplied: boolean }
+    //             if (isFloat) {
+    //                 result = pylon.burnFloat(totalSupply, ptTotalSupply, liquidity,
+    //                     mintCase[8], mintCase[9], mintCase[10],
+    //                     ptb, mintCase[11], mintCase[12], pylonFactory, mintCase[13], mintCase[14], mintCase[15], mintCase[16], mintCase[17], isLineFormula, mintCase[21])
+    //             }else{
+    //                 result = pylon.burnAnchor(totalSupply, ptTotalSupply, liquidity,
+    //                     mintCase[8], mintCase[9], mintCase[10],
+    //                     ptb, mintCase[11], mintCase[12], pylonFactory, mintCase[13], mintCase[14], mintCase[15], mintCase[16], mintCase[17], isLineFormula, mintCase[21])
+    //             }
+    //
+    //
+    //             expect(result.amount.raw.toString()).toEqual(mintCase[19].toString())
+    //         })
+    //     })
+    // })
+
+
+    // VALUES WE NEED
+    //
+    // Pylon Sync Reserve0 after mint:  807499999999999999
+    // Pylon Sync Reserve1 after mint:  5072159999999999996
+    // Pylon Pair Reserve0 after initPylon:  1601739312972445070805
+    // Pylon Pair Reserve1 after initPylon:  6090076300000000000004
+    // ptb:  87279525603905600997
+    // ptt:  3088945729564632477341
+    // ftt:  17000000000000000000
+    // att:  262806084539709957223
+    // gamma:  179726387453719553
+    // muuu:  179726387453719553
+    // vab:  262806084539709957223
+    // gEMA:  0
+    // akv:  1827921151256990108
+    // fs:  false
+    // lrkt:  87282157808787885051
+    // thisBlockEMA:  320273612546280446
+    // EMABlockNumber:  72
+    // strikeBlock:  72
+    // blockNumber:  125
+    // kLast:  9542161245487750000012424846300000000000004
+    // END VALUES
 
     // ResPair0, resPair1, resPylon0, resPylon1,
     // totalSupply, ptb, ptTotalSupply, liquidity,
     // vab, mu, gamma,
     // strikeBlock, blockNumber, emaBlockNumber, gammaEMA, thisBlockEMA
-    // lastRootK, anchorKFactor, isLineFormula
-
-
-    describe('Burning', () => {
+    // lastRootK, anchorKFactor, isFloat, result1, result2, isLineFormula, kLast
+    describe('Burning Async', () => {
         const mintTestCases = [
-            ['5432954545454545455', '10870450000000000001', '21590909090909090', '84090909090909089',
-                '7684960719857458457','613892907991983213', "954533170736769027", '45442261645859937',
-                '954533170736769027', '499999999999999998', "499999999999999998",
-                0, 23, 22, 0, 2, "613893113145093460", "1000008578633132464", 1, "45437717419695352", 0, "59058660738636363646737704545454545455"],
-
-            ['5432954545454545455', '10870450000000000001', '21590909090909090', '38653191671213737',
-                '7684960719857458457','613892907991983213', "454545454545454545", '227272727272726772',
-                '909090909090909090', '498799510977290185', "498799510977290185",
-                0, 25, 24, 0, "1200489022709813", "613893113145093460", "1000008578633132464", 0, "225008320489675926", 0, "59058660738636363646737704545454545455"]
+            ['1601739312972445070805', '6090076300000000000004', '807499999999999999', '5072159999999999996',
+                '3088945729564632477341','87279525603905600997', "262806084539709957223", '5245152113492748930',
+                '262806084539709957223', '179726387453719553', "179726387453719553",
+                72, 125, 72, 0, "320273612546280446", "87282157808787885051", "1827921151256990108", 1,
+                "690424910634252638", "2625109061836215700", 1, "9542161245487750000012424846300000000000004"],
+            ['1601739312972445070805', '6090076300000000000004', '807499999999999999', '5072159999999999996',
+                '3088945729564632477341','87279525603905600997', "17000000000000000000", '5245152113492748930',
+                '262806084539709957223', '179726387453719553', "179726387453719553",
+                72, 125, 72, 0, "320273612546280446", "87282157808787885051", "1827921151256990108", 0,
+                "3578131992801231441", "13604646318626897107", 1, "9542161245487750000012424846300000000000004"],
         ].map(a => a.map(n => (JSBI.BigInt(n))))
         mintTestCases.forEach((mintCase, i) => {
-            it('Calculating async minting' + i , () => {
+            it('Burning Async' + i , () => {
                 const pylon = new Pylon(new Pair(new TokenAmount(USDC, mintCase[0]), new TokenAmount(DAI, mintCase[1])), new TokenAmount(USDC, mintCase[2]), new TokenAmount(DAI, mintCase[3]))
 
                 let totalSupply = new TokenAmount(pylon.pair.liquidityToken, mintCase[4])
                 let ptb = new TokenAmount(pylon.pair.liquidityToken, mintCase[5])
                 const isFloat = JSBI.equal(mintCase[18], ZERO)
-                const isLineFormula = JSBI.equal(mintCase[20], ZERO)
+                const isLineFormula = JSBI.equal(mintCase[21], ZERO)
 
                 let ptTotalSupply = new TokenAmount(isFloat ? FP : AP, mintCase[6])
                 let liquidity = new TokenAmount(USDC, mintCase[7])
-                let result: { amount: TokenAmount; blocked: boolean; fee: TokenAmount; deltaApplied: boolean }
+                let result: { amountA: TokenAmount; amountB: TokenAmount; blocked: boolean; fee: TokenAmount; deltaApplied: boolean }
                 if (isFloat) {
-                    result = pylon.burnFloat(totalSupply, ptTotalSupply, liquidity,
+                    result = pylon.burnAsyncFloat(totalSupply, ptTotalSupply, liquidity,
                         mintCase[8], mintCase[9], mintCase[10],
-                        ptb, mintCase[11], mintCase[12], pylonFactory, mintCase[13], mintCase[14], mintCase[15], mintCase[16], mintCase[17], isLineFormula, mintCase[21])
+                        ptb, mintCase[11], mintCase[12], pylonFactory, mintCase[13], mintCase[14], mintCase[15], mintCase[16], mintCase[17], isLineFormula, mintCase[22])
                 }else{
-                    result = pylon.burnAnchor(totalSupply, ptTotalSupply, liquidity,
+                    result = pylon.burnAsyncAnchor(totalSupply, ptTotalSupply, liquidity,
                         mintCase[8], mintCase[9], mintCase[10],
-                        ptb, mintCase[11], mintCase[12], pylonFactory, mintCase[13], mintCase[14], mintCase[15], mintCase[16], mintCase[17], isLineFormula, mintCase[21])
+                        ptb, mintCase[11], mintCase[12], pylonFactory, mintCase[13], mintCase[14], mintCase[15], mintCase[16], mintCase[17], isLineFormula, mintCase[22])
                 }
-
-
-                expect(result.amount.raw.toString()).toEqual(mintCase[19].toString())
+                expect(result.amountA.raw.toString()).toEqual(mintCase[19].toString())
+                expect(result.amountB.raw.toString()).toEqual(mintCase[20].toString())
             })
         })
     })
