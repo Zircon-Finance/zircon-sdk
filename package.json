@@ -1,7 +1,7 @@
 {
   "name": "zircon-sdk",
   "license": "MIT",
-  "version": "1.0.6-alpha.10",
+  "version": "1.0.7-beta.0",
   "description": "🛠 An example SDK for building applications on top of Uniswap in Moonbeam.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
