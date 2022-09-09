@@ -11,7 +11,6 @@ import {
     MINIMUM_LIQUIDITY,
     ZERO,
     ONE,
-    FIVE,
     _997,
     _1000,
     ChainId,
@@ -152,6 +151,22 @@ export class Pylon {
         }
     }
 
+    // public getHealthFactor(gamma: JSBI, vab: JSBI, ptb: TokenAmount, ptt: TokenAmount): String {
+    //             // uint omegaMulDecimals = Math.min(1e18, (1e18 - gammaMulDecimals).mul(pairReserves1.mul(2))/(virtualAnchorBalance.sub(reserveAnchor)));
+    //
+    //     // High -> Omega >= 1 && Price >= breakevenPrice
+    //     //
+    //     // Medium -> Omega >= .95 && anchorReserve + poolTokenReserve > (1-Omega) * TPV
+    //     //
+    //     // Low -> Omega <= .95 || anchorReserve + poolTokenReserve < (1-Omega) * TPV
+    //    let omega = this.getOmegaSlashing(gamma, vab, ptb.raw, ptt.raw, BASE)
+    //     if (omega.greaterThan(BASE)) {
+    //
+    //     }
+    //     return ""
+    //
+    // }
+
 
 
     private translateToPylon(toTranslate: JSBI, ptb: JSBI, ptt: JSBI) {
@@ -202,14 +217,16 @@ export class Pylon {
     }
 
     private changePairReserveonFloatSwap(fee: JSBI) {
-        let outputAmount = this.pair.getOutputAmount(new TokenAmount(this.token0, fee))
+        if (JSBI.greaterThan(fee, ZERO)) {
+            let outputAmount = this.pair.getOutputAmount(new TokenAmount(this.token0, fee))
 
-        let reserves = this.getPairReserves()
-        let isFloatR0 = this.token0.equals(this.pair.token0)
-        let ta0 = new TokenAmount(this.token0, JSBI.add(reserves[0].raw, fee))
-        let ta1 = new TokenAmount(this.token1, JSBI.subtract(reserves[1].raw, outputAmount[0].raw))
+            let reserves = this.getPairReserves()
+            let isFloatR0 = this.token0.equals(this.pair.token0)
+            let ta0 = new TokenAmount(this.token0, JSBI.add(reserves[0].raw, fee))
+            let ta1 = new TokenAmount(this.token1, JSBI.subtract(reserves[1].raw, outputAmount[0].raw))
 
-        this.pair = new Pair(isFloatR0 ? ta0 : ta1,isFloatR0 ? ta1 : ta0 )
+            this.pair = new Pair(isFloatR0 ? ta0 : ta1, isFloatR0 ? ta1 : ta0)
+        }
     }
 
     private calculatePTUToAmount(
@@ -474,12 +491,8 @@ export class Pylon {
         let pairRSTR = this.translateToPylon(this.pair!.reserve1.raw, ptb, ptt);
         let omegaSlashing = JSBI.divide(JSBI.multiply(JSBI.subtract(BASE, gamma), JSBI.multiply(pairRSTR, TWO)), JSBI.subtract(vab, this.reserve1.raw));
         omegaSlashing = JSBI.lessThan(omegaSlashing, BASE) ? omegaSlashing : BASE;
-        console.log(amount.toString(), omegaSlashing.toString())
-
-
         //Send slashing should send the extra PTUs to Uniswap.
         //When burn calls the uniswap burn it will also give users the compensation
-        // (extraPercentage) = sendSlashing(omegaMulDecimals, ptu);
         return  JSBI.divide(JSBI.multiply(amount, omegaSlashing), BASE)
     }
 
@@ -938,6 +951,7 @@ export class Pylon {
             // console.log("adjustedLiq", adjustedLiq.toString(10))
             let lptu = this.calculateLPTU(newTotalSupply, floatTotalSupply, adjustedLiq, result.vab, result.gamma, ptb.raw, false);
             let fee = this.applyDeltaAndGammaTax(lptu, parseBigintIsh(strikeBlock), parseBigintIsh(blockNumber), result.gamma, factory, ema);
+            console.log("fee", fee1.fee.toString())
             this.changePairReserveonFloatSwap(fee1.fee)
 
             //604705541361411447
@@ -1119,43 +1133,61 @@ export class Pylon {
     }
 
     public getLiquidityValue(
-        token: Token,
         totalSupply: TokenAmount,
+        ptTotalSupply: TokenAmount,
         liquidity: TokenAmount,
-        feeOn: boolean = false,
-        kLast?: BigintIsh
-    ): TokenAmount {
-        invariant(this.involvesToken(token), 'TOKEN')
+        anchorVirtualBalance: JSBI,
+        ptb: TokenAmount,
+        muMulDecimals: BigintIsh,
+        kLast: JSBI,
+        factory: PylonFactory,
+        lastRootK: BigintIsh,
+        anchorKFactor: BigintIsh,
+        isLineFormula: boolean,
+        isAnchor: boolean
+    ): [TokenAmount, TokenAmount]  {
+        // invariant(this.involvesToken(token), 'TOKEN')
         invariant(totalSupply.token.equals(this.anchorLiquidityToken) || totalSupply.token.equals(this.floatLiquidityToken), 'TOTAL_SUPPLY')
-        invariant(liquidity.token.equals(this.anchorLiquidityToken) || liquidity.token.equals(this.floatLiquidityToken), 'LIQUIDITY')
-        invariant(JSBI.lessThanOrEqual(liquidity.raw, totalSupply.raw), 'LIQUIDITY')
+        // invariant(liquidity.token.equals(this.anchorLiquidityToken) || liquidity.token.equals(this.floatLiquidityToken), 'LIQUIDITY')
+        // invariant(JSBI.lessThanOrEqual(liquidity.raw, totalSupply.raw), 'LIQUIDITY')
+        let ptMinted = this.publicMintFeeCalc(parseBigintIsh(kLast), totalSupply.raw, factory)
+        let newTotalSupply = JSBI.add(totalSupply.raw, ptMinted);
 
-        let totalSupplyAdjusted: TokenAmount
-        if (!feeOn) {
-            totalSupplyAdjusted = totalSupply
-        } else {
-            invariant(!!kLast, 'K_LAST')
-            const kLastParsed = parseBigintIsh(kLast)
-            if (!JSBI.equal(kLastParsed, ZERO)) {
-                const rootK = sqrt(JSBI.multiply(this.getPairReserves()[0].raw, this.getPairReserves()[1].raw))
-                const rootKLast = sqrt(kLastParsed)
-                if (JSBI.greaterThan(rootK, rootKLast)) {
-                    const numerator = JSBI.multiply(totalSupply.raw, JSBI.subtract(rootK, rootKLast))
-                    const denominator = JSBI.add(JSBI.multiply(rootK, FIVE), rootKLast)
-                    const feeLiquidity = JSBI.divide(numerator, denominator)
-                    totalSupplyAdjusted = totalSupply.add(new TokenAmount(liquidity.token, feeLiquidity))
-                } else {
-                    totalSupplyAdjusted = totalSupply
-                }
-            } else {
-                totalSupplyAdjusted = totalSupply
-            }
-        }
+        let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), parseBigintIsh(lastRootK),
+            parseBigintIsh(anchorKFactor), isLineFormula,
+            ptb.raw, newTotalSupply, parseBigintIsh(muMulDecimals))
 
-        return new TokenAmount(
-            token,
-            JSBI.divide(JSBI.multiply(liquidity.raw, this.reserveOf(token).raw), totalSupplyAdjusted.raw)
-        )
+        let lptu = this.calculateLPTU(newTotalSupply, ptTotalSupply, liquidity.raw, result.vab, result.gamma, ptb.raw, isAnchor);
+
+        return [this.pair.getLiquidityValue(this.token0, totalSupply, new TokenAmount(this.pair.liquidityToken, lptu)),
+            this.pair.getLiquidityValue(this.token1, totalSupply, new TokenAmount(this.pair.liquidityToken, lptu))]
+
+        // let totalSupplyAdjusted: TokenAmount
+        // if (!feeOn) {
+        //     totalSupplyAdjusted = totalSupply
+        // } else {
+        //     invariant(!!kLast, 'K_LAST')
+        //     const kLastParsed = parseBigintIsh(kLast)
+        //     if (!JSBI.equal(kLastParsed, ZERO)) {
+        //         const rootK = sqrt(JSBI.multiply(this.getPairReserves()[0].raw, this.getPairReserves()[1].raw))
+        //         const rootKLast = sqrt(kLastParsed)
+        //         if (JSBI.greaterThan(rootK, rootKLast)) {
+        //             const numerator = JSBI.multiply(totalSupply.raw, JSBI.subtract(rootK, rootKLast))
+        //             const denominator = JSBI.add(JSBI.multiply(rootK, FIVE), rootKLast)
+        //             const feeLiquidity = JSBI.divide(numerator, denominator)
+        //             totalSupplyAdjusted = totalSupply.add(new TokenAmount(liquidity.token, feeLiquidity))
+        //         } else {
+        //             totalSupplyAdjusted = totalSupply
+        //         }
+        //     } else {
+        //         totalSupplyAdjusted = totalSupply
+        //     }
+        // }
+        //
+        // return new TokenAmount(
+        //     token,
+        //     JSBI.divide(JSBI.multiply(liquidity.raw, this.reserveOf(token).raw), totalSupplyAdjusted.raw)
+        // )
     }
 }
 

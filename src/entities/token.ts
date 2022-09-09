@@ -1,8 +1,7 @@
 import invariant from 'tiny-invariant'
-import { ChainId } from '../constants'
+import { ChainId, MOONBASE_ADDRESSES } from '../constants'
 import { validateAndParseAddress } from '../utils'
 import { Currency } from './currency'
-import { WETH } from '../moonbase_address.json'
 
 /**
  * Represents an ERC20 token with a unique address and some metadata.
@@ -72,7 +71,7 @@ export const WDEV = {
     'WDEV',
     'Wrapped Dev'
   ),
-  [ChainId.MOONROCK]: new Token(ChainId.MOONROCK, WETH, 18, 'WDEV', 'Wrapped Dev'),
-  [ChainId.MOONBASE]: new Token(ChainId.MOONBASE, WETH, 18, 'WDEV', 'Wrapped Dev'),
-  [ChainId.MOONSHADOW]: new Token(ChainId.MOONSHADOW, WETH, 18, 'WDEV', 'Wrapped Dev')
+  [ChainId.MOONROCK]: new Token(ChainId.MOONROCK, MOONBASE_ADDRESSES.WETH, 18, 'WDEV', 'Wrapped Dev'),
+  [ChainId.MOONBASE]: new Token(ChainId.MOONBASE, MOONBASE_ADDRESSES.WETH, 18, 'WDEV', 'Wrapped Dev'),
+  [ChainId.MOONSHADOW]: new Token(ChainId.MOONSHADOW, MOONBASE_ADDRESSES.WETH, 18, 'WDEV', 'Wrapped Dev')
 }
