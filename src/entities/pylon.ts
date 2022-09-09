@@ -151,23 +151,35 @@ export class Pylon {
         }
     }
 
-    // public getHealthFactor(gamma: JSBI, vab: JSBI, ptb: TokenAmount, ptt: TokenAmount): String {
-    //             // uint omegaMulDecimals = Math.min(1e18, (1e18 - gammaMulDecimals).mul(pairReserves1.mul(2))/(virtualAnchorBalance.sub(reserveAnchor)));
-    //
-    //     // High -> Omega >= 1 && Price >= breakevenPrice
-    //     //
-    //     // Medium -> Omega >= .95 && anchorReserve + poolTokenReserve > (1-Omega) * TPV
-    //     //
-    //     // Low -> Omega <= .95 || anchorReserve + poolTokenReserve < (1-Omega) * TPV
-    //    let omega = this.getOmegaSlashing(gamma, vab, ptb.raw, ptt.raw, BASE)
-    //     if (omega.greaterThan(BASE)) {
-    //
-    //     }
-    //     return ""
-    //
-    // }
+    public getHealthFactor( vab: JSBI, ptb: TokenAmount, ptt: TokenAmount, reserveAnchorEnergy: JSBI, ptbEnergy: JSBI, isLineFormula: boolean,
+                           muMulDecimals: JSBI, lastRootK: JSBI, anchorKFactor: JSBI, kLast: JSBI, factory: PylonFactory): String {
 
+        // High -> Omega >= 1 && Price >= breakevenPrice
+        //
+        // Medium -> Omega >= .95 && anchorReserve + poolTokenReserve > (1-Omega) * TPV
+        //
+        // Low -> Omega <= .95 || anchorReserve + poolTokenReserve < (1-Omega) * TPV
 
+        let ptMinted = this.publicMintFeeCalc(parseBigintIsh(kLast), ptt.raw, factory)
+        let newTotalSupply = JSBI.add(ptt.raw, ptMinted);
+        let result = this.updateSync(parseBigintIsh(vab), parseBigintIsh(lastRootK),
+            parseBigintIsh(anchorKFactor), isLineFormula,
+            ptb.raw, newTotalSupply, parseBigintIsh(muMulDecimals))
+
+        let resTR1 = this.translateToPylon(this.getPairReserves()[1].raw, ptb.raw, ptt.raw);
+        let percentageAnchorEnergy = JSBI.divide(JSBI.multiply(reserveAnchorEnergy, BASE), result.vab);
+
+        let percentagePTBEnergy = JSBI.divide(JSBI.multiply(ptbEnergy, JSBI.divide(JSBI.multiply(result.vab, BASE), resTR1)), BASE);
+        let omega = this.getOmegaSlashing(result.gamma, result.vab, ptb.raw, ptt.raw, BASE)
+        if (JSBI.greaterThanOrEqual(omega, BASE) && !isLineFormula) {
+            return "high"
+        }else if (JSBI.greaterThanOrEqual(omega, JSBI.subtract(BASE, JSBI.BigInt(5000000000000000))) &&
+        JSBI.greaterThanOrEqual(JSBI.add(percentageAnchorEnergy, percentagePTBEnergy), JSBI.subtract(BASE, omega))) {
+            return "medium"
+        }else {
+            return "low"
+        }
+    }
 
     private translateToPylon(toTranslate: JSBI, ptb: JSBI, ptt: JSBI) {
         return JSBI.divide(JSBI.multiply(toTranslate, ptb), ptt)
