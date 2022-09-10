@@ -64,10 +64,17 @@ export const PT_FACTORY_ADDRESS: { [key: string]: string } = {
   [ChainId.MOONBASE]: MOONBASE_ADDRESSES.ptFactory,
   [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.ptFactory
 }
+export const EN_FACTORY_ADDRESS: { [key: string]: string } = {
+  [ChainId.STANDALONE]: '0xD8a5a9b31c3C0232E196d518E89Fd8bF83AcAd43',
+  [ChainId.MOONROCK]: MOONBASE_ADDRESSES.energyFactory,
+  [ChainId.MOONBASE]: MOONBASE_ADDRESSES.energyFactory,
+  [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.energyFactory
+}
 
 export const INIT_CODE_HASH = '0x0ec3a964af2d4288dcee11cf85135843bcfc1e8e4f8a107d634a0818cc792ee7'
 export const PYLON_CODE_HASH = '0x9fc442a4d7a12215c697eb81564442a0cd83ff2b9db622486b898fe36004e492'
 export const PT_CODE_HASH = '0x584a9deddda96e2bea8b2f7be35b08d7ddfd6fa4da2a026d973bc5ba1bbee91a'
+export const EN_CODE_HASH = '0xf7f47583f133c1e04059755d96b165532bef2114faae8e068f21ffd8fe846bd0'
 
 export const MINIMUM_LIQUIDITY = JSBI.BigInt(1000)
 

@@ -22,7 +22,7 @@ import {
     TEN,
     _100,
     _10000,
-    DOUBLE_BASE,
+    DOUBLE_BASE, EN_FACTORY_ADDRESS, EN_CODE_HASH,
 } from '../constants'
 import { sqrt, parseBigintIsh } from '../utils'
 import { InsufficientReservesError, InsufficientInputAmountError } from '../errors'
@@ -32,6 +32,7 @@ import {PylonFactory} from "entities/pylonFactory";
 
 let PYLON_ADDRESS_CACHE: {[pair: string] : {[tokenAddress: string]: string}} = {}
 let PT_ADDRESS_CACHE: { [tokenAddress: string]: { [pylonAddress: string]: string } } = {}
+let ENERGY_ADDRESS_CACHE: { [tokenAddress: string]: { [pairAddress: string]: string } } = {}
 
 export class Pylon {
     public readonly floatLiquidityToken: Token
@@ -74,6 +75,29 @@ export class Pylon {
         }
 
         return PT_ADDRESS_CACHE[token.address][pylonAddress]
+    }
+
+    public static getEnergyAddress(tokenA: Token, tokenB: Token): string|undefined {
+        if (tokenA && tokenB) {
+            let pairAddress = Pair.getAddress(tokenA, tokenB);
+            if (ENERGY_ADDRESS_CACHE?.[tokenA.address]?.[Pair.getAddress(tokenA, tokenB)] === undefined) {
+                ENERGY_ADDRESS_CACHE = {
+                    ...ENERGY_ADDRESS_CACHE,
+                    [tokenA.address]: {
+                        ...ENERGY_ADDRESS_CACHE?.[tokenA.address],
+                        [pairAddress]: getCreate2Address(
+                            EN_FACTORY_ADDRESS[tokenA.chainId],
+                            keccak256(["bytes"], [pack(['address', 'address'], [pairAddress, tokenA.address])]),
+                            EN_CODE_HASH
+                        )
+                    }
+                }
+            }
+            return ENERGY_ADDRESS_CACHE[tokenA.address][pairAddress]
+        }else {
+            return undefined
+        }
+
     }
 
     public static getLiquidityAddresses(tokenA: Token, tokenB: Token): [string, string] {
@@ -151,8 +175,8 @@ export class Pylon {
         }
     }
 
-    public getHealthFactor( vab: JSBI, ptb: TokenAmount, ptt: TokenAmount, reserveAnchorEnergy: JSBI, ptbEnergy: JSBI, isLineFormula: boolean,
-                           muMulDecimals: JSBI, lastRootK: JSBI, anchorKFactor: JSBI, kLast: JSBI, factory: PylonFactory): String {
+    public getHealthFactor( vab: BigintIsh, ptb: TokenAmount, ptt: TokenAmount, reserveAnchorEnergy: BigintIsh, ptbEnergy: BigintIsh, isLineFormula: boolean,
+                           muMulDecimals: BigintIsh, lastRootK: BigintIsh, anchorKFactor: BigintIsh, kLast: BigintIsh, factory: PylonFactory): String {
 
         // High -> Omega >= 1 && Price >= breakevenPrice
         //
@@ -167,9 +191,9 @@ export class Pylon {
             ptb.raw, newTotalSupply, parseBigintIsh(muMulDecimals))
 
         let resTR1 = this.translateToPylon(this.getPairReserves()[1].raw, ptb.raw, ptt.raw);
-        let percentageAnchorEnergy = JSBI.divide(JSBI.multiply(reserveAnchorEnergy, BASE), result.vab);
+        let percentageAnchorEnergy = JSBI.divide(JSBI.multiply(parseBigintIsh(reserveAnchorEnergy), BASE), result.vab);
 
-        let percentagePTBEnergy = JSBI.divide(JSBI.multiply(ptbEnergy, JSBI.divide(JSBI.multiply(result.vab, BASE), resTR1)), BASE);
+        let percentagePTBEnergy = JSBI.divide(JSBI.multiply(parseBigintIsh(ptbEnergy), JSBI.divide(JSBI.multiply(result.vab, BASE), resTR1)), BASE);
         let omega = this.getOmegaSlashing(result.gamma, result.vab, ptb.raw, ptt.raw, BASE)
         if (JSBI.greaterThanOrEqual(omega, BASE) && !isLineFormula) {
             return "high"
