@@ -820,7 +820,7 @@ export class Pylon {
         anchorKFactor: BigintIsh,
         isLineFormula: boolean,
         kLast: BigintIsh
-    ): {liquidity: TokenAmount, blocked: boolean, fee: TokenAmount, deltaApplied: boolean} {
+    ): { amountsToInvest?: { sync: JSBI; async: JSBI }; extraSlippagePercentage?: JSBI; blocked: boolean; fee: TokenAmount; liquidity: TokenAmount; deltaApplied: boolean } {
         invariant(anchorTotalSupply.token.equals(this.anchorLiquidityToken), 'ANCHOR LIQUIDITY')
         invariant(totalSupply.token.equals(this.pair.liquidityToken), 'LIQUIDITY')
         invariant(tokenAmount.token.equals(this.token1), 'TOKEN')
@@ -846,11 +846,13 @@ export class Pylon {
             syncLiquidity = this.calculatePTU(true, amountsToInvest.sync, newTotalSupply, ptb.raw, anchorTotalSupply, result.vab);
         }
         let asyncLiquidity: JSBI = ZERO;
+        let extraSlippagePercentage = ZERO;
         if (JSBI.greaterThan(amountsToInvest.async, ZERO)) {
             // let halfAmountA = new TokenAmount(this.token0, JSBI.divide(amountsToInvest.async, TWO));
             // let outputAmount = this.pair.getOutputAmount(halfAmountA)
             let sqrtK = sqrt(JSBI.multiply(this.getPairReserves()[0].raw, this.getPairReserves()[1].raw ))
             let amounInWithFee = JSBI.divide(JSBI.multiply(amountsToInvest.async, JSBI.subtract(_10000, JSBI.add(JSBI.divide(factory.liquidityFee, TWO), ONE))), _10000)
+            extraSlippagePercentage = JSBI.divide(JSBI.multiply(JSBI.subtract(amountsToInvest.async, amounInWithFee), BASE), amountsToInvest.async)
             let sqrtKPrime = sqrt(JSBI.multiply(JSBI.add(this.getPairReserves()[1].raw, amounInWithFee), this.getPairReserves()[0].raw))
             let liqPercentage = JSBI.divide(JSBI.multiply(JSBI.subtract(sqrtKPrime, sqrtK), BASE), sqrtK)
 
@@ -861,7 +863,14 @@ export class Pylon {
         if (!JSBI.greaterThan(liquidity, ZERO)) {
             throw new InsufficientInputAmountError()
         }
-        return {liquidity: new TokenAmount(this.anchorLiquidityToken, liquidity), blocked: false, fee: new TokenAmount(this.anchorLiquidityToken, fee.fee), deltaApplied: fee.deltaApplied}
+        return {
+            liquidity: new TokenAmount(this.anchorLiquidityToken, liquidity),
+            blocked: false,
+            fee: new TokenAmount(this.anchorLiquidityToken, fee.fee),
+            deltaApplied: fee.deltaApplied,
+            amountsToInvest: amountsToInvest,
+            extraSlippagePercentage: extraSlippagePercentage
+        }
     }
 
 
@@ -883,7 +892,7 @@ export class Pylon {
         anchorKFactor: BigintIsh,
         isLineFormula: boolean,
         kLast: BigintIsh
-    ): {liquidity: TokenAmount, blocked: boolean, fee: TokenAmount, deltaApplied: boolean} {
+    ): { amountsToInvest?: { sync: JSBI; async: JSBI }; extraSlippagePercentage?: JSBI; blocked: boolean; fee: TokenAmount; liquidity: TokenAmount; deltaApplied: boolean } {
         invariant(totalSupply.token.equals(this.pair.liquidityToken), 'LIQUIDITY')
         invariant(floatTotalSupply.token.equals(this.floatLiquidityToken), 'FLOAT LIQUIDITY')
         //invariant((pair.token0.equals(this.token0) && pair.token1.equals(this.token1)) || (pair.token0.equals(this.token1) && pair.token1.equals(this.token0)), 'LIQUIDITY')
@@ -911,12 +920,14 @@ export class Pylon {
             syncLiquidity = this.calculatePTU(false, amountsToInvest.sync, newTotalSupply, ptb.raw, floatTotalSupply, result.vab, result.gamma);
         }
         let asyncLiquidity: JSBI = ZERO;
+        let extraSlippagePercentage = ZERO;
         if (JSBI.greaterThan(amountsToInvest.async, ZERO)) {
             // let halfAmountA = new TokenAmount(this.token0, JSBI.divide(amountsToInvest.async, TWO));
             // let outputAmount = this.pair.getOutputAmount(halfAmountA)
             let sqrtK = sqrt(JSBI.multiply(this.getPairReserves()[0].raw, this.getPairReserves()[1].raw ))
             let amounInWithFee = JSBI.divide(JSBI.multiply(amountsToInvest.async, JSBI.subtract(_10000, JSBI.add(JSBI.divide(factory.liquidityFee, TWO), ONE))), _10000)
             let sqrtKPrime = sqrt(JSBI.multiply(JSBI.add(this.getPairReserves()[0].raw, amounInWithFee), this.getPairReserves()[1].raw))
+            extraSlippagePercentage = JSBI.divide(JSBI.multiply(JSBI.subtract(amountsToInvest.async, amounInWithFee), BASE), amountsToInvest.async)
 
             let liqPercentage = JSBI.divide(JSBI.multiply(JSBI.subtract(sqrtKPrime, sqrtK), BASE), sqrtK)
 
@@ -929,7 +940,14 @@ export class Pylon {
         }
         // 95113082759130264 4500005175824747
         // 94756618014081722 4500005175824747
-        return {liquidity: new TokenAmount(this.anchorLiquidityToken, liquidity), blocked: false, fee: new TokenAmount(this.anchorLiquidityToken, fee.fee), deltaApplied: fee.deltaApplied}
+        return {
+            liquidity: new TokenAmount(this.anchorLiquidityToken, liquidity),
+            blocked: false,
+            fee: new TokenAmount(this.anchorLiquidityToken, fee.fee),
+            deltaApplied: fee.deltaApplied,
+            amountsToInvest: amountsToInvest,
+            extraSlippagePercentage: extraSlippagePercentage
+        }
     }
 
     public burnFloat(

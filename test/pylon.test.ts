@@ -7,8 +7,15 @@ describe('Pylon', () => {
 
     // const FP = new Token(ChainId.STANDALONE, '0xCF9a47aEf447639899cE2b7dFB77C33f8e07cc64', 18, 'ZR-FT', 'Zircon FT')
     // const AP = new Token(ChainId.STANDALONE, '0xd0eab14eF374344dA2732a871423470EDbA5915D', 18, 'ZR-AT', 'Zircon AT')
+    // maximumPercentageSync: BigintIsh, deltaGammaThreshold: BigintIsh, deltaGammaMinFee: BigintIsh,  EMASamples: BigintIsh,
+    //     muUpdatePeriod: BigintIsh, muChangeFactor: BigintIsh, liquidityFee: BigintIsh, dynamicRatio: BigintIsh,
+    //     feePercentageRev: BigintIsh, feePercentageEnergy: BigintIsh, minFee: BigintIsh, maxFee: BigintIsh
 
-    const pylonFactory = new PylonFactory(JSBI.BigInt(4e16), JSBI.BigInt(100), JSBI.BigInt(1), JSBI.BigInt(50), JSBI.BigInt(10), JSBI.BigInt(30), JSBI.BigInt(2), JSBI.BigInt(240), JSBI.BigInt(3), JSBI.BigInt(5));
+    const pylonFactory = new PylonFactory(JSBI.BigInt(30), JSBI.BigInt(4e16),
+        JSBI.BigInt(100), JSBI.BigInt(2), JSBI.BigInt(240),
+        JSBI.BigInt(3),  JSBI.BigInt(30),
+        JSBI.BigInt(5), JSBI.BigInt(20), JSBI.BigInt(100),
+        JSBI.BigInt(1), JSBI.BigInt(50));
 
     describe('Pool tokens', () => {
         it('Calculating FPT and APT', () => {
