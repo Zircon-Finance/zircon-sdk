@@ -12,7 +12,7 @@ export type BigintIsh = JSBI | bigint | string
 export enum ChainId {
   MAINNET = 1,
   STANDALONE = 1281,
-  MOONROCK = 1286,
+  MOONRIVER = 1285,
   MOONBASE = 1287,
   MOONSHADOW = 1288
 }
@@ -37,36 +37,55 @@ export const MOONBASE_ADDRESSES ={
   "pylonFactory" : "0x19040fC4c40863F0af606e21E6d1CEef80958858",
   "energyFactory" : "0xe2522E34d2eDAbEd507A8b975ae8d7bf4CBe40ff",
   "farmFactory" : "0x931dEA8C13472452c77065B6eB087E87A16a1BFe",
-  "ptFactory" : "0x3EbB4d256C123D9bBccabcfB4cBd0c89A569F867"
+  "ptFactory" : "0x3EbB4d256C123D9bBccabcfB4cBd0c89A569F867",
+  "migrator": "0x49675A06F3D243583ecDD55C7FAf26F9b4aD9200",
+  "feeToSetter": "0xbCea98Df85045F2Fcf5310fE4237ca95C9C24622"
 }
 
+export const MOONRIVER_ADDRESSES = {
+  "WETH": "0x98878B06940aE243284CA214f92Bb71a2b032B8A",
+  "factory": "0x98340c9a7AA3A32A5780c726f7A61fd3828d1775",
+  "router": "0x234A8d99653bDA63CfbdC307d2b41023d670bc01",
+  "multicall": "0x5B1b125e496c4a61331E9D9cCE32f6FC5Cf86B2e",
+  "pylonRouter" : "0xc09aD8eDC417121F88C40604FafcdF2D2a6F1b3c",
+  "pylonFactory" : "0xDe75D76c7471FF2f5363433222412F6cDAC0eF1c",
+  "energyFactory" : "0x1F580724b4b2a95c00b144fB2eBeCd41a15eBA74",
+  "farmFactory" : "0x97b2aE105DAFb7DC8a73c93e5f56d3f095D0DCF3",
+  "ptFactory" : "0xBC67EB3617d3Bc07ACfB282DE32495baA49531df",
+  "migrator": "0x3413B287b0B75D9111Ebcc220d624E84AA5c00e8",
+  "feeToSetter": "0xa1428f71616254E9c2E80946bb0C0F1948E808Db"
+}
+// MOONBASE
 // deploying "Migrator" (tx: 0xcd5c69ba9da0ef02bf6967c98daf601c8406511fdd3d50de53cc0a4bef687b1c)...: deployed at 0x49675A06F3D243583ecDD55C7FAf26F9b4aD9200 with 1319591 gas
 // deploying "FeeToSetter" (tx: 0xb79e0291208313be9918fa5c87860e0805dfd04c728c9d46beed27cedc18bd96)...: deployed at 0xbCea98Df85045F2Fcf5310fE4237ca95C9C24622 with 798377 gas
 // deploying "ZirconPeripheralLibrary" (tx: 0xd01ee89156e29acfb8d144aaddd7f9e46b66f156e588cdfa34f2844bd3b97948)...: deployed at 0xc4f039344A48BeA06499d1026Fb9d1629E7DE769 with 277288 gas
-
+// MOONRIVER
+// deploying "Migrator" (tx: 0xa109149e40e5438b2ac2bbe5d50e07c5ee4e93180dd7a82bed7f1d45652489cc)...: deployed at 0x3413B287b0B75D9111Ebcc220d624E84AA5c00e8 with 1319591 gas
+// deploying "FeeToSetter" (tx: 0xf1ee3431638da0ac8f034cfab30c4787889383630c7fd6115c38c92590e89fe1)...: deployed at 0xa1428f71616254E9c2E80946bb0C0F1948E808Db with 798377 gas
+// deploying "ZirconPeripheralLibrary" (tx: 0x3f1d59fad3f0874ca0b0051b103bd6ab1fc6529307737253b3a6fceca7a3ec79)...: deployed at 0xCc4993a8D8C9e6Ed0757e0455c5CeaDCD48b6520 with 277288 gas
 
 export const FACTORY_ADDRESS: { [key: string]: string } = {
   [ChainId.STANDALONE]: '0x2E2Ed0Cfd3AD2f1d34481277b3204d807Ca2F8c2',
-  [ChainId.MOONROCK]: MOONBASE_ADDRESSES.factory,
+  [ChainId.MOONRIVER]: MOONRIVER_ADDRESSES.factory,
   [ChainId.MOONBASE]: MOONBASE_ADDRESSES.factory,
   [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.factory
 }
 
 export const PYLON_FACTORY_ADDRESS: { [key: string]: string } = {
   [ChainId.STANDALONE]: '0xDC11f7E700A4c898AE5CAddB1082cFfa76512aDD',
-  [ChainId.MOONROCK]: MOONBASE_ADDRESSES.pylonFactory,
+  [ChainId.MOONRIVER]: MOONRIVER_ADDRESSES.pylonFactory,
   [ChainId.MOONBASE]: MOONBASE_ADDRESSES.pylonFactory,
   [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.pylonFactory
 }
 export const PT_FACTORY_ADDRESS: { [key: string]: string } = {
   [ChainId.STANDALONE]: '0xD8a5a9b31c3C0232E196d518E89Fd8bF83AcAd43',
-  [ChainId.MOONROCK]: MOONBASE_ADDRESSES.ptFactory,
+  [ChainId.MOONRIVER]: MOONRIVER_ADDRESSES.ptFactory,
   [ChainId.MOONBASE]: MOONBASE_ADDRESSES.ptFactory,
   [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.ptFactory
 }
 export const EN_FACTORY_ADDRESS: { [key: string]: string } = {
   [ChainId.STANDALONE]: '0xD8a5a9b31c3C0232E196d518E89Fd8bF83AcAd43',
-  [ChainId.MOONROCK]: MOONBASE_ADDRESSES.energyFactory,
+  [ChainId.MOONRIVER]: MOONRIVER_ADDRESSES.energyFactory,
   [ChainId.MOONBASE]: MOONBASE_ADDRESSES.energyFactory,
   [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.energyFactory
 }
