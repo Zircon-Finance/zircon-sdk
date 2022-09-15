@@ -265,6 +265,11 @@ export class Pylon {
         }
     }
 
+    public static calculateLiquidity(gamme: BigintIsh, reserve: BigintIsh, ptb: BigintIsh, ptt: BigintIsh): JSBI {
+        return JSBI.divide(JSBI.multiply(JSBI.subtract(BASE, parseBigintIsh(gamme)), JSBI.divide(JSBI.multiply(JSBI.multiply(parseBigintIsh(reserve), TWO), parseBigintIsh(ptb)), parseBigintIsh(ptt))), BASE);
+
+    }
+
     private calculatePTUToAmount(
         totalSupply: JSBI,
         floatTotalSupply: TokenAmount,
@@ -976,10 +981,11 @@ export class Pylon {
         anchorKFactor: BigintIsh,
         isLineFormula: boolean,
         kLast: BigintIsh
-    ): {amount: TokenAmount, blocked: boolean, fee: TokenAmount, deltaApplied: boolean, feePercentage: JSBI}  {
+    ): {amount: TokenAmount, blocked: boolean, fee: TokenAmount, deltaApplied: boolean, feePercentage: JSBI, omegaSlashingPercentage: JSBI}  {
         let ptMinted = this.publicMintFeeCalc(parseBigintIsh(kLast), totalSupply.raw, factory)
         let newTotalSupply = JSBI.add(totalSupply.raw, ptMinted);
         let feePercentage = ZERO;
+        let omegaSlashingPercentage = ZERO
 
         let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), parseBigintIsh(lastRootK),
             parseBigintIsh(anchorKFactor), isLineFormula,
@@ -1003,13 +1009,13 @@ export class Pylon {
 
         let fee1 = this.applyDeltaAndGammaTax(ptuAmount, parseBigintIsh(strikeBlock), parseBigintIsh(blockNumber), result.gamma, factory, ema);
         if (fee1.blocked) {
-            return {amount: new TokenAmount(this.anchorLiquidityToken, ZERO), blocked: true, fee: new TokenAmount(this.anchorLiquidityToken, ZERO), deltaApplied: true, feePercentage}
+            return {amount: new TokenAmount(this.anchorLiquidityToken, ZERO), blocked: true, fee: new TokenAmount(this.anchorLiquidityToken, ZERO), deltaApplied: true, feePercentage, omegaSlashingPercentage}
         }
         kLast = JSBI.multiply(this.getPairReserves()[0].raw, this.getPairReserves()[1].raw)
         let amount = fee1.newAmount
 
 
-        feePercentage = JSBI.divide(JSBI.multiply(fee1.fee, BASE), fee1.newAmount)
+        feePercentage = JSBI.greaterThan(fee1.newAmount, ZERO) ? JSBI.divide(JSBI.multiply(fee1.fee, BASE), fee1.newAmount) : ZERO
 
          // amount: JSBI = ZERO;
         if (JSBI.lessThan(reservesPTU, tokenAmountOut.raw)) {
@@ -1034,14 +1040,14 @@ export class Pylon {
             let feeAmountTransformed = newPair.getOutputAmount(new TokenAmount(this.token1, feeAmount1));
             // console.log("amount", amount.toString(10))
 
-            amount =  JSBI.add(amount, JSBI.add(amount0, amountTransformed[0].raw));
-            feePercentage =  JSBI.divide(JSBI.multiply(JSBI.add(fee1.fee, JSBI.add(feeAmount0, feeAmountTransformed[0].raw)), BASE), amount);
+            amount = JSBI.add(amount, JSBI.add(amount0, amountTransformed[0].raw));
+            feePercentage = JSBI.greaterThan(amount, ZERO) ? JSBI.divide(JSBI.multiply(JSBI.add(fee1.fee, JSBI.add(feeAmount0, feeAmountTransformed[0].raw)), BASE), amount): feePercentage;
             // console.log("amount", amount.toString(10))
 
         }
 
         // this.changePairReserveonFloatSwap(fee1.fee)
-        return {amount: new TokenAmount(tokenAmountOut.token, amount), blocked: false, fee: new TokenAmount(this.anchorLiquidityToken, fee1.fee), deltaApplied: fee1.deltaApplied, feePercentage}
+        return {amount: new TokenAmount(tokenAmountOut.token, amount), blocked: false, fee: new TokenAmount(this.anchorLiquidityToken, fee1.fee), deltaApplied: fee1.deltaApplied, feePercentage, omegaSlashingPercentage}
     }
     public burnAnchor(
         totalSupply: TokenAmount,
@@ -1061,13 +1067,13 @@ export class Pylon {
         anchorKFactor: BigintIsh,
         isLineFormula: boolean,
         kLast: BigintIsh
-    ): {amount: TokenAmount, blocked: boolean, fee: TokenAmount, deltaApplied: boolean, feePercentage: JSBI} {
+    ): {amount: TokenAmount, blocked: boolean, fee: TokenAmount, deltaApplied: boolean, feePercentage: JSBI, omegaSlashingPercentage :JSBI} {
         let ptMinted = this.publicMintFeeCalc(parseBigintIsh(kLast), totalSupply.raw, factory)
-        kLast = JSBI.multiply(this.getPairReserves()[0].raw, this.getPairReserves()[1].raw)
+        // kLast = JSBI.multiply(this.getPairReserves()[0].raw, this.getPairReserves()[1].raw)
         let newTotalSupply = JSBI.add(totalSupply.raw, ptMinted);
 
         let feePercentage = ZERO
-
+        let omegaSlashingPercentage = ZERO
         let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), parseBigintIsh(lastRootK),
             parseBigintIsh(anchorKFactor), isLineFormula,
             ptb.raw, newTotalSupply, parseBigintIsh(muMulDecimals))
@@ -1087,20 +1093,22 @@ export class Pylon {
             true
         )
         let fee1 = this.applyDeltaAndGammaTax(ptuAmount, parseBigintIsh(strikeBlock), parseBigintIsh(blockNumber), result.gamma, factory, ema);
+
         if (fee1.blocked) {
-            return {amount: new TokenAmount(this.anchorLiquidityToken, ZERO), blocked: true, fee: new TokenAmount(this.anchorLiquidityToken, ZERO), deltaApplied: true, feePercentage}
+            return {amount: new TokenAmount(this.anchorLiquidityToken, ZERO), blocked: true, fee: new TokenAmount(this.anchorLiquidityToken, ZERO), deltaApplied: true, feePercentage, omegaSlashingPercentage}
         }
         let amount = fee1.newAmount
-        feePercentage = JSBI.divide(JSBI.multiply(fee1.fee, BASE), fee1.newAmount)
-
+        feePercentage = JSBI.greaterThan(fee1.newAmount, ZERO) ? JSBI.divide(JSBI.multiply(fee1.fee, BASE), fee1.newAmount) : ZERO
         if (JSBI.lessThan(reservesPTU, tokenAmountOut.raw)) {
 
             let adjustedLiq = JSBI.subtract(tokenAmountOut.raw, reservesPTU);
             // console.log("adjustedLiq", adjustedLiq.toString(10))
+            let totalLPTU = this.calculateLPTU(newTotalSupply, anchorTotalSupply, tokenAmountOut.raw, result.vab, result.gamma, ptb.raw, true);
             let lptu = this.calculateLPTU(newTotalSupply, anchorTotalSupply, adjustedLiq, result.vab, result.gamma, ptb.raw, true);
             let fee = this.applyDeltaAndGammaTax(lptu, parseBigintIsh(strikeBlock), parseBigintIsh(blockNumber), result.gamma, factory, ema);
 
             let omegaPTU = this.getOmegaSlashing(result.gamma, result.vab, ptb.raw, newTotalSupply, fee.newAmount);
+            omegaSlashingPercentage = JSBI.divide(JSBI.multiply(JSBI.subtract(lptu, omegaPTU), BASE), totalLPTU);
             // let adjustedLiq = JSBI.divide(JSBI.multiply(omega, JSBI.subtract(tokenAmountOut.raw, reservesPTU)), BASE);
             // let lptu = this.calculateLPTU(newTotalSupply, anchorTotalSupply, adjustedLiq, result.vab, result.gamma, ptb.raw, true);
             // let fee = this.applyDeltaAndGammaTax(lptu, parseBigintIsh(strikeBlock), parseBigintIsh(blockNumber), result.gamma, factory, ema);
@@ -1116,11 +1124,11 @@ export class Pylon {
             let feeAmountTransformed = newPair.getOutputAmount(new TokenAmount(this.token0, feeAmount0));
 
             amount = JSBI.add(fee1.newAmount, JSBI.add(amount1, amountTransformed[0].raw));
-            feePercentage =  JSBI.divide(JSBI.multiply(JSBI.add(fee1.fee, JSBI.add(feeAmount1, feeAmountTransformed[0].raw)), BASE), amount);
+            feePercentage =  JSBI.greaterThan(amount, ZERO) ? JSBI.divide(JSBI.multiply(JSBI.add(fee1.fee, JSBI.add(feeAmount1, feeAmountTransformed[0].raw)), BASE), amount): feePercentage;
 
         }
 
-        return {amount: new TokenAmount(tokenAmountOut.token, amount), blocked: false, fee: new TokenAmount(this.anchorLiquidityToken, fee1.fee), deltaApplied: fee1.deltaApplied, feePercentage}
+        return {amount: new TokenAmount(tokenAmountOut.token, amount), blocked: false, fee: new TokenAmount(this.anchorLiquidityToken, fee1.fee), deltaApplied: fee1.deltaApplied, feePercentage, omegaSlashingPercentage}
     }
 
     public burnAsyncAnchor(
@@ -1141,11 +1149,11 @@ export class Pylon {
         anchorKFactor: BigintIsh,
         isLineFormula: boolean,
         kLast: BigintIsh
-    ): {amountA: TokenAmount, amountB: TokenAmount, blocked: boolean, fee: TokenAmount, deltaApplied: boolean,  asyncBlocked: boolean, feePercentage: JSBI} {
+    ): {amountA: TokenAmount, amountB: TokenAmount, blocked: boolean, fee: TokenAmount, deltaApplied: boolean,  asyncBlocked: boolean, feePercentage: JSBI, omegaSlashingPercentage: JSBI} {
 
         let ptMinted = this.publicMintFeeCalc(parseBigintIsh(kLast), totalSupply.raw, factory)
         let newTotalSupply = JSBI.add(totalSupply.raw, ptMinted);
-
+        let omegaSlashingPercentage = ZERO
         let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), parseBigintIsh(lastRootK),
             parseBigintIsh(anchorKFactor), isLineFormula,
             ptb.raw, newTotalSupply, parseBigintIsh(muMulDecimals))
@@ -1156,16 +1164,17 @@ export class Pylon {
         let fee = this.applyDeltaAndGammaTax(lptu, parseBigintIsh(strikeBlock), parseBigintIsh(blockNumber), result.gamma, factory, ema);
         if (fee.blocked) {
             return {amountA: new TokenAmount(this.anchorLiquidityToken, ZERO), amountB: new TokenAmount(this.anchorLiquidityToken, ZERO),
-                asyncBlocked: false, blocked: true, fee: new TokenAmount(this.anchorLiquidityToken, ZERO), deltaApplied: true, feePercentage: ZERO}
+                asyncBlocked: false, blocked: true, fee: new TokenAmount(this.anchorLiquidityToken, ZERO), deltaApplied: true, feePercentage: ZERO, omegaSlashingPercentage: ZERO}
         }
-        let feePercentage = JSBI.divide(JSBI.multiply(fee.fee, BASE), fee.newAmount)
+        let feePercentage = JSBI.greaterThan(fee.newAmount, ZERO) ? JSBI.divide(JSBI.multiply(fee.fee, BASE), fee.newAmount) : ZERO
         let omegaPTU = this.getOmegaSlashing(result.gamma, result.vab, ptb.raw, newTotalSupply, fee.newAmount);
+        omegaSlashingPercentage = JSBI.divide(JSBI.multiply(JSBI.subtract(lptu, omegaPTU), BASE), lptu);
 
         let amount0 = JSBI.divide(JSBI.multiply(omegaPTU, this.getPairReserves()[0].raw), newTotalSupply);
         let amount1 = JSBI.divide(JSBI.multiply(omegaPTU, this.getPairReserves()[1].raw), newTotalSupply);
 
         return {amountA: new TokenAmount(this.token0, amount0), amountB: new TokenAmount(this.token1, amount1),
-            asyncBlocked: fee.asyncBlocked, blocked: fee.blocked, fee: new TokenAmount(this.anchorLiquidityToken, fee.fee), deltaApplied: fee.deltaApplied, feePercentage};
+            asyncBlocked: fee.asyncBlocked, blocked: fee.blocked, fee: new TokenAmount(this.anchorLiquidityToken, fee.fee), deltaApplied: fee.deltaApplied, feePercentage, omegaSlashingPercentage};
     }
 
     public burnAsyncFloat(
@@ -1186,10 +1195,11 @@ export class Pylon {
         anchorKFactor: BigintIsh,
         isLineFormula: boolean,
         kLast: BigintIsh
-    ): {amountA: TokenAmount, amountB: TokenAmount, blocked: boolean, fee: TokenAmount, deltaApplied: boolean, asyncBlocked: boolean, feePercentage: JSBI} {
+    ): {amountA: TokenAmount, amountB: TokenAmount, blocked: boolean, fee: TokenAmount, deltaApplied: boolean, asyncBlocked: boolean, feePercentage: JSBI, omegaSlashingPercentage: JSBI} {
 
         let ptMinted = this.publicMintFeeCalc(parseBigintIsh(kLast), totalSupply.raw, factory)
         let newTotalSupply = JSBI.add(totalSupply.raw, ptMinted);
+        let omegaSlashingPercentage = ZERO
 
         let result = this.updateSync(parseBigintIsh(anchorVirtualBalance), parseBigintIsh(lastRootK),
             parseBigintIsh(anchorKFactor), isLineFormula,
@@ -1202,17 +1212,18 @@ export class Pylon {
         if (fee.blocked) {
             return {amountA: new TokenAmount(this.anchorLiquidityToken, ZERO),
                 amountB: new TokenAmount(this.anchorLiquidityToken, ZERO),
-                asyncBlocked: false, blocked: true, fee: new TokenAmount(this.anchorLiquidityToken, ZERO), deltaApplied: true, feePercentage: ZERO}
+                asyncBlocked: false, blocked: true, fee: new TokenAmount(this.anchorLiquidityToken, ZERO), deltaApplied: true, feePercentage: ZERO, omegaSlashingPercentage}
         }
-        let feePercentage = JSBI.divide(JSBI.multiply(fee.fee, BASE), fee.newAmount)
+        let feePercentage = JSBI.greaterThan(fee.newAmount, ZERO) ? JSBI.divide(JSBI.multiply(fee.fee, BASE), fee.newAmount) : ZERO
 
         let omegaPTU = this.getOmegaSlashing(result.gamma, result.vab, ptb.raw, newTotalSupply, fee.newAmount);
+        omegaSlashingPercentage = JSBI.divide(JSBI.multiply(JSBI.subtract(lptu, omegaPTU), BASE), lptu);
 
         let amount0 = JSBI.divide(JSBI.multiply(omegaPTU, this.getPairReserves()[0].raw), newTotalSupply);
         let amount1 = JSBI.divide(JSBI.multiply(omegaPTU, this.getPairReserves()[1].raw), newTotalSupply);
 
         return {amountA: new TokenAmount(this.token0, amount0), amountB: new TokenAmount(this.token1, amount1),
-            asyncBlocked: fee.asyncBlocked, blocked: fee.blocked, fee: new TokenAmount(this.anchorLiquidityToken, fee.fee), deltaApplied: fee.deltaApplied, feePercentage};
+            asyncBlocked: fee.asyncBlocked, blocked: fee.blocked, fee: new TokenAmount(this.anchorLiquidityToken, fee.fee), deltaApplied: fee.deltaApplied, feePercentage, omegaSlashingPercentage};
     }
 
     public getLiquidityValue(
@@ -1245,32 +1256,7 @@ export class Pylon {
         return [this.pair.getLiquidityValue(this.token0, totalSupply, new TokenAmount(this.pair.liquidityToken, lptu)),
             this.pair.getLiquidityValue(this.token1, totalSupply, new TokenAmount(this.pair.liquidityToken, lptu))]
 
-        // let totalSupplyAdjusted: TokenAmount
-        // if (!feeOn) {
-        //     totalSupplyAdjusted = totalSupply
-        // } else {
-        //     invariant(!!kLast, 'K_LAST')
-        //     const kLastParsed = parseBigintIsh(kLast)
-        //     if (!JSBI.equal(kLastParsed, ZERO)) {
-        //         const rootK = sqrt(JSBI.multiply(this.getPairReserves()[0].raw, this.getPairReserves()[1].raw))
-        //         const rootKLast = sqrt(kLastParsed)
-        //         if (JSBI.greaterThan(rootK, rootKLast)) {
-        //             const numerator = JSBI.multiply(totalSupply.raw, JSBI.subtract(rootK, rootKLast))
-        //             const denominator = JSBI.add(JSBI.multiply(rootK, FIVE), rootKLast)
-        //             const feeLiquidity = JSBI.divide(numerator, denominator)
-        //             totalSupplyAdjusted = totalSupply.add(new TokenAmount(liquidity.token, feeLiquidity))
-        //         } else {
-        //             totalSupplyAdjusted = totalSupply
-        //         }
-        //     } else {
-        //         totalSupplyAdjusted = totalSupply
-        //     }
-        // }
-        //
-        // return new TokenAmount(
-        //     token,
-        //     JSBI.divide(JSBI.multiply(liquidity.raw, this.reserveOf(token).raw), totalSupplyAdjusted.raw)
-        // )
+
     }
 }
 

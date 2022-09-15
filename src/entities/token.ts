@@ -71,7 +71,7 @@ export const WDEV = {
     'WDEV',
     'Wrapped Dev'
   ),
-  [ChainId.MOONRIVER]: new Token(ChainId.MOONRIVER, MOONRIVER_ADDRESSES.WETH, 18, 'WDEV', 'Wrapped Dev'),
+  [ChainId.MOONRIVER]: new Token(ChainId.MOONRIVER, MOONRIVER_ADDRESSES.WETH, 18, 'WMOVR', 'Wrapped MoonRiver'),
   [ChainId.MOONBASE]: new Token(ChainId.MOONBASE, MOONBASE_ADDRESSES.WETH, 18, 'WDEV', 'Wrapped Dev'),
   [ChainId.MOONSHADOW]: new Token(ChainId.MOONSHADOW, MOONBASE_ADDRESSES.WETH, 18, 'WDEV', 'Wrapped Dev')
 }

@@ -134,9 +134,9 @@ export class Pair {
       inputAmount.token.equals(this.token0) ? this.token1 : this.token0,
       JSBI.divide(numerator, denominator)
     )
-    if (JSBI.equal(outputAmount.raw, ZERO)) {
-      throw new InsufficientInputAmountError()
-    }
+    // if (JSBI.equal(outputAmount.raw, ZERO)) {
+    //   throw new InsufficientInputAmountError()
+    // }
     return [outputAmount, new Pair(inputReserve.add(inputAmount), outputReserve.subtract(outputAmount))]
   }
 
