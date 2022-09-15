@@ -508,22 +508,22 @@ export class Pylon {
             );
 
             //_ptTotalSupply - (_ptTotalSupply.mul(_pylonReserve1) / virtualAnchorBalance) :
-            maxPoolTokens = JSBI.subtract(ptTotalSupply, JSBI.divide(JSBI.multiply(ptTotalSupply, this.reserve1.raw), anchorVirtualBalance))
+            maxPoolTokens = JSBI.subtract(ptTotalSupply.raw, JSBI.divide(JSBI.multiply(ptTotalSupply.raw, this.reserve1.raw), anchorVirtualBalance));
 
             //pylonShare = JSBI.add(pylonShare,
                 JSBI.divide(
                     JSBI.multiply(pylonShare, this.reserve1.raw),
-                    this.translateToPylon(JSBI.multiply(this.getPairReserves()[1].raw, TWO), ptb, totalSupply) ))
+                    this.translateToPylon(JSBI.multiply(this.getPairReserves()[1].raw, TWO), ptb, totalSupply) );
         }else{
-            pylonShare = JSBI.divide(JSBI.multiply(gamma, ptb.raw), BASE)
+            pylonShare = JSBI.divide(JSBI.multiply(gamma, ptb.raw), BASE);
 
 
             //_ptTotalSupply - (_ptTotalSupply.mul(_pylonReserve0) / (_reserve0.mul(2).mul(gammaMulDecimals) / 1e18).add(_pylonReserve0));
-            maxPoolTokens = JSBI.subtract(ptTotalSupply, JSBI.divide(
-                                                            JSBI.multiply(ptTotalSupply, this.reserve0.raw),
+            maxPoolTokens = JSBI.subtract(ptTotalSupply.raw, JSBI.divide(
+                                                            JSBI.multiply(ptTotalSupply.raw, this.reserve0.raw),
                                                             JSBI.add(this.reserve0.raw, JSBI.divide(
-                                                                                            JSBI.multiply(JSBI.multiply(this.getPairReserves()[0].raw(), TWO), gamma),
-                                                                                            BASE))))
+                                                                                            JSBI.multiply(JSBI.multiply(this.getPairReserves()[0].raw, TWO), gamma),
+                                                                                            BASE))));
 
 
             //pylonShare =  JSBI.add(pylonShare, JSBI.divide(JSBI.multiply(pylonShare, this.reserve0.raw), this.translateToPylon(JSBI.multiply(this.getPairReserves()[0].raw, TWO), ptb, totalSupply) ))
@@ -532,7 +532,7 @@ export class Pylon {
 
         return JSBI.divide(
             JSBI.multiply(pylonShare, tokenAmount),
-            maxPoolTokens)
+            maxPoolTokens);
     }
 
     public burnFloat(
