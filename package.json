@@ -1,14 +1,14 @@
 {
   "name": "zircon-sdk",
   "license": "MIT",
-  "version": "1.0.7-beta.33",
-  "description": "🛠 An example SDK for building applications on top of Uniswap in Moonbeam.",
+  "version": "1.0.10-rc-8",
+  "description": "The Pylon SDK for Zircon Finance Platform.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
     "dist"
   ],
-  "repository": "https://github.com/PureStake/moonbeam",
+  "repository": "https://github.com/Zircon-Finance/zircon-sdk",
   "keywords": [
     "uniswap",
     "ethereum",
