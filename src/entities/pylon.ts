@@ -1037,8 +1037,12 @@ export class Pylon {
         let pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, ptb.raw, newTotalSupply);
         let derVFB = JSBI.add(this.reserve0.raw, JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, result.gamma), pairReserveTranslated0), BASE))
 
+        console.log("SDK:: pairRes0, pairRes1, derVFB", pairReserveTranslated0.toString(), pairReserveTranslated1.toString(), derVFB.toString());
+        console.log("SDK:: reserve0", this.reserve0.raw.toString());
 
         let amountsToInvest = this.handleSyncAndAsync(factory.maxSync, pairReserveTranslated0, this.reserve0.raw, fee.newAmount)
+
+        console.log("SDK:: amountsToInvest Sync, Async", amountsToInvest.sync.toString(), amountsToInvest.async.toString());
 
         let amount = ZERO;
         let extraSlippagePercentage = ZERO;
@@ -1055,9 +1059,13 @@ export class Pylon {
 
         amount = JSBI.add(amount, amountsToInvest.sync);
 
+        console.log("SDK:: amount", amount.toString());
+
 
         let syncMinting = this.syncMinting(pairReserveTranslated0, pairReserveTranslated1,
-            JSBI.add(this.reserve0.raw, fee.newAmount), this.reserve1.raw, factory, newTotalSupply)
+            JSBI.add(this.reserve0.raw, fee.newAmount), this.reserve1.raw, factory, newTotalSupply);
+        let newReserve0 = syncMinting.newReserve0;
+        let newReserve1 = syncMinting.newReserve1;
         ptMinted = this.publicMintFeeCalc(parseBigintIsh(kLast), newTotalSupply, factory)
         kLast = JSBI.multiply(this.getPairReserves()[0].raw, this.getPairReserves()[1].raw)
         newTotalSupply = JSBI.add(newTotalSupply, ptMinted);
@@ -1070,8 +1078,11 @@ export class Pylon {
         pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, newPTB, newTotalSupply);
 
         let updateRemovingExcess = this.updateRemovingExcess(pairReserveTranslated0, pairReserveTranslated1,
-            JSBI.add(this.reserve0.raw, fee.newAmount), this.reserve1.raw, factory, newTotalSupply, kLast)
+            JSBI.add(newReserve0, fee.newAmount), newReserve1, factory, newTotalSupply, kLast)
 
+        console.log("SDK:: pairRes0New, pairRes1New, fee.newAmount", pairReserveTranslated0.toString(), pairReserveTranslated1.toString(), fee.newAmount.toString());
+
+        console.log("SDK:: reserve0New", newReserve0.toString());
 
 
         newPTB = JSBI.add(newPTB, updateRemovingExcess.liquidity);
@@ -1080,15 +1091,26 @@ export class Pylon {
         pairReserveTranslated0 = this.translateToPylon(this.getPairReserves()[0].raw, newPTB, newTotalSupply);
         pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, newPTB, newTotalSupply);
 
-        let adjustedVab = JSBI.subtract(result.vab, this.reserve1.raw)
+        let adjustedVab = JSBI.subtract(result.vab, newReserve1)
         let newGamma = this.calculateGamma(pairReserveTranslated1, parseBigintIsh(anchorKFactor), adjustedVab, isLineFormula);
 
         let slippagePercentage = JSBI.divide(JSBI.multiply(amount, BASE), fee.newAmount);
 
-        let newDerVFB = JSBI.add(this.reserve0.raw, JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, newGamma.gamma), pairReserveTranslated0), BASE))
+        let newDerVFB = JSBI.add(newReserve0, JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, newGamma.gamma), pairReserveTranslated0), BASE))
 
-        let liquidity = JSBI.divide(JSBI.multiply(floatTotalSupply.raw, JSBI.subtract(JSBI.divide(JSBI.multiply(newDerVFB, BASE), derVFB), BASE)), BASE);
+        let liquidity = JSBI.divide(
+                            JSBI.multiply(
+                                floatTotalSupply.raw,
+                                JSBI.subtract(
+                                        JSBI.divide(
+                                            JSBI.multiply(newDerVFB, BASE)
+                                            , derVFB)
+                                    , BASE))
+                            , BASE);
         liquidity = JSBI.divide(JSBI.multiply(liquidity, slippagePercentage), BASE);
+
+        console.log("SDK:: newGamma, newDerVFB, liquidity", newGamma.gamma.toString(), newDerVFB.toString(), liquidity.toString());
+
         if (!JSBI.greaterThan(liquidity, ZERO)) {
             console.error()
             throw new InsufficientInputAmountError()
