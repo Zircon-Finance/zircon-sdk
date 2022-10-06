@@ -175,46 +175,46 @@ describe('Pylon', () => {
     // // strikeBlock, blockNumber, emaBlockNumber, gammaEMA, thisBlockEMA
     // // lastRootK, anchorKFactor, isLineFormula
     //
-    // describe('Async Minting', () => {
-    //     const mintTestCases = [
-    //         ['1716150000000000000000', '5350350000000000000000', '850000000000000000', '2650000000000000000',
-    //             '3030182032898353781669','28515828937626905325', "53000000000000000000", '34000000000000000000', '106000000000000000000',
-    //             '53000000000000000000', "500000000000000000", "500000000000000000",
-    //         0, 132, 0, 0, 0, "28515828937626905324", "1000000000000000000", 1, "211977961326582515044", 0, "9182003152500000000000000000000000000000000"],
-    //         ['1846818181818181818181', '5757727272727272727272', '7727272727272727273', '24090909090909090909',
-    //             '3260901012484607833844','259234808523880957500', "154545454545454545454", '25000000000000000000', '25000000000000000000',
-    //             '481818181818181818181', "500000000000000000", "500000000000000000",
-    //             0, 22, 0, 0, 0, "259234808523880957499", "1000000000000000000", 0, "16036154803521621119", 0, "10633475413223140495861714586776859504132232"],
-    //
-    //     ].map(a => a.map(n => (JSBI.BigInt(n))))
-    //     mintTestCases.forEach((mintCase, i) => {
-    //         it('Calculating async minting' + i , () => {
-    //             const pylon = new Pylon(new Pair(new TokenAmount(USDC, mintCase[0]), new TokenAmount(DAI, mintCase[1])), new TokenAmount(USDC, mintCase[2]), new TokenAmount(DAI, mintCase[3]))
-    //
-    //             let totalSupply = new TokenAmount(pylon.pair.liquidityToken, mintCase[4])
-    //             let ptb = new TokenAmount(pylon.pair.liquidityToken, mintCase[5])
-    //             const isFloat = JSBI.equal(mintCase[19], ZERO)
-    //             const isLineFormula = JSBI.equal(mintCase[21], ZERO)
-    //
-    //             let ptTotalSupply = new TokenAmount(isFloat ? pylon.floatLiquidityToken : pylon.anchorLiquidityToken, mintCase[6])
-    //             let floatSupply = new TokenAmount(USDC, mintCase[7])
-    //             let anchorSupply = new TokenAmount(DAI, mintCase[8])
-    //             let result: { liquidity: TokenAmount; blocked: boolean; fee: TokenAmount; deltaApplied: boolean }
-    //             if (isFloat) {
-    //                 result = pylon.getFloatAsyncLiquidityMinted(totalSupply, ptTotalSupply, floatSupply, anchorSupply,
-    //                     mintCase[9], mintCase[10], mintCase[11],
-    //                     ptb, mintCase[12], mintCase[13], pylonFactory, mintCase[14], mintCase[15], mintCase[16], mintCase[17], mintCase[18], isLineFormula, mintCase[22])
-    //             }else{
-    //                 result = pylon.getAnchorAsyncLiquidityMinted(totalSupply, ptTotalSupply, floatSupply, anchorSupply,
-    //                     mintCase[9], mintCase[10], mintCase[11],
-    //                     ptb, mintCase[12], mintCase[13], pylonFactory, mintCase[14], mintCase[15], mintCase[16], mintCase[17], mintCase[18], isLineFormula, mintCase[22])
-    //             }
-    //
-    //
-    //             expect(result.liquidity.raw.toString()).toEqual(mintCase[20].toString())
-    //         })
-    //     })
-    // })
+    describe('Async Minting', () => {
+        const mintTestCases = [
+            ['1716150000000000000000', '5350350000000000000000', '850000000000000000', '2650000000000000000',
+                '3030182032898353781669','28515828937626905325', "53000000000000000000", '34000000000000000000', '106000000000000000000',
+                '53000000000000000000', "500000000000000000", "500000000000000000",
+            0, 132, 0, 0, 0, "28515828937626905324", "1000000000000000000", 1, "211977961326582515044", 0, "9182003152500000000000000000000000000000000"],
+            ['1846818181818181818181', '5757727272727272727272', '7727272727272727273', '24090909090909090909',
+                '3260901012484607833844','259234808523880957500', "154545454545454545454", '25000000000000000000', '25000000000000000000',
+                '481818181818181818181', "500000000000000000", "500000000000000000",
+                0, 22, 0, 0, 0, "259234808523880957499", "1000000000000000000", 0, "16036154803521621119", 0, "10633475413223140495861714586776859504132232"],
+
+        ].map(a => a.map(n => (JSBI.BigInt(n))))
+        mintTestCases.forEach((mintCase, i) => {
+            it('Calculating async minting' + i , () => {
+                const pylon = new Pylon(new Pair(new TokenAmount(USDC, mintCase[0]), new TokenAmount(DAI, mintCase[1])), new TokenAmount(USDC, mintCase[2]), new TokenAmount(DAI, mintCase[3]))
+
+                let totalSupply = new TokenAmount(pylon.pair.liquidityToken, mintCase[4])
+                let ptb = new TokenAmount(pylon.pair.liquidityToken, mintCase[5])
+                const isFloat = JSBI.equal(mintCase[19], ZERO)
+                const isLineFormula = JSBI.equal(mintCase[21], ZERO)
+
+                let ptTotalSupply = new TokenAmount(isFloat ? pylon.floatLiquidityToken : pylon.anchorLiquidityToken, mintCase[6])
+                let floatSupply = new TokenAmount(USDC, mintCase[7])
+                let anchorSupply = new TokenAmount(DAI, mintCase[8])
+                let result: { liquidity: TokenAmount; blocked: boolean; fee: TokenAmount; deltaApplied: boolean }
+                if (isFloat) {
+                    result = pylon.getFloatAsyncLiquidityMinted(totalSupply, ptTotalSupply, floatSupply, anchorSupply,
+                        mintCase[9], mintCase[10], mintCase[11],
+                        ptb, mintCase[12], mintCase[13], pylonFactory, mintCase[14], mintCase[15], mintCase[16], mintCase[17], mintCase[18], isLineFormula, mintCase[22])
+                }else{
+                    result = pylon.getAnchorAsyncLiquidityMinted(totalSupply, ptTotalSupply, floatSupply, anchorSupply,
+                        mintCase[9], mintCase[10], mintCase[11],
+                        ptb, mintCase[12], mintCase[13], pylonFactory, mintCase[14], mintCase[15], mintCase[16], mintCase[17], mintCase[18], isLineFormula, mintCase[22])
+                }
+
+
+                expect(result.liquidity.raw.toString()).toEqual(mintCase[20].toString())
+            })
+        })
+    })
 
     // ResPair0, resPair1, resPylon0, resPylon1,
     // totalSupply, ptb, ptTotalSupply, amount, vab, mu, gamma,

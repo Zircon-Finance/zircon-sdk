@@ -218,7 +218,7 @@ export class Pylon {
         let omega = this.getOmegaSlashing(result.gamma, result.vab, ptb.raw, ptt.raw, BASE)
         if (JSBI.greaterThanOrEqual(omega, BASE) && !isLineFormula) {
             return "high"
-        }else if (JSBI.greaterThanOrEqual(omega, JSBI.subtract(BASE, JSBI.BigInt(5000000000000000))) &&
+        }else if (JSBI.greaterThanOrEqual(omega, JSBI.subtract(BASE, JSBI.BigInt(4000000000000000))) ||
             JSBI.greaterThanOrEqual(JSBI.add(percentageAnchorEnergy, percentagePTBEnergy), JSBI.subtract(BASE, omega))) {
             return "medium"
         }else {
@@ -904,7 +904,67 @@ export class Pylon {
             return {liquidity: new TokenAmount(this.anchorLiquidityToken, ZERO), blocked: true, fee: new TokenAmount(this.anchorLiquidityToken, ZERO), deltaApplied: true, feePercentage: ZERO}
         }
 
-        let liquidity = this.getLiquidityFromPoolTokensLiquidity(fee1.newAmount, fee2.newAmount, newTotalSupply, ptb.raw, floatTotalSupply, false, result.vab, result.gamma)
+
+        let pairReserveTranslated0 = this.translateToPylon(this.getPairReserves()[0].raw, ptb.raw, newTotalSupply);
+        let pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, ptb.raw, newTotalSupply);
+        let derVFB = JSBI.add(this.reserve0.raw, JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, result.gamma), pairReserveTranslated0), BASE))
+
+
+        console.log("SDK:: pairRes0, pairRes1, derVFB", pairReserveTranslated0.toString(), pairReserveTranslated1.toString(), derVFB.toString());
+        console.log("SDK:: reserve0", this.reserve0.raw.toString());
+        //calculate amount added that results in uniPT generation, expressed in float units.
+
+        // let amountA = JSBI.divide(JSBI.multiply(pairReserveTranslated0, JSBI.multiply(fee2.newAmount, TWO)), pairReserveTranslated1);
+        // let amountB = JSBI.multiply(fee1.newAmount, TWO);
+        // //let finalAmount = JSBI.greaterThan(amountA, amountB) ? amountB: amountA;
+
+        //console.log("SDK:: amountA, amountB", amountA.toString(), amountB.toString());
+
+        //now we need to calculate new reserves + new gamma
+
+        let poolAddedLiquidity = JSBI.divide(JSBI.multiply(fee1.newAmount, totalSupply.raw), this.getPairReserves()[0].raw);
+        let secondPoolLiq = JSBI.divide(JSBI.multiply(fee2.newAmount, totalSupply.raw), this.getPairReserves()[1].raw);
+
+        poolAddedLiquidity = JSBI.greaterThan(poolAddedLiquidity, secondPoolLiq) ? secondPoolLiq : poolAddedLiquidity;
+
+
+        newTotalSupply = JSBI.add(newTotalSupply, poolAddedLiquidity);
+        let newPtb = JSBI.add(ptb.raw, poolAddedLiquidity);
+
+        console.log("SDK:: addedLiq, ptb, ptt", poolAddedLiquidity.toString(), newPtb.toString(), newTotalSupply.toString());
+        //console.log("SDK:: reserve0", this.reserve0.raw.toString());
+
+        //adding amounts to reserves in memory
+        let reserves = this.getPairReserves()
+        let isFloatR0 = this.token0.equals(this.pair.token0)
+        let newPairReserve0 = new TokenAmount(this.token0, JSBI.add(reserves[0].raw, fee1.newAmount))
+        let newPairReserve1 = new TokenAmount(this.token1, JSBI.add(reserves[1].raw, fee2.newAmount))
+        this.pair = new Pair(isFloatR0 ? newPairReserve0 : newPairReserve1, isFloatR0 ? newPairReserve1 : newPairReserve0)
+
+        pairReserveTranslated0 = this.translateToPylon(this.getPairReserves()[0].raw, newPtb, newTotalSupply);
+        pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, newPtb, newTotalSupply);
+
+        let adjustedVab = JSBI.subtract(result.vab, this.reserve1.raw);
+        let newGamma = this.calculateGamma(pairReserveTranslated1, parseBigintIsh(anchorKFactor), adjustedVab, isLineFormula);
+
+        let newDerVFB = JSBI.add(this.reserve0.raw, JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, newGamma.gamma), pairReserveTranslated0), BASE))
+
+        console.log("SDK:: pairRes0, pairRes1, derVFB", pairReserveTranslated0.toString(), pairReserveTranslated1.toString(), newDerVFB.toString());
+        console.log("SDK:: newGamma, adjustedVab", newGamma.gamma.toString(), adjustedVab.toString());
+
+        let liquidity = JSBI.divide(
+                            JSBI.multiply(
+                                floatTotalSupply.raw,
+                                JSBI.subtract(
+                                        JSBI.divide(
+                                            JSBI.multiply(newDerVFB, BASE)
+                                            , derVFB)
+                                    , BASE))
+                                , BASE);
+
+
+        console.log("SDK:: liquidity", liquidity.toString());
+        //let liquidity = this.getLiquidityFromPoolTokensLiquidity(fee1.newAmount, fee2.newAmount, newTotalSupply, ptb.raw, floatTotalSupply, false, result.vab, result.gamma)
         let feeLiquidity = this.getLiquidityFromPoolTokensLiquidity(fee1.fee, fee2.fee, newTotalSupply, ptb.raw, floatTotalSupply, false, result.vab, result.gamma)
         let feePercentage = JSBI.multiply(JSBI.divide(JSBI.multiply(feeLiquidity, BASE), liquidity), _100);
 
@@ -1130,7 +1190,7 @@ export class Pylon {
         //Expresses b1 in units of reserve0
 
         let px = JSBI.divide(JSBI.multiply(b1, this.getPairReserves()[0].raw), this.getPairReserves()[1].raw);
-        if (JSBI.greaterThan(px, this.getPairReserves()[0].raw)) {
+        if (JSBI.greaterThan(px, b0)) {
             return {maxX: b0, maxY: JSBI.divide(JSBI.multiply(b0, this.getPairReserves()[1].raw), this.getPairReserves()[0].raw)}
         }else{
             return {maxX: px, maxY: b1}
@@ -1144,8 +1204,9 @@ export class Pylon {
 
         let max0 = JSBI.divide(JSBI.multiply(reserveTranslated0, factory.maxSync), _200);
         let max1 = JSBI.divide(JSBI.multiply(reserveTranslated1, factory.maxSync), _200);
-        let newReserve0 = ZERO;
-        let newReserve1 = ZERO;
+        console.log("max0, max1, maxSync", max0.toString(), max1.toString(), factory.maxSync.toString());
+        let newReserve0 = balance0;
+        let newReserve1 = balance1;
         let liquidity = ZERO;
         let excess0 = ZERO;
         let excess1 = ZERO;
