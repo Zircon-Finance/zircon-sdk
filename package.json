@@ -1,7 +1,7 @@
 {
   "name": "zircon-sdk",
   "license": "MIT",
-  "version": "1.0.10-rc-28a",
+  "version": "1.0.10-rc-33a",
   "description": "The Pylon SDK for Zircon Finance Platform.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
