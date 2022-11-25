@@ -1,5 +1,5 @@
 import invariant from 'tiny-invariant'
-import {ChainId, MOONBASE_ADDRESSES, MOONRIVER_ADDRESSES} from '../constants'
+import { ChainId, MOONBASE_ADDRESSES, MOONRIVER_ADDRESSES } from '../constants'
 import { validateAndParseAddress } from '../utils'
 import { Currency } from './currency'
 

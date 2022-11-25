@@ -1,5 +1,5 @@
 import invariant from 'tiny-invariant'
-import {ChainId, WDEV as _WDEV, TradeType, Rounding, Token, TokenAmount, Pair, Route, Trade} from '../src'
+import { ChainId, WDEV as _WDEV, TradeType, Rounding, Token, TokenAmount, Pair, Route, Trade } from '../src'
 
 const ADDRESSES = [
   '0x0000000000000000000000000000000000000001',
@@ -36,15 +36,18 @@ describe('entities', () => {
         pairs = [
           new Pair(
             new TokenAmount(tokens[0], decimalize(1, tokens[0].decimals)),
-            new TokenAmount(tokens[1], decimalize(1, tokens[1].decimals))
+            new TokenAmount(tokens[1], decimalize(1, tokens[1].decimals)),
+              '0', '30'
           ),
           new Pair(
             new TokenAmount(tokens[1], decimalize(1, tokens[1].decimals)),
-            new TokenAmount(tokens[2], decimalize(1, tokens[2].decimals))
+            new TokenAmount(tokens[2], decimalize(1, tokens[2].decimals)),
+              '0', '30'
           ),
           new Pair(
             new TokenAmount(tokens[2], decimalize(1, tokens[2].decimals)),
-            new TokenAmount(WDEV, decimalize(1234, WDEV.decimals))
+            new TokenAmount(WDEV, decimalize(1234, WDEV.decimals)),
+              '0', '30'
           )
         ]
       })
@@ -104,7 +107,8 @@ describe('entities', () => {
             [
               new Pair(
                 new TokenAmount(tokens[1], decimalize(5, tokens[1].decimals)),
-                new TokenAmount(WDEV, decimalize(10, WDEV.decimals))
+                new TokenAmount(WDEV, decimalize(10, WDEV.decimals)),
+                  '0', '30'
               )
             ],
             tokens[1]
@@ -158,7 +162,9 @@ describe('entities', () => {
                     WDEV,
                     decimalize(10, WDEV.decimals) +
                       (tokens[1].decimals === 9 ? BigInt('30090280812437312') : BigInt('30090270812437322'))
-                  )
+                  ),
+                    '0', '30'
+
                 )
               ],
               tokens[1]

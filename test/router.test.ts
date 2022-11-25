@@ -13,9 +13,9 @@ describe('Router', () => {
   const token0 = new Token(ChainId.STANDALONE, '0x0000000000000000000000000000000000000001', 18, 't0')
   const token1 = new Token(ChainId.STANDALONE, '0x0000000000000000000000000000000000000002', 18, 't1')
 
-  const pair_0_1 = new Pair(new TokenAmount(token0, JSBI.BigInt(1000)), new TokenAmount(token1, JSBI.BigInt(1000)))
+  const pair_0_1 = new Pair(new TokenAmount(token0, JSBI.BigInt(1000)), new TokenAmount(token1, JSBI.BigInt(1000)), '0', '30')
 
-  const pair_WDEV_0 = new Pair(new TokenAmount(WDEV[ChainId.STANDALONE], '1000'), new TokenAmount(token0, '1000'))
+  const pair_WDEV_0 = new Pair(new TokenAmount(WDEV[ChainId.STANDALONE], '1000'), new TokenAmount(token0, '1000'), '0', '30')
 
   describe('#swapCallParameters', () => {
     describe('exact in', () => {
@@ -28,7 +28,7 @@ describe('Router', () => {
         expect(result.args.slice(0, -1)).toEqual([
           '0x51',
           [WDEV[ChainId.STANDALONE].address, token0.address, token1.address],
-          '0x0000000000000000000000000000000000000004',
+          '0x0000000000000000000000000000000000000004'
         ])
         expect(result.value).toEqual('0x64')
         checkDeadline(result.args[result.args.length - 1])
@@ -40,7 +40,7 @@ describe('Router', () => {
           {
             deadline: 50,
             recipient: '0x0000000000000000000000000000000000000004',
-            allowedSlippage: new Percent('1', '100'),
+            allowedSlippage: new Percent('1', '100')
           }
         )
         expect(result.methodName).toEqual('swapExactETHForTokens')
@@ -48,7 +48,7 @@ describe('Router', () => {
           '0x51',
           [WDEV[ChainId.STANDALONE].address, token0.address, token1.address],
           '0x0000000000000000000000000000000000000004',
-          '0x32',
+          '0x32'
         ])
         expect(result.value).toEqual('0x64')
       })
@@ -63,7 +63,7 @@ describe('Router', () => {
           '0x64',
           '0x51',
           [token1.address, token0.address, WDEV[ChainId.STANDALONE].address],
-          '0x0000000000000000000000000000000000000004',
+          '0x0000000000000000000000000000000000000004'
         ])
         expect(result.value).toEqual('0x0')
         checkDeadline(result.args[result.args.length - 1])
@@ -78,7 +78,7 @@ describe('Router', () => {
           '0x64',
           '0x59',
           [token0.address, token1.address],
-          '0x0000000000000000000000000000000000000004',
+          '0x0000000000000000000000000000000000000004'
         ])
         expect(result.value).toEqual('0x0')
         checkDeadline(result.args[result.args.length - 1])
@@ -94,7 +94,7 @@ describe('Router', () => {
         expect(result.args.slice(0, -1)).toEqual([
           '0x64',
           [WDEV[ChainId.STANDALONE].address, token0.address, token1.address],
-          '0x0000000000000000000000000000000000000004',
+          '0x0000000000000000000000000000000000000004'
         ])
         expect(result.value).toEqual('0x80')
         checkDeadline(result.args[result.args.length - 1])
@@ -109,7 +109,7 @@ describe('Router', () => {
           '0x64',
           '0x80',
           [token1.address, token0.address, WDEV[ChainId.STANDALONE].address],
-          '0x0000000000000000000000000000000000000004',
+          '0x0000000000000000000000000000000000000004'
         ])
         expect(result.value).toEqual('0x0')
         checkDeadline(result.args[result.args.length - 1])
@@ -124,7 +124,7 @@ describe('Router', () => {
           '0x64',
           '0x71',
           [token0.address, token1.address],
-          '0x0000000000000000000000000000000000000004',
+          '0x0000000000000000000000000000000000000004'
         ])
         expect(result.value).toEqual('0x0')
         checkDeadline(result.args[result.args.length - 1])
@@ -139,14 +139,14 @@ describe('Router', () => {
               ttl: 50,
               recipient: '0x0000000000000000000000000000000000000004',
               allowedSlippage: new Percent('1', '100'),
-              feeOnTransfer: true,
+              feeOnTransfer: true
             }
           )
           expect(result.methodName).toEqual('swapExactETHForTokensSupportingFeeOnTransferTokens')
           expect(result.args.slice(0, -1)).toEqual([
             '0x51',
             [WDEV[ChainId.STANDALONE].address, token0.address, token1.address],
-            '0x0000000000000000000000000000000000000004',
+            '0x0000000000000000000000000000000000000004'
           ])
           expect(result.value).toEqual('0x64')
           checkDeadline(result.args[result.args.length - 1])
@@ -158,7 +158,7 @@ describe('Router', () => {
               ttl: 50,
               recipient: '0x0000000000000000000000000000000000000004',
               allowedSlippage: new Percent('1', '100'),
-              feeOnTransfer: true,
+              feeOnTransfer: true
             }
           )
           expect(result.methodName).toEqual('swapExactTokensForETHSupportingFeeOnTransferTokens')
@@ -166,7 +166,7 @@ describe('Router', () => {
             '0x64',
             '0x51',
             [token1.address, token0.address, WDEV[ChainId.STANDALONE].address],
-            '0x0000000000000000000000000000000000000004',
+            '0x0000000000000000000000000000000000000004'
           ])
           expect(result.value).toEqual('0x0')
           checkDeadline(result.args[result.args.length - 1])
@@ -178,7 +178,7 @@ describe('Router', () => {
               ttl: 50,
               recipient: '0x0000000000000000000000000000000000000004',
               allowedSlippage: new Percent('1', '100'),
-              feeOnTransfer: true,
+              feeOnTransfer: true
             }
           )
           expect(result.methodName).toEqual('swapExactTokensForTokensSupportingFeeOnTransferTokens')
@@ -186,7 +186,7 @@ describe('Router', () => {
             '0x64',
             '0x59',
             [token0.address, token1.address],
-            '0x0000000000000000000000000000000000000004',
+            '0x0000000000000000000000000000000000000004'
           ])
           expect(result.value).toEqual('0x0')
           checkDeadline(result.args[result.args.length - 1])
@@ -204,7 +204,7 @@ describe('Router', () => {
                 ttl: 50,
                 recipient: '0x0000000000000000000000000000000000000004',
                 allowedSlippage: new Percent('1', '100'),
-                feeOnTransfer: true,
+                feeOnTransfer: true
               }
             )
           ).toThrow('EXACT_OUT_FOT')
@@ -217,7 +217,7 @@ describe('Router', () => {
                 ttl: 50,
                 recipient: '0x0000000000000000000000000000000000000004',
                 allowedSlippage: new Percent('1', '100'),
-                feeOnTransfer: true,
+                feeOnTransfer: true
               }
             )
           ).toThrow('EXACT_OUT_FOT')
@@ -230,7 +230,7 @@ describe('Router', () => {
                 ttl: 50,
                 recipient: '0x0000000000000000000000000000000000000004',
                 allowedSlippage: new Percent('1', '100'),
-                feeOnTransfer: true,
+                feeOnTransfer: true
               }
             )
           ).toThrow('EXACT_OUT_FOT')
