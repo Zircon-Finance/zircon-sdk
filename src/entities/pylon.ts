@@ -455,6 +455,7 @@ export class Pylon {
     let currentFloatAccumulator = priceCumulativeLast;
     if (JSBI.greaterThan(blockTimestamp, this.pair.lastBlockTimestamp)) {
       let timeElapsed = JSBI.subtract(blockTimestamp, this.pair.lastBlockTimestamp)
+      console.log("timeElapsed", timeElapsed.toString())
       let resPair1 = JSBI.leftShift(resTR1, _112)
 
       currentFloatAccumulator = JSBI.add(
@@ -465,6 +466,8 @@ export class Pylon {
                   resTR0),
               timeElapsed))
     }
+    console.log("currFloatAccumulator", currentFloatAccumulator.toString());
+    console.log("lastFloatAccumulator", lastFloatAccumulator.toString());
 
     let avgPrice = ZERO
     if (JSBI.greaterThan(currentFloatAccumulator, lastFloatAccumulator)) {
@@ -777,6 +780,9 @@ export class Pylon {
     console.log("instant Price =====> ", instantPrice.toString())
     console.log("last Price =====> ", lastPrice.toString())
 
+
+    // 10274744793400104233
+    // 2878764591642686146
     let feeByGamma = this.getFeeByGamma(gamma, pylonFactory.minFee, pylonFactory.maxFee)
     let feeBPS = ZERO
     if (isSync) {
@@ -790,9 +796,6 @@ export class Pylon {
       }
     }
 
-
-    console.log("feeBPS ==== >>>> ", feeBPS.toString())
-
     if (JSBI.greaterThanOrEqual(maxDerivative, pylonFactory.deltaGammaThreshold)) {
       let strikeDiff = JSBI.subtract(blockNumber, strikeBlock)
       let cooldownBlocks = JSBI.divide(BASE, pylonFactory.deltaGammaThreshold)
@@ -805,6 +808,8 @@ export class Pylon {
             ),
             feeBPS
         )
+        console.log("feeBPS ==== >>>> ", feeBPS.toString())
+
         if (JSBI.greaterThan(feeBPS, _10000)) {
           return {
             newAmount: ZERO,
@@ -1235,9 +1240,8 @@ export class Pylon {
       return blockedReturn
     }
 
-    console.log("amount1", fee1.newAmount.toString())
-    console.log("pairReserveTranslated1", pairReserveTranslated1.toString())
-    console.log("pairReserveTranslated0", pairReserveTranslated0.toString())
+    pairReserveTranslated0 = this.translateToPylon(this.getPairReserves()[0].raw, ptb.raw, newTotalSupply)
+    pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, ptb.raw, newTotalSupply)
 
     let aCase1 = JSBI.divide(
         JSBI.multiply(
@@ -1248,8 +1252,6 @@ export class Pylon {
     let aCase2 = JSBI.multiply(fee2.newAmount, TWO)
     let amount = JSBI.greaterThan(aCase1, aCase2) ? aCase2 : aCase1
 
-    console.log("amount", amount.toString())
-    console.log("vab", result.vab.toString())
     let liquidity = JSBI.divide(
         JSBI.multiply(amount, anchorTotalSupply.raw),
         result.vab)
@@ -1319,6 +1321,7 @@ export class Pylon {
     invariant(floatTotalSupply.token.equals(this.floatLiquidityToken), 'FLOAT LIQUIDITY')
     invariant(totalSupply.token.equals(this.pair.liquidityToken), 'LIQUIDITY')
 
+    let stReserve0 = this.reserve0.raw
     let ptMinted = this.publicMintFeeCalc(parseBigintIsh(kLast), totalSupply.raw, factory)
     let newTotalSupply = JSBI.add(totalSupply.raw, ptMinted)
 
@@ -1327,6 +1330,7 @@ export class Pylon {
     let pairReserveTranslated0 = this.translateToPylon(this.getPairReserves()[0].raw, ptb.raw, newTotalSupply)
     let pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, ptb.raw, newTotalSupply)
     let rootK = sqrt(JSBI.multiply(pairReserveTranslated0, pairReserveTranslated1))
+    console.log("ptb nptb pairRes", ptb.raw.toString(), newTotalSupply.toString(), this.getPairReserves()[1].raw.toString())
 
     let updateRemovingExcess = this.updateRemovingExcess(
         pairReserveTranslated0,
@@ -1397,10 +1401,14 @@ export class Pylon {
     pairReserveTranslated0 = this.translateToPylon(this.getPairReserves()[0].raw, newPTB, newTotalSupply)
     pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, newPTB, newTotalSupply)
 
+    console.log("pairReserveTranslated0", fee1.newAmount.toString())
+    console.log("pairReserveTranslated0", fee2.newAmount.toString())
+    console.log("pairReserveTranslated0", pairReserveTranslated0.toString())
+
     let floatLiqOwned = JSBI.add(
         JSBI.divide(
             JSBI.multiply(
-                this.reserve0.raw,
+                stReserve0,
                 newPTB),
             JSBI.multiply(TWO, pairReserveTranslated0)),
         JSBI.divide(
@@ -1419,6 +1427,10 @@ export class Pylon {
 
     let aCase2 = JSBI.multiply(fee1.newAmount, TWO)
     let amount = JSBI.greaterThan(aCase1, aCase2) ? aCase2 : aCase1
+
+    console.log("amount", amount.toString())
+    console.log("floatLiqOwned", floatLiqOwned.toString())
+    console.log("ptbMax", ptbMax.toString())
 
     anchorKFactor = this.anchorFactorFloatAdd(
         newPTB,
@@ -2112,6 +2124,7 @@ export class Pylon {
     let excess1 = ZERO
 
     if (JSBI.greaterThan(balance0, max0)) {
+      console.log("00");
       excess0 = JSBI.subtract(balance0, max0)
       liquidity = JSBI.add(
           liquidity,
@@ -2129,7 +2142,10 @@ export class Pylon {
     } else {
       newReserve0 = balance0
     }
-
+    console.log("b1, m1", max1.toString(), balance1.toString(), reserveTranslated1.toString());
+    //19786860154876221800
+    //906569208188320213
+    //9065692081883202131
     if (JSBI.greaterThan(balance1, max1)) {
       excess1 = JSBI.subtract(balance1, max1)
       liquidity = JSBI.add(
@@ -2221,7 +2237,6 @@ export class Pylon {
 
     let pairReserveTranslated0 = this.translateToPylon(this.getPairReserves()[0].raw, ptb.raw, newTotalSupply)
     let pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, ptb.raw, newTotalSupply)
-
     let updateRemovingExcess = this.updateRemovingExcess(
         pairReserveTranslated0,
         pairReserveTranslated1,
