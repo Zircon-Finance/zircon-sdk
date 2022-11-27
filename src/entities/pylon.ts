@@ -2256,6 +2256,9 @@ export class Pylon {
         parseBigintIsh(result.gamma)
     )
 
+    pairReserveTranslated0 = this.translateToPylon(this.getPairReserves()[0].raw, ptb.raw, newTotalSupply)
+
+
     let reservePTU = JSBI.divide(
         JSBI.multiply(this.reserve0.raw, floatTotalSupply.raw),
         JSBI.add(
@@ -2269,7 +2272,12 @@ export class Pylon {
       ptAmount = poolTokensIn.raw
     }
 
-    let amount = JSBI.divide(JSBI.multiply(result.vab, ptAmount), floatTotalSupply.raw)
+    let amount = JSBI.divide(JSBI.multiply(
+        JSBI.add(this.reserve0.raw,
+            JSBI.divide(
+                JSBI.multiply(pairReserveTranslated0,
+                    JSBI.multiply(result.gamma, TWO)), BASE)),
+        ptAmount), floatTotalSupply.raw)
 
     let fee1 = this.applyDeltaAndGammaTax(
         amount,
@@ -2281,24 +2289,20 @@ export class Pylon {
         true,
         result.lastPrice
     )
+    let amounNofee = amount
+    amount = JSBI.subtract(amount, JSBI.divide(JSBI.multiply(amount, fee1.feeBPS), _10000))
     if (fee1.blocked) {
       return blockReturn
     }
     kLast = JSBI.multiply(this.getPairReserves()[0].raw, this.getPairReserves()[1].raw)
-
-    // let retAmount = JSBI.subtract(amount,
-    //     JSBI.divide(
-    //         JSBI.multiply(amount, fee1.feeBPS),
-    //         _10000))
+    let fee = JSBI.subtract(amounNofee, amount)
 
     feePercentage = JSBI.greaterThan(fee1.newAmount, ZERO)
-        ? JSBI.multiply(JSBI.divide(JSBI.multiply(fee1.fee, BASE), fee1.newAmount), _100)
+        ? JSBI.multiply(JSBI.divide(JSBI.multiply(fee, BASE), amounNofee), _100)
         : ZERO
     let slippage = ZERO
-    // amount: JSBI = ZERO;
     if (JSBI.lessThan(reservePTU, poolTokensIn.raw)) {
       let adjustedLiq = JSBI.subtract(poolTokensIn.raw, reservePTU)
-      // console.log("adjustedLiq", adjustedLiq.toString(10))
       let lptu = this.calculateLPTU(
           newTotalSupply,
           floatTotalSupply,
@@ -2314,8 +2318,6 @@ export class Pylon {
       //604705541361411447
       let ptMinted = this.publicMintFeeCalc(parseBigintIsh(kLast), newTotalSupply, factory)
       newTotalSupply = JSBI.add(totalSupply.raw, ptMinted)
-
-      // TODO: burn one side
 
 
       let amount0 = JSBI.divide(JSBI.multiply(lptuWithFee, this.getPairReserves()[0].raw), newTotalSupply)
@@ -2341,27 +2343,23 @@ export class Pylon {
           this.getPairReserves()[1].raw
       )
       let feeAmountTransformed = newPair.getOutputAmount(new TokenAmount(this.token1, feeAmount1))
-      // console.log("amount", amount.toString(10))
 
       amount = JSBI.add(amount, JSBI.add(amount0, amountTransformed[0].raw))
       slippage = JSBI.divide(JSBI.multiply(amount, BASE), JSBI.add(amount0, amountTransformedComplete))
       feePercentage = JSBI.greaterThan(amount, ZERO)
           ? JSBI.multiply(
               JSBI.divide(
-                  JSBI.multiply(JSBI.add(fee1.fee, JSBI.add(feeAmount0, feeAmountTransformed[0].raw)), BASE),
+                  JSBI.multiply(JSBI.add(fee, JSBI.add(feeAmount0, feeAmountTransformed[0].raw)), BASE),
                   amount
               ),
               _100
           )
           : feePercentage
-      // console.log("amount", amount.toString(10))
     }
-
-    // this.changePairReserveOnFloatSwap(fee1.fee)
     return {
       amountOut: new TokenAmount(poolTokensIn.token, amount),
       blocked: false,
-      fee: new TokenAmount(this.anchorLiquidityToken, fee1.fee),
+      fee: new TokenAmount(this.anchorLiquidityToken, fee),
       deltaApplied: fee1.deltaApplied,
       feePercentage,
       omegaSlashingPercentage,
