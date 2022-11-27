@@ -1,6 +1,7 @@
 import { ChainId, Token, Pylon, Pair, TokenAmount, PylonFactory,  } from '../src'
 import JSBI from 'jsbi'
-import {MINT_CASES} from "./helper";
+import {CASES} from "./helper";
+import {BurnParams, Params} from "interfaces/pylonInterface";
 describe('Pylon', () => {
   const USDC = new Token(ChainId.STANDALONE, '0x21dF544947ba3E8b3c32561399E88B52Dc8b2823', 18, 'USDC', 'USD Coin')
   const DAI = new Token(ChainId.STANDALONE, '0x4C4a2f8c81640e47606d3fd77B353E87Ba015584', 18, 'DAI', 'DAI Stablecoin')
@@ -132,72 +133,72 @@ describe('Pylon', () => {
   //       '0'
   //     ]
   //   ].map(a => a.map(n => JSBI.BigInt(n)))
-  //   mintTestCases.forEach((mintCase, i) => {
+  //   mintTestCases.forEach((testCase, i) => {
   //     it('Burning' + i, () => {
   //       const pylon = new Pylon(
-  //         new Pair(new TokenAmount(USDC, mintCase[0]), new TokenAmount(DAI, mintCase[1]),'1', pylonFactory.liquidityFee),
-  //         new TokenAmount(USDC, mintCase[2]),
-  //         new TokenAmount(DAI, mintCase[3])
+  //         new Pair(new TokenAmount(USDC, testCase[0]), new TokenAmount(DAI, testCase[1]),'1', pylonFactory.liquidityFee),
+  //         new TokenAmount(USDC, testCase[2]),
+  //         new TokenAmount(DAI, testCase[3])
   //       )
   //
-  //       let totalSupply = new TokenAmount(pylon.pair.liquidityToken, mintCase[4])
-  //       let ptb = new TokenAmount(pylon.pair.liquidityToken, mintCase[5])
-  //       const isFloat = JSBI.equal(mintCase[18], ZERO)
-  //       const isLineFormula = JSBI.equal(mintCase[20], ZERO)
+  //       let totalSupply = new TokenAmount(pylon.pair.liquidityToken, testCase[4])
+  //       let ptb = new TokenAmount(pylon.pair.liquidityToken, testCase[5])
+  //       const isFloat = JSBI.equal(testCase[18], ZERO)
+  //       const isLineFormula = JSBI.equal(testCase[20], ZERO)
   //
   //       let ptTotalSupply = new TokenAmount(
   //         isFloat ? pylon.floatLiquidityToken : pylon.anchorLiquidityToken,
-  //         mintCase[6]
+  //         testCase[6]
   //       )
-  //       let liquidity = new TokenAmount(USDC, mintCase[7])
+  //       let liquidity = new TokenAmount(USDC, testCase[7])
   //       let result: { amount: TokenAmount; blocked: boolean; fee: TokenAmount; deltaApplied: boolean }
   //       if (isFloat) {
   //         result = pylon.burnFloat(
   //           totalSupply,
   //           ptTotalSupply,
   //           liquidity,
-  //           mintCase[8],
-  //           mintCase[9],
-  //           mintCase[10],
+  //           testCase[8],
+  //           testCase[9],
+  //           testCase[10],
   //           ptb,
-  //           mintCase[11],
-  //           mintCase[12],
+  //           testCase[11],
+  //           testCase[12],
   //           pylonFactory,
-  //           mintCase[13],
-  //           mintCase[14],
-  //           mintCase[15],
-  //           mintCase[16],
-  //           mintCase[17],
+  //           testCase[13],
+  //           testCase[14],
+  //           testCase[15],
+  //           testCase[16],
+  //           testCase[17],
   //           isLineFormula,
-  //           mintCase[21]
+  //           testCase[21]
   //         )
   //       } else {
-  //         let ptbEnergy = new TokenAmount(pylon.pair.liquidityToken, mintCase[22])
-  //         let a1Energy = new TokenAmount(pylon.anchorLiquidityToken, mintCase[23])
+  //         let ptbEnergy = new TokenAmount(pylon.pair.liquidityToken, testCase[22])
+  //         let a1Energy = new TokenAmount(pylon.anchorLiquidityToken, testCase[23])
   //         result = pylon.burnAnchor(
   //           totalSupply,
   //           ptTotalSupply,
   //           liquidity,
-  //           mintCase[8],
-  //           mintCase[9],
-  //           mintCase[10],
+  //           testCase[8],
+  //           testCase[9],
+  //           testCase[10],
   //           ptb,
-  //           mintCase[11],
-  //           mintCase[12],
+  //           testCase[11],
+  //           testCase[12],
   //           pylonFactory,
-  //           mintCase[13],
-  //           mintCase[14],
-  //           mintCase[15],
-  //           mintCase[16],
-  //           mintCase[17],
+  //           testCase[13],
+  //           testCase[14],
+  //           testCase[15],
+  //           testCase[16],
+  //           testCase[17],
   //           isLineFormula,
-  //           mintCase[21],
+  //           testCase[21],
   //           ptbEnergy,
   //           a1Energy
   //         )
   //       }
   //
-  //       expect(result.amount.raw.toString()).toEqual(mintCase[19].toString())
+  //       expect(result.amount.raw.toString()).toEqual(testCase[19].toString())
   //     })
   //   })
   // })
@@ -221,30 +222,30 @@ describe('Pylon', () => {
   //             72, 125, 72, 0, "320273612546280446", "87282157808787885051", "1827921151256990108", 0,
   //             "3578131992801231441", "13604646318626897107", 1, "9542161245487750000012424846300000000000004", 0],
   //     ].map(a => a.map(n => (JSBI.BigInt(n))))
-  //     mintTestCases.forEach((mintCase, i) => {
+  //     mintTestCases.forEach((testCase, i) => {
   //         it('Burning Async' + i , () => {
-  //             const pylon = new Pylon(new Pair(new TokenAmount(USDC, mintCase[0]), new TokenAmount(DAI, mintCase[1])), new TokenAmount(USDC, mintCase[2]), new TokenAmount(DAI, mintCase[3]))
+  //             const pylon = new Pylon(new Pair(new TokenAmount(USDC, testCase[0]), new TokenAmount(DAI, testCase[1])), new TokenAmount(USDC, testCase[2]), new TokenAmount(DAI, testCase[3]))
   //
-  //             let totalSupply = new TokenAmount(pylon.pair.liquidityToken, mintCase[4])
-  //             let ptb = new TokenAmount(pylon.pair.liquidityToken, mintCase[5])
-  //             const isFloat = JSBI.equal(mintCase[18], ZERO)
-  //             const isLineFormula = JSBI.equal(mintCase[21], ZERO)
+  //             let totalSupply = new TokenAmount(pylon.pair.liquidityToken, testCase[4])
+  //             let ptb = new TokenAmount(pylon.pair.liquidityToken, testCase[5])
+  //             const isFloat = JSBI.equal(testCase[18], ZERO)
+  //             const isLineFormula = JSBI.equal(testCase[21], ZERO)
   //
-  //             let ptTotalSupply = new TokenAmount(isFloat ? pylon.floatLiquidityToken : pylon.anchorLiquidityToken, mintCase[6])
-  //             let liquidity = new TokenAmount(USDC, mintCase[7])
+  //             let ptTotalSupply = new TokenAmount(isFloat ? pylon.floatLiquidityToken : pylon.anchorLiquidityToken, testCase[6])
+  //             let liquidity = new TokenAmount(USDC, testCase[7])
   //             let result: { amountA: TokenAmount; amountB: TokenAmount; blocked: boolean; fee: TokenAmount; deltaApplied: boolean, asyncBlocked: boolean }
   //             if (isFloat) {
   //                 result = pylon.burnAsyncFloat(totalSupply, ptTotalSupply, liquidity,
-  //                     mintCase[8], mintCase[9], mintCase[10],
-  //                     ptb, mintCase[11], mintCase[12], pylonFactory, mintCase[13], mintCase[14], mintCase[15], mintCase[16], mintCase[17], isLineFormula, mintCase[22])
+  //                     testCase[8], testCase[9], testCase[10],
+  //                     ptb, testCase[11], testCase[12], pylonFactory, testCase[13], testCase[14], testCase[15], testCase[16], testCase[17], isLineFormula, testCase[22])
   //             }else{
   //                 result = pylon.burnAsyncAnchor(totalSupply, ptTotalSupply, liquidity,
-  //                     mintCase[8], mintCase[9], mintCase[10],
-  //                     ptb, mintCase[11], mintCase[12], pylonFactory, mintCase[13], mintCase[14], mintCase[15], mintCase[16], mintCase[17], isLineFormula, mintCase[22])
+  //                     testCase[8], testCase[9], testCase[10],
+  //                     ptb, testCase[11], testCase[12], pylonFactory, testCase[13], testCase[14], testCase[15], testCase[16], testCase[17], isLineFormula, testCase[22])
   //             }
-  //             expect(result.amountA.raw.toString()).toEqual(mintCase[19].toString())
-  //             expect(result.amountB.raw.toString()).toEqual(mintCase[20].toString())
-  //             expect(result.asyncBlocked).toEqual(JSBI.equal(mintCase[23], ZERO))
+  //             expect(result.amountA.raw.toString()).toEqual(testCase[19].toString())
+  //             expect(result.amountB.raw.toString()).toEqual(testCase[20].toString())
+  //             expect(result.asyncBlocked).toEqual(JSBI.equal(testCase[23], ZERO))
   //         })
   //     })
   // })
@@ -268,31 +269,31 @@ describe('Pylon', () => {
   //             0, 22, 0, 0, 0, "259234808523880957499", "1000000000000000000", 0, "16036154803521621119", 0, "10633475413223140495861714586776859504132232"],
   //
   //     ].map(a => a.map(n => (JSBI.BigInt(n))))
-  //     mintTestCases.forEach((mintCase, i) => {
+  //     mintTestCases.forEach((testCase, i) => {
   //         it('Calculating async minting' + i , () => {
-  //             const pylon = new Pylon(new Pair(new TokenAmount(USDC, mintCase[0]), new TokenAmount(DAI, mintCase[1])), new TokenAmount(USDC, mintCase[2]), new TokenAmount(DAI, mintCase[3]))
+  //             const pylon = new Pylon(new Pair(new TokenAmount(USDC, testCase[0]), new TokenAmount(DAI, testCase[1])), new TokenAmount(USDC, testCase[2]), new TokenAmount(DAI, testCase[3]))
   //
-  //             let totalSupply = new TokenAmount(pylon.pair.liquidityToken, mintCase[4])
-  //             let ptb = new TokenAmount(pylon.pair.liquidityToken, mintCase[5])
-  //             const isFloat = JSBI.equal(mintCase[19], ZERO)
-  //             const isLineFormula = JSBI.equal(mintCase[21], ZERO)
+  //             let totalSupply = new TokenAmount(pylon.pair.liquidityToken, testCase[4])
+  //             let ptb = new TokenAmount(pylon.pair.liquidityToken, testCase[5])
+  //             const isFloat = JSBI.equal(testCase[19], ZERO)
+  //             const isLineFormula = JSBI.equal(testCase[21], ZERO)
   //
-  //             let ptTotalSupply = new TokenAmount(isFloat ? pylon.floatLiquidityToken : pylon.anchorLiquidityToken, mintCase[6])
-  //             let floatSupply = new TokenAmount(USDC, mintCase[7])
-  //             let anchorSupply = new TokenAmount(DAI, mintCase[8])
+  //             let ptTotalSupply = new TokenAmount(isFloat ? pylon.floatLiquidityToken : pylon.anchorLiquidityToken, testCase[6])
+  //             let floatSupply = new TokenAmount(USDC, testCase[7])
+  //             let anchorSupply = new TokenAmount(DAI, testCase[8])
   //             let result: { liquidity: TokenAmount; blocked: boolean; fee: TokenAmount; deltaApplied: boolean }
   //             if (isFloat) {
   //                 result = pylon.getFloatAsyncLiquidityMinted(totalSupply, ptTotalSupply, floatSupply, anchorSupply,
-  //                     mintCase[9], mintCase[10], mintCase[11],
-  //                     ptb, mintCase[12], mintCase[13], pylonFactory, mintCase[14], mintCase[15], mintCase[16], mintCase[17], mintCase[18], isLineFormula, mintCase[22])
+  //                     testCase[9], testCase[10], testCase[11],
+  //                     ptb, testCase[12], testCase[13], pylonFactory, testCase[14], testCase[15], testCase[16], testCase[17], testCase[18], isLineFormula, testCase[22])
   //             }else{
   //                 result = pylon.getAnchorAsyncLiquidityMinted(totalSupply, ptTotalSupply, floatSupply, anchorSupply,
-  //                     mintCase[9], mintCase[10], mintCase[11],
-  //                     ptb, mintCase[12], mintCase[13], pylonFactory, mintCase[14], mintCase[15], mintCase[16], mintCase[17], mintCase[18], isLineFormula, mintCase[22])
+  //                     testCase[9], testCase[10], testCase[11],
+  //                     ptb, testCase[12], testCase[13], pylonFactory, testCase[14], testCase[15], testCase[16], testCase[17], testCase[18], isLineFormula, testCase[22])
   //             }
   //
   //
-  //             expect(result.liquidity.raw.toString()).toEqual(mintCase[20].toString())
+  //             expect(result.liquidity.raw.toString()).toEqual(testCase[20].toString())
   //         })
   //     })
   // })
@@ -352,148 +353,209 @@ describe('Pylon', () => {
   // lastRootK, anchorKFactor, isLineFormula
 
   describe('Sync Minting', () => {
-    MINT_CASES.forEach((mintCase, i) => {
+    CASES.forEach((testCase, i) => {
       it('Calculating sync minting ' + i, () => {
-        if (!mintCase.skip) {
+        if (!testCase.skip) {
           const pylon = new Pylon(
               new Pair(
-                  new TokenAmount(USDC, mintCase.resPair0),
-                  new TokenAmount(DAI, mintCase.resPair1),
-                  mintCase.lastBlockTimestamp,
+                  new TokenAmount(USDC, testCase.resPair0),
+                  new TokenAmount(DAI, testCase.resPair1),
+                  testCase.lastBlockTimestamp,
                   pylonFactory.liquidityFee
               ),
-              new TokenAmount(USDC, mintCase.resPylon0),
-              new TokenAmount(DAI, mintCase.resPylon1)
+              new TokenAmount(USDC, testCase.resPylon0),
+              new TokenAmount(DAI, testCase.resPylon1)
           )
 
-          pylonFactory.setMaxSync(mintCase.maxSync ?? "10")
-          let totalSupply = new TokenAmount(pylon.pair.liquidityToken, mintCase.totalSupply)
-          let ptb = new TokenAmount(pylon.pair.liquidityToken, mintCase.ptb)
-          const isLineFormula = mintCase.fs
-          const isFloat = !mintCase.isAnchor
+          pylonFactory.setMaxSync(testCase.maxSync ?? "10")
+          let totalSupply = new TokenAmount(pylon.pair.liquidityToken, testCase.totalSupply)
+          let ptb = new TokenAmount(pylon.pair.liquidityToken, testCase.ptb)
+          const isLineFormula = testCase.fs
+          const isFloat = !testCase.isAnchor
           let ptTotalSupply = new TokenAmount(
               isFloat ? pylon.floatLiquidityToken : pylon.anchorLiquidityToken,
-              mintCase.ptTotalSupply
+              testCase.ptTotalSupply
           )
-          let amount = new TokenAmount(isFloat ? USDC : DAI, mintCase.amountIn)
-          let result: { liquidity: TokenAmount; blocked: boolean; fee: TokenAmount; deltaApplied: boolean }
-          if (mintCase.isSync) {
-            if (isFloat) {
-              result = pylon.getFloatSyncLiquidityMinted(
-                  totalSupply,
-                  ptTotalSupply,
-                  amount,
-                  mintCase.vab,
-                  mintCase.mu,
-                  mintCase.gamma,
-                  ptb,
-                  mintCase.strikeBlock,
-                  mintCase.blockNumber,
-                  pylonFactory,
-                  mintCase.EMABlockNumber,
-                  mintCase.gEMA,
-                  mintCase.thisBlockEMA,
-                  mintCase.lrkt,
-                  mintCase.akv,
-                  isLineFormula,
-                  mintCase.lastK,
-                  mintCase.timestamp,
-                  mintCase.lastFloatAccumulator,
-                  mintCase.price0CumulativeLast,
-                  mintCase.price1CumulativeLast,
-                  mintCase.lastOracleTimestamp
-              )
-            } else {
-              result = pylon.getAnchorSyncLiquidityMinted(
-                  totalSupply,
-                  ptTotalSupply,
-                  amount,
-                  mintCase.vab,
-                  mintCase.mu,
-                  mintCase.gamma,
-                  ptb,
-                  mintCase.strikeBlock,
-                  mintCase.blockNumber,
-                  pylonFactory,
-                  mintCase.EMABlockNumber,
-                  mintCase.gEMA,
-                  mintCase.thisBlockEMA,
-                  mintCase.lrkt,
-                  mintCase.akv,
-                  isLineFormula,
-                  mintCase.lastK,
-                  mintCase.timestamp,
-                  mintCase.lastFloatAccumulator,
-                  mintCase.price0CumulativeLast,
-                  mintCase.price1CumulativeLast,
-                  mintCase.lastOracleTimestamp
-              )
+          let amount = new TokenAmount(isFloat ? USDC : DAI, testCase.amountIn)
+          let result: Params
+          if (testCase.isBurn) {
+            if (testCase.isSync) {
+              if(isFloat) {
+                result = pylon.burnFloat(
+                    totalSupply,
+                    ptTotalSupply,
+                    amount,
+                    testCase.vab,
+                    testCase.mu,
+                    testCase.gamma,
+                    ptb,
+                    testCase.strikeBlock,
+                    testCase.blockNumber,
+                    pylonFactory,
+                    testCase.EMABlockNumber,
+                    testCase.gEMA,
+                    testCase.thisBlockEMA,
+                    testCase.lrkt,
+                    testCase.akv,
+                    isLineFormula,
+                    testCase.lastK,
+                    testCase.timestamp,
+                    testCase.lastFloatAccumulator,
+                    testCase.price0CumulativeLast,
+                    testCase.price1CumulativeLast,
+                    testCase.lastOracleTimestamp
+                )
+              }else{
+                let resPtEnergy = new TokenAmount(pylon.pair.liquidityToken, testCase.reservePtEnergy ?? "0")
+                let resAnchorEnergy = new TokenAmount(pylon.token1, testCase.reserveAnchorEnergy ?? "0")
+                result = pylon.burnAnchor(
+                    totalSupply,
+                    ptTotalSupply,
+                    amount,
+                    testCase.vab,
+                    testCase.mu,
+                    testCase.gamma,
+                    ptb,
+                    testCase.strikeBlock,
+                    testCase.blockNumber,
+                    pylonFactory,
+                    testCase.EMABlockNumber,
+                    testCase.gEMA,
+                    testCase.thisBlockEMA,
+                    testCase.lrkt,
+                    testCase.akv,
+                    isLineFormula,
+                    testCase.lastK,
+                    resPtEnergy,
+                    resAnchorEnergy,
+                    testCase.timestamp,
+                    testCase.lastFloatAccumulator,
+                    testCase.price0CumulativeLast,
+                    testCase.price1CumulativeLast,
+                    testCase.lastOracleTimestamp
+                )
+              }
+
+            }else{
+
             }
           }else{
-            let amount1 = new TokenAmount( USDC  , mintCase.amountIn)
-            let amount2 = new TokenAmount( DAI, mintCase.amountIn2 ?? "0")
+            if (testCase.isSync) {
+              if (isFloat) {
+                result = pylon.getFloatSyncLiquidityMinted(
+                    totalSupply,
+                    ptTotalSupply,
+                    amount,
+                    testCase.vab,
+                    testCase.mu,
+                    testCase.gamma,
+                    ptb,
+                    testCase.strikeBlock,
+                    testCase.blockNumber,
+                    pylonFactory,
+                    testCase.EMABlockNumber,
+                    testCase.gEMA,
+                    testCase.thisBlockEMA,
+                    testCase.lrkt,
+                    testCase.akv,
+                    isLineFormula,
+                    testCase.lastK,
+                    testCase.timestamp,
+                    testCase.lastFloatAccumulator,
+                    testCase.price0CumulativeLast,
+                    testCase.price1CumulativeLast,
+                    testCase.lastOracleTimestamp
+                )
+              } else {
+                result = pylon.getAnchorSyncLiquidityMinted(
+                    totalSupply,
+                    ptTotalSupply,
+                    amount,
+                    testCase.vab,
+                    testCase.mu,
+                    testCase.gamma,
+                    ptb,
+                    testCase.strikeBlock,
+                    testCase.blockNumber,
+                    pylonFactory,
+                    testCase.EMABlockNumber,
+                    testCase.gEMA,
+                    testCase.thisBlockEMA,
+                    testCase.lrkt,
+                    testCase.akv,
+                    isLineFormula,
+                    testCase.lastK,
+                    testCase.timestamp,
+                    testCase.lastFloatAccumulator,
+                    testCase.price0CumulativeLast,
+                    testCase.price1CumulativeLast,
+                    testCase.lastOracleTimestamp
+                )
+              }
+            }else{
+              let amount1 = new TokenAmount( USDC  , testCase.amountIn)
+              let amount2 = new TokenAmount( DAI, testCase.amountIn2 ?? "0")
 
-            if (isFloat) {
-              result = pylon.getFloatAsyncLiquidityMinted(
-                  totalSupply,
-                  ptTotalSupply,
-                  amount1,
-                  amount2,
-                  mintCase.vab,
-                  mintCase.mu,
-                  mintCase.gamma,
-                  ptb,
-                  mintCase.strikeBlock,
-                  mintCase.blockNumber,
-                  pylonFactory,
-                  mintCase.EMABlockNumber,
-                  mintCase.gEMA,
-                  mintCase.thisBlockEMA,
-                  mintCase.lrkt,
-                  mintCase.akv,
-                  isLineFormula,
-                  mintCase.lastK,
-                  mintCase.timestamp,
-                  mintCase.lastFloatAccumulator,
-                  mintCase.price0CumulativeLast,
-                  mintCase.price1CumulativeLast,
-                  mintCase.lastOracleTimestamp
-              )
-            } else {
-              console.log("smth is wrong here")
-              result = pylon.getAnchorAsyncLiquidityMinted(
-                  totalSupply,
-                  ptTotalSupply,
-                  amount1,
-                  amount2,
-                  mintCase.vab,
-                  mintCase.mu,
-                  mintCase.gamma,
-                  ptb,
-                  mintCase.strikeBlock,
-                  mintCase.blockNumber,
-                  pylonFactory,
-                  mintCase.EMABlockNumber,
-                  mintCase.gEMA,
-                  mintCase.thisBlockEMA,
-                  mintCase.lrkt,
-                  mintCase.akv,
-                  isLineFormula,
-                  mintCase.lastK,
-                  mintCase.timestamp,
-                  mintCase.lastFloatAccumulator,
-                  mintCase.price0CumulativeLast,
-                  mintCase.price1CumulativeLast,
-                  mintCase.lastOracleTimestamp
-              )
+              if (isFloat) {
+                result = pylon.getFloatAsyncLiquidityMinted(
+                    totalSupply,
+                    ptTotalSupply,
+                    amount1,
+                    amount2,
+                    testCase.vab,
+                    testCase.mu,
+                    testCase.gamma,
+                    ptb,
+                    testCase.strikeBlock,
+                    testCase.blockNumber,
+                    pylonFactory,
+                    testCase.EMABlockNumber,
+                    testCase.gEMA,
+                    testCase.thisBlockEMA,
+                    testCase.lrkt,
+                    testCase.akv,
+                    isLineFormula,
+                    testCase.lastK,
+                    testCase.timestamp,
+                    testCase.lastFloatAccumulator,
+                    testCase.price0CumulativeLast,
+                    testCase.price1CumulativeLast,
+                    testCase.lastOracleTimestamp
+                )
+              } else {
+                result = pylon.getAnchorAsyncLiquidityMinted(
+                    totalSupply,
+                    ptTotalSupply,
+                    amount1,
+                    amount2,
+                    testCase.vab,
+                    testCase.mu,
+                    testCase.gamma,
+                    ptb,
+                    testCase.strikeBlock,
+                    testCase.blockNumber,
+                    pylonFactory,
+                    testCase.EMABlockNumber,
+                    testCase.gEMA,
+                    testCase.thisBlockEMA,
+                    testCase.lrkt,
+                    testCase.akv,
+                    isLineFormula,
+                    testCase.lastK,
+                    testCase.timestamp,
+                    testCase.lastFloatAccumulator,
+                    testCase.price0CumulativeLast,
+                    testCase.price1CumulativeLast,
+                    testCase.lastOracleTimestamp
+                )
+              }
             }
           }
-          expect(result.liquidity.raw.toString()).toEqual(mintCase.amountOut)
-          expect(result.blocked).toEqual(mintCase.isBlocked)
+          expect(result.amountOut.raw.toString()).toEqual(testCase.amountOut)
+          expect(result.blocked).toEqual(testCase.isBlocked)
         }
       })
     })
-
   })
   // describe('Sync Minting', () => {
   //   const mintTestCases = [
@@ -576,68 +638,68 @@ describe('Pylon', () => {
   //     //     "265147587326582515044", "161027828852633960", "161027828852633960",
   //     //     548, 699, 548, 0, "338972171147366039", "88543034411229793462", '1850510936446229982', 1, "169662705002277610", 1, "9549393905011303751364014400000000000000000", 1],
   //   ].map(a => a.map(n => JSBI.BigInt(n)))
-  //   mintTestCases.forEach((mintCase, i) => {
+  //   mintTestCases.forEach((testCase, i) => {
   //     it('Calculating sync minting ' + i, () => {
   //       const pylon = new Pylon(
-  //           new Pair(new TokenAmount(USDC, mintCase[0]), new TokenAmount(DAI, mintCase[1]), '1', this.pair.liquidityFee),
-  //           new TokenAmount(USDC, mintCase[2]),
-  //           new TokenAmount(DAI, mintCase[3])
+  //           new Pair(new TokenAmount(USDC, testCase[0]), new TokenAmount(DAI, testCase[1]), '1', this.pair.liquidityFee),
+  //           new TokenAmount(USDC, testCase[2]),
+  //           new TokenAmount(DAI, testCase[3])
   //       )
   //
-  //       let totalSupply = new TokenAmount(pylon.pair.liquidityToken, mintCase[4])
-  //       let ptb = new TokenAmount(pylon.pair.liquidityToken, mintCase[5])
-  //       const isLineFormula = JSBI.equal(mintCase[18], ZERO)
-  //       const isFloat = JSBI.equal(mintCase[20], ZERO)
+  //       let totalSupply = new TokenAmount(pylon.pair.liquidityToken, testCase[4])
+  //       let ptb = new TokenAmount(pylon.pair.liquidityToken, testCase[5])
+  //       const isLineFormula = JSBI.equal(testCase[18], ZERO)
+  //       const isFloat = JSBI.equal(testCase[20], ZERO)
   //       let ptTotalSupply = new TokenAmount(
   //           isFloat ? pylon.floatLiquidityToken : pylon.anchorLiquidityToken,
-  //           mintCase[6]
+  //           testCase[6]
   //       )
-  //       let supply = new TokenAmount(isFloat ? USDC : DAI, mintCase[7])
+  //       let supply = new TokenAmount(isFloat ? USDC : DAI, testCase[7])
   //       let result: { liquidity: TokenAmount; blocked: boolean; fee: TokenAmount; deltaApplied: boolean }
   //       if (isFloat) {
   //         result = pylon.getFloatSyncLiquidityMinted(
   //             totalSupply,
   //             ptTotalSupply,
   //             supply,
-  //             mintCase[8],
-  //             mintCase[9],
-  //             mintCase[10],
+  //             testCase[8],
+  //             testCase[9],
+  //             testCase[10],
   //             ptb,
-  //             mintCase[11],
-  //             mintCase[12],
+  //             testCase[11],
+  //             testCase[12],
   //             pylonFactory,
-  //             mintCase[13],
-  //             mintCase[14],
-  //             mintCase[15],
-  //             mintCase[16],
-  //             mintCase[17],
+  //             testCase[13],
+  //             testCase[14],
+  //             testCase[15],
+  //             testCase[16],
+  //             testCase[17],
   //             isLineFormula,
-  //             mintCase[21]
+  //             testCase[21]
   //         )
   //       } else {
   //         result = pylon.getAnchorSyncLiquidityMinted(
   //             totalSupply,
   //             ptTotalSupply,
   //             supply,
-  //             mintCase[8],
-  //             mintCase[9],
-  //             mintCase[10],
+  //             testCase[8],
+  //             testCase[9],
+  //             testCase[10],
   //             ptb,
-  //             mintCase[11],
-  //             mintCase[12],
+  //             testCase[11],
+  //             testCase[12],
   //             pylonFactory,
-  //             mintCase[13],
-  //             mintCase[14],
-  //             mintCase[15],
-  //             mintCase[16],
-  //             mintCase[17],
+  //             testCase[13],
+  //             testCase[14],
+  //             testCase[15],
+  //             testCase[16],
+  //             testCase[17],
   //             isLineFormula,
-  //             mintCase[21]
+  //             testCase[21]
   //         )
   //       }
   //
-  //       expect(result.liquidity.raw.toString()).toEqual(mintCase[19].toString())
-  //       expect(result.blocked).toEqual(JSBI.equal(mintCase[22], ZERO))
+  //       expect(result.liquidity.raw.toString()).toEqual(testCase[19].toString())
+  //       expect(result.blocked).toEqual(JSBI.equal(testCase[22], ZERO))
   //     })
   //   })
   // })

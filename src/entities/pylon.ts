@@ -1137,10 +1137,8 @@ export class Pylon {
       price1CumulativeLast: BigintIsh,
       lastOracleTimestamp: BigintIsh
   ): MintAsyncParams {
-    console.log("FUCKKKKKK")
-
     const blockedReturn = {
-      liquidity: new TokenAmount(this.anchorLiquidityToken, ZERO),
+      amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
       blocked: true,
       fee: new TokenAmount(this.anchorLiquidityToken, ZERO),
       deltaApplied: true,
@@ -1180,9 +1178,6 @@ export class Pylon {
     let newPTB = JSBI.add(ptb.raw, updateRemovingExcess.liquidity)
     newTotalSupply = JSBI.add(newTotalSupply, updateRemovingExcess.liquidity)
 
-    console.log('newPTB', newPTB)
-    console.log('newTotalSupply', newTotalSupply)
-
     let result = this.updateSync(
         parseBigintIsh(anchorVirtualBalance),
         parseBigintIsh(lastRootK),
@@ -1197,9 +1192,6 @@ export class Pylon {
         parseBigintIsh(lastOracleTimestamp),
         rootK
     )
-
-    console.log('vab', result.vab.toString())
-    console.log('gamma after sync', result.gamma.toString())
 
     let ema = this.calculateEMA(
         parseBigintIsh(emaBlockNumber),
@@ -1235,8 +1227,6 @@ export class Pylon {
     this.changePairReserveOnFloatSwap(fee1.fee)
 
     if (fee1.blocked || fee2.blocked) {
-      console.log("blocked1", fee1.blocked)
-      console.log("blocked2", fee2.blocked)
       return blockedReturn
     }
 
@@ -1262,7 +1252,7 @@ export class Pylon {
       throw new InsufficientInputAmountError()
     }
     return {
-      liquidity: new TokenAmount(this.anchorLiquidityToken, liquidity),
+      amountOut: new TokenAmount(this.anchorLiquidityToken, liquidity),
       blocked: false,
       fee: new TokenAmount(this.anchorLiquidityToken, JSBI.add(fee1.fee, fee2.fee)),
       deltaApplied: fee1.deltaApplied || fee2.deltaApplied,
@@ -1309,7 +1299,7 @@ export class Pylon {
       lastOracleTimestamp: BigintIsh
   ): MintAsyncParams {
     const blockedReturn = {
-      liquidity: new TokenAmount(this.anchorLiquidityToken, ZERO),
+      amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
       blocked: true,
       fee: new TokenAmount(this.anchorLiquidityToken, ZERO),
       deltaApplied: true,
@@ -1401,10 +1391,6 @@ export class Pylon {
     pairReserveTranslated0 = this.translateToPylon(this.getPairReserves()[0].raw, newPTB, newTotalSupply)
     pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, newPTB, newTotalSupply)
 
-    console.log("pairReserveTranslated0", fee1.newAmount.toString())
-    console.log("pairReserveTranslated0", fee2.newAmount.toString())
-    console.log("pairReserveTranslated0", pairReserveTranslated0.toString())
-
     let floatLiqOwned = JSBI.add(
         JSBI.divide(
             JSBI.multiply(
@@ -1427,10 +1413,6 @@ export class Pylon {
 
     let aCase2 = JSBI.multiply(fee1.newAmount, TWO)
     let amount = JSBI.greaterThan(aCase1, aCase2) ? aCase2 : aCase1
-
-    console.log("amount", amount.toString())
-    console.log("floatLiqOwned", floatLiqOwned.toString())
-    console.log("ptbMax", ptbMax.toString())
 
     anchorKFactor = this.anchorFactorFloatAdd(
         newPTB,
@@ -1523,7 +1505,7 @@ export class Pylon {
     }
 
     return {
-      liquidity: new TokenAmount(this.anchorLiquidityToken, liquidity),
+      amountOut: new TokenAmount(this.anchorLiquidityToken, liquidity),
       blocked: false,
       fee: new TokenAmount(this.anchorLiquidityToken, JSBI.add(fee1.fee, fee2.fee)),
       deltaApplied: fee1.deltaApplied || fee2.deltaApplied,
@@ -1555,6 +1537,7 @@ export class Pylon {
       price1CumulativeLast: BigintIsh,
       lastOracleTimestamp: BigintIsh
   ): MintSyncParams {
+
     const blockedReturn = {
       isDerivedVFB: false,
       blocked: true,
@@ -1562,7 +1545,7 @@ export class Pylon {
       deltaApplied: true,
       feePercentage: ZERO,
       extraSlippagePercentage: ZERO,
-      liquidity: new TokenAmount(this.anchorLiquidityToken, ZERO),
+      amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
       amountsToInvest: { async: ZERO, sync: ZERO }
     }
     if (JSBI.equal(parseBigintIsh(lastRootK), ZERO)) {
@@ -1629,10 +1612,10 @@ export class Pylon {
         result.lastPrice
     )
 
-    console.log("fee new amount", fee.newAmount.toString())
     if (fee.blocked) {
       return blockedReturn
     }
+
     let feePercentage = JSBI.multiply(JSBI.divide(JSBI.multiply(fee.fee, BASE), fee.newAmount), _100)
     let pairReserveTranslated = this.translateToPylon(this.getPairReserves()[1].raw, newPTB, newTotalSupply)
     let amountsToInvest = this.handleSyncAndAsync(
@@ -1660,7 +1643,6 @@ export class Pylon {
       let sqrtKPrime = sqrt(
           JSBI.multiply(JSBI.add(pairReserveTranslated1, amounInWithFee), pairReserveTranslated0)
       )
-      console.log("sqrtKP", sqrtKPrime.toString());
       //7175424315084004299
       //7211387720175460098
       let liqPercentage = JSBI.divide(JSBI.multiply(JSBI.subtract(sqrtKPrime, sqrtK), BASE), sqrtK)
@@ -1710,16 +1692,13 @@ export class Pylon {
     //14212663367574706618
     //7141433865249083198
     amount = JSBI.add(amount, amountsToInvest.sync)
-    console.log("SDK:: amount", amount.toString())
-    console.log("SDK:: ats", anchorTotalSupply.raw.toString())
-    console.log("SDK:: vab", result.vab.toString())
 
     let liquidity: JSBI = JSBI.divide(JSBI.multiply(amount, anchorTotalSupply.raw), result.vab)
     if (!JSBI.greaterThan(liquidity, ZERO)) {
       throw new InsufficientInputAmountError()
     }
     return {
-      liquidity: new TokenAmount(this.anchorLiquidityToken, liquidity),
+      amountOut: new TokenAmount(this.anchorLiquidityToken, liquidity),
       blocked: false,
       fee: new TokenAmount(this.anchorLiquidityToken, fee.fee),
       deltaApplied: fee.deltaApplied,
@@ -1761,7 +1740,7 @@ export class Pylon {
       deltaApplied: true,
       feePercentage: ZERO,
       extraSlippagePercentage: ZERO,
-      liquidity: new TokenAmount(this.anchorLiquidityToken, ZERO),
+      amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
       amountsToInvest: { async: ZERO, sync: ZERO }
     }
     if (JSBI.equal(parseBigintIsh(lastRootK), ZERO)) {
@@ -1995,7 +1974,7 @@ export class Pylon {
       return {
         amountsToInvest: { async: ZERO, sync: ZERO },
         extraSlippagePercentage: ZERO,
-        liquidity: new TokenAmount(this.anchorLiquidityToken, ZERO),
+        amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
         blocked: false,
         fee: new TokenAmount(this.anchorLiquidityToken, ZERO),
         deltaApplied: false,
@@ -2004,7 +1983,7 @@ export class Pylon {
       }
     }
     return {
-      liquidity: new TokenAmount(this.anchorLiquidityToken, liquidity),
+      amountOut: new TokenAmount(this.anchorLiquidityToken, liquidity),
       blocked: false,
       fee: new TokenAmount(this.anchorLiquidityToken, fee.fee),
       deltaApplied: fee.deltaApplied,
@@ -2211,7 +2190,7 @@ export class Pylon {
       lastOracleTimestamp: BigintIsh
   ): BurnParams {
     const blockReturn = {
-      amount: new TokenAmount(this.anchorLiquidityToken, ZERO),
+      amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
       blocked: true,
       fee: new TokenAmount(this.anchorLiquidityToken, ZERO),
       deltaApplied: true,
@@ -2380,7 +2359,7 @@ export class Pylon {
 
     // this.changePairReserveOnFloatSwap(fee1.fee)
     return {
-      amount: new TokenAmount(poolTokensIn.token, amount),
+      amountOut: new TokenAmount(poolTokensIn.token, amount),
       blocked: false,
       fee: new TokenAmount(this.anchorLiquidityToken, fee1.fee),
       deltaApplied: fee1.deltaApplied,
@@ -2420,7 +2399,7 @@ export class Pylon {
       lastOracleTimestamp: BigintIsh
   ): BurnParams {
     const blockReturn = {
-      amount: new TokenAmount(this.anchorLiquidityToken, ZERO),
+      amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
       blocked: true,
       fee: new TokenAmount(this.anchorLiquidityToken, ZERO),
       deltaApplied: true,
@@ -2593,7 +2572,7 @@ export class Pylon {
           : feePercentage
     }
     return {
-      amount: new TokenAmount(poolTokensIn.token, amount),
+      amountOut: new TokenAmount(poolTokensIn.token, amount),
       blocked: false,
       fee: new TokenAmount(this.anchorLiquidityToken, fee1.fee),
       deltaApplied: fee1.deltaApplied,
@@ -2631,8 +2610,8 @@ export class Pylon {
       lastOracleTimestamp: BigintIsh
   ): BurnAsyncParams {
     const blockReturn = {
-      amountA: new TokenAmount(this.anchorLiquidityToken, ZERO),
-      amountB: new TokenAmount(this.anchorLiquidityToken, ZERO),
+      amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
+      amountOut2: new TokenAmount(this.anchorLiquidityToken, ZERO),
       asyncBlocked: false,
       blocked: true,
       fee: new TokenAmount(this.anchorLiquidityToken, ZERO),
@@ -2717,8 +2696,8 @@ export class Pylon {
     let extraAmount1 = this.anchorSlash(amount1, amount0, slash.percentage, parseBigintIsh(reserveAnchorEnergy.raw))
 
     return {
-      amountA: new TokenAmount(this.token0, amount0),
-      amountB: new TokenAmount(this.token1, JSBI.add(amount1, extraAmount1.extraStable)),
+      amountOut: new TokenAmount(this.token0, amount0),
+      amountOut2: new TokenAmount(this.token1, JSBI.add(amount1, extraAmount1.extraStable)),
       asyncBlocked: fee.asyncBlocked,
       blocked: fee.blocked,
       fee: new TokenAmount(this.anchorLiquidityToken, fee.fee),
@@ -2753,8 +2732,8 @@ export class Pylon {
       lastOracleTimestamp: BigintIsh
   ): BurnAsyncParams {
     const blockedReturn = {
-      amountA: new TokenAmount(this.anchorLiquidityToken, ZERO),
-      amountB: new TokenAmount(this.anchorLiquidityToken, ZERO),
+      amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
+      amountOut2: new TokenAmount(this.anchorLiquidityToken, ZERO),
       asyncBlocked: false,
       blocked: true,
       fee: new TokenAmount(this.anchorLiquidityToken, ZERO),
@@ -2827,8 +2806,8 @@ export class Pylon {
     let amount1 = JSBI.divide(JSBI.multiply(fee.newAmount, this.getPairReserves()[1].raw), newTotalSupply)
 
     return {
-      amountA: new TokenAmount(this.token0, amount0),
-      amountB: new TokenAmount(this.token1, amount1),
+      amountOut: new TokenAmount(this.token0, amount0),
+      amountOut2: new TokenAmount(this.token1, amount1),
       asyncBlocked: fee.asyncBlocked,
       blocked: fee.blocked,
       fee: new TokenAmount(this.anchorLiquidityToken, fee.fee),

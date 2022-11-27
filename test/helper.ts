@@ -25,6 +25,7 @@ export interface TestInput {
     price0CumulativeLast: string
     price1CumulativeLast: string
     amountOut: string
+    amountOut2?: string // For Burn Async Case
     amountIn: string
     amountIn2?: string // For Async use case
     lastOracleTimestamp: string
@@ -32,9 +33,13 @@ export interface TestInput {
     skip: boolean
     maxSync?: string
     isSync: boolean
+    isBurn: boolean
+    reservePtEnergy?: string
+    reserveAnchorEnergy?: string
 }
 
-export const MINT_CASES: TestInput[] = [
+
+export const CASES: TestInput[] = [
     {
         resPair0: '9750000000000000000',
         resPair1: '19500000000000000000',
@@ -66,7 +71,8 @@ export const MINT_CASES: TestInput[] = [
         lastOracleTimestamp: '1668862595',
         lastBlockTimestamp: '1668873799',
         skip: true,
-        isSync: true
+        isSync: true,
+        isBurn: false
     },{
         resPair0: '19500000000000000000',
         resPair1: '9750000000000000000',
@@ -98,7 +104,9 @@ export const MINT_CASES: TestInput[] = [
         lastOracleTimestamp: '1669196208',
         lastBlockTimestamp: '1669196211',
         skip: true,
-        isSync: true
+        isSync: true,
+        isBurn: false
+
     },{
         resPair0: '580382380101448981943',
         resPair1: '16051050000000000000000',
@@ -130,7 +138,8 @@ export const MINT_CASES: TestInput[] = [
         lastOracleTimestamp: '1669207934',
         lastBlockTimestamp: '1669207939',
         skip: true,
-        isSync: true
+        isSync: true,
+        isBurn: false
     },{
         resPair0: '19525000000000000001',
         resPair1: '9762500000000000000',
@@ -163,7 +172,9 @@ export const MINT_CASES: TestInput[] = [
         lastBlockTimestamp: '1669207939',
         skip: true,
         maxSync: "0",
-        isSync: true
+        isSync: true,
+        isBurn: false
+
     },{
         resPair0: '19525000000000000001',
         resPair1: '9762500000000000000',
@@ -196,7 +207,9 @@ export const MINT_CASES: TestInput[] = [
         lastBlockTimestamp: '1669207939',
         skip: true,
         maxSync: "0",
-        isSync: true
+        isSync: true,
+        isBurn: false
+
     },{
         resPair0: '3740000000000000000000',
         resPair1: '9277545527316389833901',
@@ -229,7 +242,9 @@ export const MINT_CASES: TestInput[] = [
         lastOracleTimestamp: '1669378573',
         lastBlockTimestamp: '1669378578',
         skip: true,
-        isSync: false
+        isSync: false,
+        isBurn: false
+
     },
     {
         resPair0: '5148450374000000000000',
@@ -263,6 +278,7 @@ export const MINT_CASES: TestInput[] = [
         lastOracleTimestamp: '1669483833',
         lastBlockTimestamp: '1669483833',
         skip: false,
-        isSync: false
+        isSync: false,
+        isBurn: false
     },
 ]
