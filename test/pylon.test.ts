@@ -1,7 +1,7 @@
 import { ChainId, Token, Pylon, Pair, TokenAmount, PylonFactory,  } from '../src'
 import JSBI from 'jsbi'
 import {CASES} from "./helper";
-import {Params} from "interfaces/pylonInterface";
+import {BurnAsyncParams, Params} from "interfaces/pylonInterface";
 describe('Pylon', () => {
   const USDC = new Token(ChainId.STANDALONE, '0x21dF544947ba3E8b3c32561399E88B52Dc8b2823', 18, 'USDC', 'USD Coin')
   const DAI = new Token(ChainId.STANDALONE, '0x4C4a2f8c81640e47606d3fd77B353E87Ba015584', 18, 'DAI', 'DAI Stablecoin')
@@ -438,7 +438,7 @@ describe('Pylon', () => {
 
             }else{
               if(isFloat) {
-                result = pylon.burnFloat(
+                result = pylon.burnAsyncFloat(
                     totalSupply,
                     ptTotalSupply,
                     amount,
@@ -465,7 +465,7 @@ describe('Pylon', () => {
               }else{
                 let resPtEnergy = new TokenAmount(pylon.pair.liquidityToken, testCase.reservePtEnergy ?? "0")
                 let resAnchorEnergy = new TokenAmount(pylon.token1, testCase.reserveAnchorEnergy ?? "0")
-                result = pylon.burnAnchor(
+                result = pylon.burnAsyncAnchor(
                     totalSupply,
                     ptTotalSupply,
                     amount,
@@ -492,6 +492,7 @@ describe('Pylon', () => {
                     testCase.lastOracleTimestamp
                 )
               }
+              expect((result as BurnAsyncParams).amountOut2.raw.toString()).toEqual(testCase.amountOut2)
             }
           }else{
             if (testCase.isSync) {
