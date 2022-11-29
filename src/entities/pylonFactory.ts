@@ -15,6 +15,7 @@ export class PylonFactory {
   public dynamicRatio: JSBI
   public feePercentageRev: JSBI
   public feePercentageEnergy: JSBI
+  public oracleUpdateSecs: JSBI
 
   public constructor(
     maximumPercentageSync: BigintIsh,
@@ -23,6 +24,7 @@ export class PylonFactory {
     EMASamples: BigintIsh,
     muUpdatePeriod: BigintIsh,
     muChangeFactor: BigintIsh,
+    oracleUpdateSecs: BigintIsh,
     liquidityFee: BigintIsh,
     dynamicRatio: BigintIsh,
     feePercentageRev: BigintIsh,
@@ -42,6 +44,7 @@ export class PylonFactory {
     this.muUpdatePeriod = parseBigintIsh(muUpdatePeriod)
     this.muChangeFactor = parseBigintIsh(muChangeFactor)
     this.dynamicRatio = parseBigintIsh(dynamicRatio)
+    this.oracleUpdateSecs = parseBigintIsh(oracleUpdateSecs)
   }
   public setMaxSync(maximumPercentageSync: BigintIsh)  {
     this.maxSync = parseBigintIsh(maximumPercentageSync)

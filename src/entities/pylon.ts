@@ -297,7 +297,8 @@ export class Pylon {
       lastFloatAccumulator: BigintIsh,
       price0CumulativeLast: BigintIsh,
       price1CumulativeLast: BigintIsh,
-      lastOracleTimestamp: BigintIsh
+      lastOracleTimestamp: BigintIsh,
+      lastPrice: BigintIsh
   ): String {
     if (JSBI.equal(parseBigintIsh(lastRootK), ZERO)) {
       return ''
@@ -317,7 +318,9 @@ export class Pylon {
         parseBigintIsh(lastFloatAccumulator),
         parseBigintIsh(this.token0.equals(this.pair.token0) ? price0CumulativeLast : price1CumulativeLast),
         parseBigintIsh(lastOracleTimestamp),
-        ZERO
+        ZERO,
+        factory,
+        parseBigintIsh(lastPrice)
     )
 
     let resTR1 = this.translateToPylon(this.getPairReserves()[1].raw, ptb.raw, ptt.raw)
@@ -438,7 +441,9 @@ export class Pylon {
       lastFloatAccumulator: JSBI,
       priceCumulativeLast: JSBI,
       lastOracleTimestamp: JSBI,
-      rootK: JSBI
+      rootK: JSBI,
+      constants: PylonFactory,
+      oldPrice: JSBI
   ): {
     gamma: JSBI;
     vab: JSBI;
@@ -453,43 +458,40 @@ export class Pylon {
     let resTR1 = this.translateToPylon(this.getPairReserves()[1].raw, ptb, ptt)
 
     let currentFloatAccumulator = priceCumulativeLast;
-    if (JSBI.greaterThan(blockTimestamp, this.pair.lastBlockTimestamp)) {
-      let timeElapsed = JSBI.subtract(blockTimestamp, this.pair.lastBlockTimestamp)
-      console.log("timeElapsed", timeElapsed.toString())
-      let resPair1 = JSBI.leftShift(resTR1, _112)
+    let avgPrice = oldPrice
 
-      currentFloatAccumulator = JSBI.add(
-          currentFloatAccumulator,
-          JSBI.multiply(
-              JSBI.divide(
-                  resPair1,
-                  resTR0),
-              timeElapsed))
+    if (JSBI.greaterThan(blockTimestamp, JSBI.add(constants.oracleUpdateSecs, lastOracleTimestamp))) {
+
+
+      if (JSBI.greaterThan(blockTimestamp, this.pair.lastBlockTimestamp)) {
+        let timeElapsed = JSBI.subtract(blockTimestamp, this.pair.lastBlockTimestamp)
+        console.log("timeElapsed", timeElapsed.toString())
+        let resPair1 = JSBI.leftShift(resTR1, _112)
+
+        currentFloatAccumulator = JSBI.add(
+            currentFloatAccumulator,
+            JSBI.multiply(
+                JSBI.divide(
+                    resPair1,
+                    resTR0),
+                timeElapsed))
+      }
+
+      if (JSBI.greaterThan(currentFloatAccumulator, lastFloatAccumulator)) {
+        avgPrice = JSBI.signedRightShift(
+            JSBI.multiply(JSBI.subtract(currentFloatAccumulator, lastFloatAccumulator), BASE),
+            _112
+        )
+        avgPrice = JSBI.divide(avgPrice, JSBI.subtract(blockTimestamp, lastOracleTimestamp))
+      }
     }
-    console.log("currFloatAccumulator", currentFloatAccumulator.toString());
-    console.log("lastFloatAccumulator", lastFloatAccumulator.toString());
-
-    let avgPrice = ZERO
-    if (JSBI.greaterThan(currentFloatAccumulator, lastFloatAccumulator)) {
-      avgPrice = JSBI.signedRightShift(
-          JSBI.multiply(JSBI.subtract(currentFloatAccumulator, lastFloatAccumulator), BASE),
-          _112
-      )
-      avgPrice = JSBI.divide(avgPrice, JSBI.subtract(blockTimestamp, lastOracleTimestamp))
-    }
-
 
     let feeValuePercentageAnchor = JSBI.divide(JSBI.multiply(JSBI.subtract(rootK, lastRootK), muMulDecimals), lastRootK)
     let anchorK = anchorKFactor
-    console.log("feeValuePercentageAnchor", feeValuePercentageAnchor.toString())
     if (JSBI.notEqual(feeValuePercentageAnchor, ZERO)) {
       let feeToAnchor = JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, resTR1), feeValuePercentageAnchor), BASE)
-      console.log('feeToAnchor', feeToAnchor.toString())
       vabLast = JSBI.add(vabLast, feeToAnchor)
     }
-
-    console.log('vabLast', vabLast.toString())
-    console.log('res1', this.reserve1.raw.toString())
     let adjVAB = JSBI.subtract(vabLast, this.reserve1.raw)
     let gamma = this.calculateGamma(resTR1, anchorK, adjVAB, isLineFormula)
 
@@ -1134,7 +1136,8 @@ export class Pylon {
       lastFloatAccumulator: BigintIsh,
       price0CumulativeLast: BigintIsh,
       price1CumulativeLast: BigintIsh,
-      lastOracleTimestamp: BigintIsh
+      lastOracleTimestamp: BigintIsh,
+      lastPrice: BigintIsh
   ): MintAsyncParams {
     const blockedReturn = {
       amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
@@ -1189,7 +1192,9 @@ export class Pylon {
         parseBigintIsh(lastFloatAccumulator),
         parseBigintIsh(this.token0.equals(this.pair.token0) ? price0CumulativeLast : price1CumulativeLast),
         parseBigintIsh(lastOracleTimestamp),
-        rootK
+        rootK,
+        factory,
+        parseBigintIsh(lastPrice)
     )
 
     let ema = this.calculateEMA(
@@ -1295,7 +1300,8 @@ export class Pylon {
       lastFloatAccumulator: BigintIsh,
       price0CumulativeLast: BigintIsh,
       price1CumulativeLast: BigintIsh,
-      lastOracleTimestamp: BigintIsh
+      lastOracleTimestamp: BigintIsh,
+      lastPrice: BigintIsh
   ): MintAsyncParams {
     const blockedReturn = {
       amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
@@ -1319,8 +1325,6 @@ export class Pylon {
     let pairReserveTranslated0 = this.translateToPylon(this.getPairReserves()[0].raw, ptb.raw, newTotalSupply)
     let pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, ptb.raw, newTotalSupply)
     let rootK = sqrt(JSBI.multiply(pairReserveTranslated0, pairReserveTranslated1))
-    console.log("ptb nptb pairRes", ptb.raw.toString(), newTotalSupply.toString(), this.getPairReserves()[1].raw.toString())
-
     let updateRemovingExcess = this.updateRemovingExcess(
         pairReserveTranslated0,
         pairReserveTranslated1,
@@ -1346,7 +1350,9 @@ export class Pylon {
         parseBigintIsh(lastFloatAccumulator),
         parseBigintIsh(this.token0.equals(this.pair.token0) ? price0CumulativeLast : price1CumulativeLast),
         parseBigintIsh(lastOracleTimestamp),
-        rootK
+        rootK,
+        factory,
+        parseBigintIsh(lastPrice)
     )
     // let mu = this.updateMU(parseBigintIsh(blockNumber), muBlockNumber, factory, result.gamma, muOldGamma, parseBigintIsh(muMulDecimals))
 
@@ -1534,7 +1540,8 @@ export class Pylon {
       lastFloatAccumulator: BigintIsh,
       price0CumulativeLast: BigintIsh,
       price1CumulativeLast: BigintIsh,
-      lastOracleTimestamp: BigintIsh
+      lastOracleTimestamp: BigintIsh,
+      lastPrice: BigintIsh
   ): MintSyncParams {
 
     const blockedReturn = {
@@ -1586,7 +1593,9 @@ export class Pylon {
         parseBigintIsh(lastFloatAccumulator),
         parseBigintIsh(this.token0.equals(this.pair.token0) ? price0CumulativeLast : price1CumulativeLast),
         parseBigintIsh(lastOracleTimestamp),
-        rootK
+        rootK,
+        factory,
+        parseBigintIsh(lastPrice)
     )
 
     let ema = this.calculateEMA(
@@ -1730,7 +1739,8 @@ export class Pylon {
       lastFloatAccumulator: BigintIsh,
       price0CumulativeLast: BigintIsh,
       price1CumulativeLast: BigintIsh,
-      lastOracleTimestamp: BigintIsh
+      lastOracleTimestamp: BigintIsh,
+      lastPrice: BigintIsh
   ): MintSyncParams {
     const blockedReturn = {
       isDerivedVFB: false,
@@ -1790,7 +1800,9 @@ export class Pylon {
         parseBigintIsh(lastFloatAccumulator),
         parseBigintIsh(this.token0.equals(this.pair.token0) ? price0CumulativeLast : price1CumulativeLast),
         parseBigintIsh(lastOracleTimestamp),
-        rootK
+        rootK,
+        factory,
+        parseBigintIsh(lastPrice)
     )
 
     anchorKFactor = result.anchorKFactor
@@ -2186,7 +2198,8 @@ export class Pylon {
       lastFloatAccumulator: BigintIsh,
       price0CumulativeLast: BigintIsh,
       price1CumulativeLast: BigintIsh,
-      lastOracleTimestamp: BigintIsh
+      lastOracleTimestamp: BigintIsh,
+      lastPrice: BigintIsh
   ): BurnParams {
     const blockReturn = {
       amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
@@ -2241,7 +2254,9 @@ export class Pylon {
         parseBigintIsh(lastFloatAccumulator),
         parseBigintIsh(this.token0.equals(this.pair.token0) ? price0CumulativeLast : price1CumulativeLast),
         parseBigintIsh(lastOracleTimestamp),
-        rootK
+        rootK,
+        factory,
+        parseBigintIsh(lastPrice)
     )
 
     let ema = this.calculateEMA(
@@ -2391,7 +2406,8 @@ export class Pylon {
       lastFloatAccumulator: BigintIsh,
       price0CumulativeLast: BigintIsh,
       price1CumulativeLast: BigintIsh,
-      lastOracleTimestamp: BigintIsh
+      lastOracleTimestamp: BigintIsh,
+      lastPrice: BigintIsh
   ): BurnParams {
     const blockReturn = {
       amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
@@ -2445,7 +2461,9 @@ export class Pylon {
         parseBigintIsh(lastFloatAccumulator),
         parseBigintIsh(this.token0.equals(this.pair.token0) ? price0CumulativeLast : price1CumulativeLast),
         parseBigintIsh(lastOracleTimestamp),
-        rootK
+        rootK,
+        factory,
+        parseBigintIsh(lastPrice)
     )
 
     let ema = this.calculateEMA(
@@ -2611,7 +2629,8 @@ export class Pylon {
       lastFloatAccumulator: BigintIsh,
       price0CumulativeLast: BigintIsh,
       price1CumulativeLast: BigintIsh,
-      lastOracleTimestamp: BigintIsh
+      lastOracleTimestamp: BigintIsh,
+      lastPrice: BigintIsh
   ): BurnAsyncParams {
     const blockReturn = {
       amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
@@ -2665,7 +2684,9 @@ export class Pylon {
         parseBigintIsh(lastFloatAccumulator),
         parseBigintIsh(this.token0.equals(this.pair.token0) ? price0CumulativeLast : price1CumulativeLast),
         parseBigintIsh(lastOracleTimestamp),
-        rootK
+        rootK,
+        factory,
+        parseBigintIsh(lastPrice)
     )
 
     let ema = this.calculateEMA(
@@ -2773,7 +2794,8 @@ export class Pylon {
       lastFloatAccumulator: BigintIsh,
       price0CumulativeLast: BigintIsh,
       price1CumulativeLast: BigintIsh,
-      lastOracleTimestamp: BigintIsh
+      lastOracleTimestamp: BigintIsh,
+      lastPrice: BigintIsh
   ): BurnAsyncParams {
     const blockedReturn = {
       amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
@@ -2828,7 +2850,9 @@ export class Pylon {
         parseBigintIsh(lastFloatAccumulator),
         parseBigintIsh(this.token0.equals(this.pair.token0) ? price0CumulativeLast : price1CumulativeLast),
         parseBigintIsh(lastOracleTimestamp),
-        rootK
+        rootK,
+        factory,
+        parseBigintIsh(lastPrice)
     )
 
     let ema = this.calculateEMA(
@@ -2915,7 +2939,8 @@ export class Pylon {
       lastFloatAccumulator: BigintIsh,
       price0CumulativeLast: BigintIsh,
       price1CumulativeLast: BigintIsh,
-      lastOracleTimestamp: BigintIsh
+      lastOracleTimestamp: BigintIsh,
+      lastPrice: BigintIsh
   ): [TokenAmount, TokenAmount] {
     // invariant(this.involvesToken(token), 'TOKEN')
     invariant(
@@ -2926,20 +2951,38 @@ export class Pylon {
     // invariant(JSBI.lessThanOrEqual(liquidity.raw, totalSupply.raw), 'LIQUIDITY')
     let ptMinted = this.publicMintFeeCalc(parseBigintIsh(kLast), totalSupply.raw, factory)
     let newTotalSupply = JSBI.add(totalSupply.raw, ptMinted)
-    //TODO
+
+    let pairReserveTranslated0 = this.translateToPylon(this.getPairReserves()[0].raw, ptb.raw, newTotalSupply)
+    let pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, ptb.raw, newTotalSupply)
+    let rootK = sqrt(JSBI.multiply(pairReserveTranslated0, pairReserveTranslated1))
+    let updateRemovingExcess = this.updateRemovingExcess(
+        pairReserveTranslated0,
+        pairReserveTranslated1,
+        this.reserve0.raw,
+        this.reserve1.raw,
+        factory,
+        newTotalSupply,
+        parseBigintIsh(kLast)
+    )
+    kLast = JSBI.multiply(this.getPairReserves()[0].raw, this.getPairReserves()[1].raw)
+    let newPTB = JSBI.add(ptb.raw, updateRemovingExcess.liquidity)
+    newTotalSupply = JSBI.add(newTotalSupply, updateRemovingExcess.liquidity)
+
     let result = this.updateSync(
         parseBigintIsh(anchorVirtualBalance),
         parseBigintIsh(lastRootK),
         parseBigintIsh(anchorKFactor),
         isLineFormula,
-        ptb.raw,
+        newPTB,
         newTotalSupply,
         parseBigintIsh(muMulDecimals),
         parseBigintIsh(blockTimestamp),
         parseBigintIsh(lastFloatAccumulator),
         parseBigintIsh(this.token0.equals(this.pair.token0) ? price0CumulativeLast : price1CumulativeLast),
         parseBigintIsh(lastOracleTimestamp),
-        ZERO
+        rootK,
+        factory,
+        parseBigintIsh(lastPrice)
     )
     let lptu = this.calculateLPTU(
         newTotalSupply,
@@ -2947,7 +2990,7 @@ export class Pylon {
         liquidity.raw,
         result.vab,
         result.gamma,
-        ptb.raw,
+        newPTB,
         isAnchor
     )
 

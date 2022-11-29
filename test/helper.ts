@@ -36,6 +36,7 @@ export interface TestInput {
     isBurn: boolean
     reservePtEnergy?: string
     reserveAnchorEnergy?: string
+    lastPrice: string
 }
 
 
@@ -70,6 +71,7 @@ export const CASES: TestInput[] = [
         amountIn: '100000000000000000',
         lastOracleTimestamp: '1668862595',
         lastBlockTimestamp: '1668873799',
+        lastPrice: '0',//TO RETRIEVE
         skip: true,
         isSync: true,
         isBurn: false
@@ -103,6 +105,7 @@ export const CASES: TestInput[] = [
         amountIn: '100000000000000000',
         lastOracleTimestamp: '1669196208',
         lastBlockTimestamp: '1669196211',
+        lastPrice: '0',//TO RETRIEVE
         skip: true,
         isSync: true,
         isBurn: false
@@ -137,6 +140,7 @@ export const CASES: TestInput[] = [
         amountIn: '170000000000000000',
         lastOracleTimestamp: '1669207934',
         lastBlockTimestamp: '1669207939',
+        lastPrice: '0',//TO RETRIEVE
         skip: true,
         isSync: true,
         isBurn: false
@@ -170,6 +174,7 @@ export const CASES: TestInput[] = [
         amountIn: '100000000000000000',
         lastOracleTimestamp: '1669314405',
         lastBlockTimestamp: '1669207939',
+        lastPrice: '0',//TO RETRIEVE
         skip: true,
         maxSync: "0",
         isSync: true,
@@ -205,6 +210,7 @@ export const CASES: TestInput[] = [
         amountIn: '100000000000000000',
         lastOracleTimestamp: '1669314405',
         lastBlockTimestamp: '1669207939',
+        lastPrice: '0',//TO RETRIEVE
         skip: true,
         maxSync: "0",
         isSync: true,
@@ -241,6 +247,7 @@ export const CASES: TestInput[] = [
         amountIn2: '1159693190914548729237',
         lastOracleTimestamp: '1669378573',
         lastBlockTimestamp: '1669378578',
+        lastPrice: '0',//TO RETRIEVE
         skip: true,
         isSync: false,
         isBurn: false
@@ -277,6 +284,7 @@ export const CASES: TestInput[] = [
         amountIn2: '180942742031628212017',
         lastOracleTimestamp: '1669483833',
         lastBlockTimestamp: '1669483833',
+        lastPrice: '0',//TO RETRIEVE
         skip: true,
         isSync: false,
         isBurn: false
@@ -310,6 +318,7 @@ export const CASES: TestInput[] = [
         amountIn: '1200000000000000000000',
         lastOracleTimestamp: '1669556477',
         lastBlockTimestamp: '1669556477',
+        lastPrice: '0',//TO RETRIEVE
         skip: true,
         isSync: true,
         isBurn: true
@@ -343,6 +352,7 @@ export const CASES: TestInput[] = [
         amountIn: '154545454545454544454',
         lastOracleTimestamp: '1669562135',
         lastBlockTimestamp: '1669562138',
+        lastPrice: '0',//TO RETRIEVE
         skip: true,
         isSync: true,
         isBurn: true
@@ -376,6 +386,7 @@ export const CASES: TestInput[] = [
         amountIn: '5303719575000000000',
         lastOracleTimestamp: '1669568683',
         lastBlockTimestamp: '1669568687',
+        lastPrice: '0',//TO RETRIEVE
         skip: true,
         isSync: true,
         isBurn: true
@@ -409,6 +420,7 @@ export const CASES: TestInput[] = [
         amountIn: '999999999999999900',
         lastOracleTimestamp: '1669577644',
         lastBlockTimestamp: '1669568687',
+        lastPrice: '0',//TO RETRIEVE
         skip: true,
         isSync: true,
         isBurn: true
@@ -443,6 +455,7 @@ export const CASES: TestInput[] = [
         amountIn: '2115085050876080948',
         lastOracleTimestamp: '1669645510',
         lastBlockTimestamp: '1669645411',
+        lastPrice: '0',//TO RETRIEVE
         skip: false,
         isSync: false,
         isBurn: true,
@@ -479,6 +492,7 @@ export const CASES: TestInput[] = [
         amountIn: '566672114789082759766',
         lastOracleTimestamp: '1669646652',
         lastBlockTimestamp: '1669646652',
+        lastPrice: '0',//TO RETRIEVE
         skip: false,
         isSync: false,
         isBurn: true,
