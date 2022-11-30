@@ -15,7 +15,8 @@ export enum ChainId {
   MOONRIVER = 1285,
   MOONROCK = 1286,
   MOONBASE = 1287,
-  MOONSHADOW = 1288
+  MOONSHADOW = 1288,
+  BSC = 56
 }
 
 export enum TradeType {
@@ -67,6 +68,27 @@ export const MOONRIVER_ADDRESSES = {
     "bytecode": "0x44ca8087c95ad2e8ea0739f78fa06a76fc246d61762366f5b76eded713fadbb2"
   },
 };
+export const BSC_ADDRESSES = {
+  "WETH": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+  "factory": "0x8c91cC36a2A1910d2bD0c18aC5964b07B5fA96dB",
+  "router": "0x8ef28D900Af0afc3bDb6e896dDc117d9972fBbd5",
+  "multicall": "0x1Ee38d535d541c55C9dae27B12edf090C608E6Fb",
+  "pylonRouter": "0x7deF160a832b2b0072998CDF27Fc41a353eEE8d0",
+  "pylonFactory": "0x86F8091D9128D42Fc6224A67570839cFF28bDe5B",
+  "energyFactory": "0x2CE0BAe1F6aD62bea22cFeF1B4FB0ADA345B2eEb",
+  "farmFactory": "0xCc4993a8D8C9e6Ed0757e0455c5CeaDCD48b6520",
+  "ptFactory": "0x13d4C1b4217C010B44e1444D6e753E7640D7030C",
+  "migrator": "0x232D5109154A3E41C77E2D2DdC8b918Df368cd9E",
+  "feeToSetter": "0xEC4a0c8BdfB81Cc046a017E99D51dcAd1e10dFFA",
+  "firstMigration": {
+    "migrationAddress": "0x86F8091D9128D42Fc6224A67570839cFF28bDe5B",
+    "bytecode": "0xa44465fcf0ab0508980700dbd7971c038b78df8dd449840ef8f30d7a5f5f9b8d"
+  },
+  "secondMigration": {
+    "migrationAddress": "0x86F8091D9128D42Fc6224A67570839cFF28bDe5B",
+    "bytecode": "0xa44465fcf0ab0508980700dbd7971c038b78df8dd449840ef8f30d7a5f5f9b8d"
+  },
+};
 
 export const MIGRATION_PYLONS: { [key: string] : { migrationAddress: string, bytecode: string } } = {
   // FIRST MIGRATION
@@ -109,7 +131,8 @@ export const FACTORY_ADDRESS: { [key: string]: string } = {
   [ChainId.MOONRIVER]: MOONRIVER_ADDRESSES.factory,
   [ChainId.MOONBASE]: MOONBASE_ADDRESSES.factory,
   [ChainId.MOONROCK]: MOONBASE_ADDRESSES.factory,
-  [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.factory
+  [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.factory,
+  [ChainId.BSC]: BSC_ADDRESSES.factory
 }
 
 export const PYLON_FACTORY_ADDRESS: { [key: string]: string } = {
@@ -117,21 +140,24 @@ export const PYLON_FACTORY_ADDRESS: { [key: string]: string } = {
   [ChainId.MOONRIVER]: MOONRIVER_ADDRESSES.pylonFactory,
   [ChainId.MOONBASE]: MOONBASE_ADDRESSES.pylonFactory,
   [ChainId.MOONROCK]: MOONBASE_ADDRESSES.pylonFactory,
-  [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.pylonFactory
+  [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.pylonFactory,
+  [ChainId.BSC]: BSC_ADDRESSES.pylonFactory
 }
 export const PT_FACTORY_ADDRESS: { [key: string]: string } = {
   [ChainId.STANDALONE]: '0xD8a5a9b31c3C0232E196d518E89Fd8bF83AcAd43',
   [ChainId.MOONRIVER]: MOONRIVER_ADDRESSES.ptFactory,
   [ChainId.MOONBASE]: MOONBASE_ADDRESSES.ptFactory,
   [ChainId.MOONROCK]: MOONBASE_ADDRESSES.ptFactory,
-  [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.ptFactory
+  [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.ptFactory,
+  [ChainId.BSC]: BSC_ADDRESSES.ptFactory
 }
 export const EN_FACTORY_ADDRESS: { [key: string]: string } = {
   [ChainId.STANDALONE]: '0xD8a5a9b31c3C0232E196d518E89Fd8bF83AcAd43',
   [ChainId.MOONRIVER]: MOONRIVER_ADDRESSES.energyFactory,
   [ChainId.MOONBASE]: MOONBASE_ADDRESSES.energyFactory,
   [ChainId.MOONROCK]: MOONBASE_ADDRESSES.energyFactory,
-  [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.energyFactory
+  [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.energyFactory,
+  [ChainId.BSC]: BSC_ADDRESSES.energyFactory
 }
 
 export const FARM_FACTORY_ADDRESS: { [key: string]: string } = {
@@ -139,7 +165,8 @@ export const FARM_FACTORY_ADDRESS: { [key: string]: string } = {
   [ChainId.MOONRIVER]: MOONRIVER_ADDRESSES.farmFactory,
   [ChainId.MOONBASE]: MOONBASE_ADDRESSES.farmFactory,
   [ChainId.MOONROCK]: MOONBASE_ADDRESSES.farmFactory,
-  [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.farmFactory
+  [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.farmFactory,
+  [ChainId.BSC]: BSC_ADDRESSES.farmFactory
 }
 
 export const MULTICALL_ADDRESS: { [key: string]: string } = {
@@ -147,7 +174,8 @@ export const MULTICALL_ADDRESS: { [key: string]: string } = {
   [ChainId.MOONRIVER]: MOONRIVER_ADDRESSES.multicall,
   [ChainId.MOONBASE]: MOONBASE_ADDRESSES.multicall,
   [ChainId.MOONROCK]: MOONBASE_ADDRESSES.multicall,
-  [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.multicall
+  [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.multicall,
+  [ChainId.BSC]: BSC_ADDRESSES.multicall
 }
 
 export const PYLON_CODE_HASH: { [key: string]: string } = {
@@ -155,14 +183,16 @@ export const PYLON_CODE_HASH: { [key: string]: string } = {
   [ChainId.MOONRIVER]: '0x44ca8087c95ad2e8ea0739f78fa06a76fc246d61762366f5b76eded713fadbb2',
   [ChainId.MOONBASE]: '0xafaf6286555f731e9581935e0bb62d3fec24c96b73c638aa7b5a8b9fbc595e39',
   [ChainId.MOONROCK]: '0xafaf6286555f731e9581935e0bb62d3fec24c96b73c638aa7b5a8b9fbc595e39',
-  [ChainId.MOONSHADOW]: '0xafaf6286555f731e9581935e0bb62d3fec24c96b73c638aa7b5a8b9fbc595e39'
+  [ChainId.MOONSHADOW]: '0xafaf6286555f731e9581935e0bb62d3fec24c96b73c638aa7b5a8b9fbc595e39',
+  [ChainId.BSC]: '0xa44465fcf0ab0508980700dbd7971c038b78df8dd449840ef8f30d7a5f5f9b8d'
 }
 export const EN_CODE_HASH: { [key: string]: string } = {
   [ChainId.STANDALONE]: '0x7dbf34a78ca182281ead469dc72e9462a253283ebb019f4e1ce0279f0045520a',
   [ChainId.MOONRIVER]: '0x7dbf34a78ca182281ead469dc72e9462a253283ebb019f4e1ce0279f0045520a',
   [ChainId.MOONBASE]: '0x7dbf34a78ca182281ead469dc72e9462a253283ebb019f4e1ce0279f0045520a',
   [ChainId.MOONROCK]: '0x7dbf34a78ca182281ead469dc72e9462a253283ebb019f4e1ce0279f0045520a',
-  [ChainId.MOONSHADOW]: '0x7dbf34a78ca182281ead469dc72e9462a253283ebb019f4e1ce0279f0045520a'
+  [ChainId.MOONSHADOW]: '0x7dbf34a78ca182281ead469dc72e9462a253283ebb019f4e1ce0279f0045520a',
+  [ChainId.BSC]: '0xf7f47583f133c1e04059755d96b165532bef2114faae8e068f21ffd8fe846bd0'
 }
 
 

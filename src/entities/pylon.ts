@@ -1231,7 +1231,7 @@ export class Pylon {
         pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, newPTB, newTotalSupply);
 
         let updateRemovingExcess = this.updateRemovingExcess(pairReserveTranslated0, pairReserveTranslated1,
-            newReserve0 , newReserve1, factory, newTotalSupply, kLast)
+            newReserve0 , newReserve1, factory, newTotalSupply, parseBigintIsh(kLast))
 
         console.log("SDK:: pairRes0New, pairRes1New, fee.newAmount", pairReserveTranslated0.toString(), pairReserveTranslated1.toString(), fee.newAmount.toString());
 
