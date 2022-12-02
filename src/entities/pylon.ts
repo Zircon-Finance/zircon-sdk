@@ -4,7 +4,6 @@ import JSBI from 'jsbi'
 import { AbiCoder } from '@ethersproject/abi'
 import { pack, keccak256 } from '@ethersproject/solidity'
 import { getCreate2Address } from '@ethersproject/address'
-import {bytecode as ptBytecode} from '../abis/ZirconPoolToken.json';
 import {
     BigintIsh,
     PYLON_CODE_HASH,
@@ -26,7 +25,8 @@ import {
     EN_FACTORY_ADDRESS,
     EN_CODE_HASH,
     _200,
-    MIGRATION_PYLONS,
+    MIGRATION_PYLONS
+    , PT_BYTECODE
 } from '../constants'
 import { sqrt, parseBigintIsh } from '../utils'
 import { InsufficientReservesError, InsufficientInputAmountError } from '../errors'
@@ -81,8 +81,8 @@ export class Pylon {
         }
         return MIGRATED_PYLON_ADDRESS_CACHE[pairAddress][tokenA.address]
     }
-    public static migratedPTCodeHash = (migrationAddress: string): string => keccak256(["bytes"], [pack(['bytes', 'bytes'], [ptBytecode,  new AbiCoder().encode(["address"], [migrationAddress]) ])])
-    public static ptCodeHash = (token: Token): string => keccak256(["bytes"], [pack(['bytes', 'bytes'], [ptBytecode,  new AbiCoder().encode(["address"], [PYLON_FACTORY_ADDRESS[token.chainId]]) ])])
+    public static migratedPTCodeHash = (migrationAddress: string, chainId: ChainId): string => keccak256(["bytes"], [pack(['bytes', 'bytes'], [PT_BYTECODE[chainId],  new AbiCoder().encode(["address"], [migrationAddress]) ])])
+    public static ptCodeHash = (token: Token): string => keccak256(["bytes"], [pack(['bytes', 'bytes'], [PT_BYTECODE[token.chainId],  new AbiCoder().encode(["address"], [PYLON_FACTORY_ADDRESS[token.chainId]]) ])])
     private static getPTAddress(tokenA: Token, tokenB: Token, isAnchor: boolean ): string {
         let token = isAnchor ? tokenB : tokenA
         let pylonAddress = this.getAddress(tokenA, tokenB)
@@ -113,7 +113,7 @@ export class Pylon {
                     [pylonAddress]: getCreate2Address(
                         PT_FACTORY_ADDRESS[token.chainId],
                         keccak256(["bytes"], [pack(['address', 'address'], [token.address, pylonAddress])]),
-                        Pylon.migratedPTCodeHash(migrationAddress)
+                        Pylon.migratedPTCodeHash(migrationAddress, tokenA.chainId)
                     )
                 }
             }
