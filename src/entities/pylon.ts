@@ -113,7 +113,7 @@ export class Pylon {
                     [pylonAddress]: getCreate2Address(
                         PT_FACTORY_ADDRESS[token.chainId],
                         keccak256(["bytes"], [pack(['address', 'address'], [token.address, pylonAddress])]),
-                        Pylon.migratedPTCodeHash(migrationAddress, tokenA.chainId)
+                        Pylon.migratedPTCodeHash(migrationAddress, token.chainId)
                     )
                 }
             }

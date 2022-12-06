@@ -5,7 +5,7 @@ import JSBI from 'jsbi'
 import _Big from 'big.js'
 import toFormat from 'toformat'
 
-import { BigintIsh, Rounding, TEN, SolidityType } from '../../constants'
+import {BigintIsh, Rounding, TEN, SolidityType, ChainId} from '../../constants'
 import { parseBigintIsh, validateSolidityTypeInstance } from '../../utils'
 import { Fraction } from './fraction'
 
@@ -18,8 +18,9 @@ export class CurrencyAmount extends Fraction {
    * Helper that calls the constructor with the DEV currency
    * @param amount ether amount in wei
    */
-  public static ether(amount: BigintIsh): CurrencyAmount {
-    return new CurrencyAmount(NATIVE_TOKEN[1285], amount)
+
+  public static ether(amount: BigintIsh, chainId: ChainId): CurrencyAmount {
+    return new CurrencyAmount(NATIVE_TOKEN[chainId], amount)
   }
 
   // amount _must_ be raw, i.e. in the native representation
@@ -46,17 +47,17 @@ export class CurrencyAmount extends Fraction {
   }
 
   public toSignificant(
-    significantDigits: number = 6,
-    format?: object,
-    rounding: Rounding = Rounding.ROUND_DOWN
+      significantDigits: number = 6,
+      format?: object,
+      rounding: Rounding = Rounding.ROUND_DOWN
   ): string {
     return super.toSignificant(significantDigits, format, rounding)
   }
 
   public toFixed(
-    decimalPlaces: number = this.currency.decimals,
-    format?: object,
-    rounding: Rounding = Rounding.ROUND_DOWN
+      decimalPlaces: number = this.currency.decimals,
+      format?: object,
+      rounding: Rounding = Rounding.ROUND_DOWN
   ): string {
     invariant(decimalPlaces <= this.currency.decimals, 'DECIMALS')
     return super.toFixed(decimalPlaces, format, rounding)
