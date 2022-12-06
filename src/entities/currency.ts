@@ -25,7 +25,6 @@ export class Currency {
     [ChainId.MOONSHADOW]: new Currency(18, 'DEV', 'DEV Token'),
     [ChainId.BSC]: new Currency(18, 'BNB', 'BNB Token')
   }
-  public static readonly DEV: Currency = new Currency(18, 'MOVR', 'Moonriver Token')
 
 
   /**
@@ -44,6 +43,4 @@ export class Currency {
 }
 
 const NATIVE_TOKEN = Currency.NATIVE_TOKEN
-const DEV = Currency.DEV
-// const MOVR = Currency.MOVR
-export { DEV, NATIVE_TOKEN }
+export { NATIVE_TOKEN }
