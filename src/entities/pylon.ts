@@ -34,7 +34,6 @@ import { Token } from './token'
 import {Pair} from "../entities";
 import {PylonFactory} from "entities/pylonFactory";
 import {BurnAsyncParams, BurnParams, MintAsyncParams, MintSyncParams} from "interfaces/pylonInterface";
-import * as constants from "constants";
 
 let PYLON_ADDRESS_CACHE: {[pair: string] : {[tokenAddress: string]: string}} = {}
 let MIGRATED_PYLON_ADDRESS_CACHE: {[pair: string] : {[tokenAddress: string]: string}} = {}
@@ -373,7 +372,7 @@ export class Pylon {
 
     private changePairReserveonFloatSwap(fee: JSBI, liquidityFee: JSBI) {
         if (JSBI.greaterThan(fee, ZERO)) {
-            let outputAmount = this.pair.getOutputAmount(new TokenAmount(this.token0, fee), liquidityFee)
+            let outputAmount = this.pair.getOutputAmount(new TokenAmount(this.token0, fee))
             // console.log("SDK:: fee", fee.toString(), outputAmount.toString());
 
             let reserves = this.getPairReserves()
@@ -381,7 +380,7 @@ export class Pylon {
             let ta0 = new TokenAmount(this.token0, JSBI.add(reserves[0].raw, fee))
             let ta1 = new TokenAmount(this.token1, JSBI.subtract(reserves[1].raw, outputAmount[0].raw))
 
-            this.pair = new Pair(isFloatR0 ? ta0 : ta1, isFloatR0 ? ta1 : ta0)
+            this.pair = new Pair(isFloatR0 ? ta0 : ta1, isFloatR0 ? ta1 : ta0, liquidityFee)
         }
     }
 
@@ -733,7 +732,7 @@ export class Pylon {
         if (JSBI.equal(outputAmount.raw, ZERO)) {
             throw new InsufficientInputAmountError()
         }
-        return [outputAmount, new Pair(inputReserve.add(inputAmount), outputReserve.subtract(outputAmount))]
+        return [outputAmount, new Pair(inputReserve.add(inputAmount), outputReserve.subtract(outputAmount), this.pair.liquidityFee)]
     }
 
     public getInputAmount(outputAmount: TokenAmount): [TokenAmount, Pair] {
@@ -754,7 +753,7 @@ export class Pylon {
             outputAmount.token.equals(this.token0) ? this.token1 : this.token0,
             JSBI.add(JSBI.divide(numerator, denominator), ONE)
         )
-        return [inputAmount, new Pair(inputReserve.add(inputAmount), outputReserve.subtract(outputAmount))]
+        return [inputAmount, new Pair(inputReserve.add(inputAmount), outputReserve.subtract(outputAmount), this.pair.liquidityFee)]
     }
 
     public initializeValues(
@@ -957,7 +956,7 @@ export class Pylon {
         let isFloatR0 = this.token0.equals(this.pair.token0)
         let newPairReserve0 = new TokenAmount(this.token0, JSBI.add(reserves[0].raw, fee1.newAmount))
         let newPairReserve1 = new TokenAmount(this.token1, JSBI.add(reserves[1].raw, fee2.newAmount))
-        this.pair = new Pair(isFloatR0 ? newPairReserve0 : newPairReserve1, isFloatR0 ? newPairReserve1 : newPairReserve0)
+        this.pair = new Pair(isFloatR0 ? newPairReserve0 : newPairReserve1, isFloatR0 ? newPairReserve1 : newPairReserve0, this.pair.liquidityFee)
 
         pairReserveTranslated0 = this.translateToPylon(this.getPairReserves()[0].raw, newPtb, newTotalSupply);
         pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, newPtb, newTotalSupply);
@@ -1282,7 +1281,7 @@ export class Pylon {
             let isFloatR0 = this.token0.equals(this.pair.token0)
             let ta0 = new TokenAmount(this.token0, JSBI.add(reserves[0].raw, amount0))
             let ta1 = new TokenAmount(this.token1, JSBI.add(reserves[1].raw, amount1))
-            this.pair = new Pair(isFloatR0 ? ta0 : ta1, isFloatR0 ? ta1 : ta0)
+            this.pair = new Pair(isFloatR0 ? ta0 : ta1, isFloatR0 ? ta1 : ta0, this.pair.liquidityFee)
         }
         return liquidity
     }
@@ -1366,7 +1365,7 @@ export class Pylon {
         let ta1 = new TokenAmount(this.token1, JSBI.add(reserves[1].raw, excess1))
         let isFloatR0 = this.token0.equals(this.pair.token0)
 
-        this.pair = new Pair(isFloatR0 ? ta0 : ta1, isFloatR0 ? ta1 : ta0)
+        this.pair = new Pair(isFloatR0 ? ta0 : ta1, isFloatR0 ? ta1 : ta0, this.pair.liquidityFee)
 
 
         this.tokenAmounts = [new TokenAmount(this.token0, newReserve0), new TokenAmount(this.token1, newReserve1)]
@@ -1459,10 +1458,11 @@ export class Pylon {
             if (JSBI.lessThan(amount0, this.getPairReserves()[0].raw) && JSBI.lessThan(amount1, this.getPairReserves()[1].raw))  {
                 newPair = new Pair(
                     new TokenAmount(this.getPairReserves()[0].token, JSBI.subtract(this.getPairReserves()[0].raw, amount0)),
-                    new TokenAmount(this.getPairReserves()[1].token, JSBI.subtract(this.getPairReserves()[1].raw, amount1)));
+                    new TokenAmount(this.getPairReserves()[1].token, JSBI.subtract(this.getPairReserves()[1].raw, amount1)),
+                    this.pair.liquidityFee);
             }
-            let amountTransformed = newPair.getOutputAmount(new TokenAmount(this.token1, amount1), factory.liquidityFee);
-            let feeAmountTransformed = newPair.getOutputAmount(new TokenAmount(this.token1, feeAmount1), factory.liquidityFee);
+            let amountTransformed = newPair.getOutputAmount(new TokenAmount(this.token1, amount1));
+            let feeAmountTransformed = newPair.getOutputAmount(new TokenAmount(this.token1, feeAmount1));
             // console.log("amount", amount.toString(10))
 
             amount = JSBI.add(amount, JSBI.add(amount0, amountTransformed[0].raw));
@@ -1564,12 +1564,13 @@ export class Pylon {
             if (JSBI.lessThan(amount0, this.getPairReserves()[0].raw) && JSBI.lessThan(amount1, this.getPairReserves()[1].raw))  {
                 newPair = new Pair(
                     new TokenAmount(this.getPairReserves()[0].token, JSBI.subtract(this.getPairReserves()[0].raw, amount0)),
-                    new TokenAmount(this.getPairReserves()[1].token, JSBI.subtract(this.getPairReserves()[1].raw, amount1)));
+                    new TokenAmount(this.getPairReserves()[1].token, JSBI.subtract(this.getPairReserves()[1].raw, amount1)),
+                    this.pair.liquidityFee);
             }
             let feeAmount0 = JSBI.divide(JSBI.multiply(fee.fee, this.getPairReserves()[0].raw), newTotalSupply);
             let feeAmount1 = JSBI.divide(JSBI.multiply(fee.fee, this.getPairReserves()[1].raw), newTotalSupply);
-            let amountTransformed = newPair.getOutputAmount(new TokenAmount(this.token0, amount0), factory.liquidityFee);
-            let feeAmountTransformed = newPair.getOutputAmount(new TokenAmount(this.token0, feeAmount0), factory.liquidityFee);
+            let amountTransformed = newPair.getOutputAmount(new TokenAmount(this.token0, amount0));
+            let feeAmountTransformed = newPair.getOutputAmount(new TokenAmount(this.token0, feeAmount0));
 
             amount = JSBI.add(fee1.newAmount, JSBI.add(amount1, amountTransformed[0].raw))
 

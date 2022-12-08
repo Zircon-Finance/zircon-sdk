@@ -70,6 +70,6 @@ export abstract class Fetcher {
     const address = Pair.getAddress(tokenA, tokenB)
     const [reserves0, reserves1] = await new Contract(address, IUniswapV2Pair.abi, provider).getReserves()
     const balances = tokenA.sortsBefore(tokenB) ? [reserves0, reserves1] : [reserves1, reserves0]
-    return new Pair(new TokenAmount(tokenA, balances[0]), new TokenAmount(tokenB, balances[1]))
+    return new Pair(new TokenAmount(tokenA, balances[0]), new TokenAmount(tokenB, balances[1]), '15')
   }
 }
