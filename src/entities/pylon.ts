@@ -1456,6 +1456,8 @@ export class Pylon {
         this.pair.liquidityFee
     )
 
+    //TODO: check if we need an extra remove excess here
+
     pairReserveTranslated0 = this.translateToPylon(this.getPairReserves()[0].raw, newPtb, newTotalSupply)
     pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, newPtb, newTotalSupply)
 
