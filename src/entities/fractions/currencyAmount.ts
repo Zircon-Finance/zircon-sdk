@@ -1,11 +1,11 @@
 import { currencyEquals } from '../token'
-import {Currency, NATIVE_TOKEN} from '../currency'
+import { Currency, NATIVE_TOKEN } from '../currency'
 import invariant from 'tiny-invariant'
 import JSBI from 'jsbi'
 import _Big from 'big.js'
 import toFormat from 'toformat'
 
-import {BigintIsh, Rounding, TEN, SolidityType, ChainId} from '../../constants'
+import { BigintIsh, Rounding, TEN, SolidityType, ChainId } from '../../constants'
 import { parseBigintIsh, validateSolidityTypeInstance } from '../../utils'
 import { Fraction } from './fraction'
 
@@ -47,17 +47,17 @@ export class CurrencyAmount extends Fraction {
   }
 
   public toSignificant(
-      significantDigits: number = 6,
-      format?: object,
-      rounding: Rounding = Rounding.ROUND_DOWN
+    significantDigits: number = 6,
+    format?: object,
+    rounding: Rounding = Rounding.ROUND_DOWN
   ): string {
     return super.toSignificant(significantDigits, format, rounding)
   }
 
   public toFixed(
-      decimalPlaces: number = this.currency.decimals,
-      format?: object,
-      rounding: Rounding = Rounding.ROUND_DOWN
+    decimalPlaces: number = this.currency.decimals,
+    format?: object,
+    rounding: Rounding = Rounding.ROUND_DOWN
   ): string {
     invariant(decimalPlaces <= this.currency.decimals, 'DECIMALS')
     return super.toFixed(decimalPlaces, format, rounding)

@@ -84,7 +84,7 @@ export abstract class Router {
     const to: string = validateAndParseAddress(options.recipient)
     const amountIn: string = toHex(trade.maximumAmountIn(options.allowedSlippage, trade.route.chainId))
     const amountOut: string = toHex(trade.minimumAmountOut(options.allowedSlippage, trade.route.chainId))
-    const path: string[] = trade.route.path.map((token) => token.address)
+    const path: string[] = trade.route.path.map(token => token.address)
     const deadline =
       'ttl' in options
         ? `0x${(Math.floor(new Date().getTime() / 1000) + options.ttl).toString(16)}`
@@ -139,7 +139,7 @@ export abstract class Router {
     return {
       methodName,
       args,
-      value,
+      value
     }
   }
 }

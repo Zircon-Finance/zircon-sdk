@@ -1,7 +1,6 @@
-
 import JSBI from 'jsbi'
 
-import {ChainId, SolidityType} from '../constants'
+import { ChainId, SolidityType } from '../constants'
 import { validateSolidityTypeInstance } from '../utils'
 
 /**
@@ -25,7 +24,6 @@ export class Currency {
     [ChainId.MOONSHADOW]: new Currency(18, 'DEV', 'DEV Token'),
     [ChainId.BSC]: new Currency(18, 'BNB', 'BNB Token')
   }
-
 
   /**
    * Constructs an instance of the base class `Currency`. The only instance of the base class `Currency` is `Currency.ETHER`.

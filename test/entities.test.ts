@@ -1,5 +1,5 @@
 import invariant from 'tiny-invariant'
-import {ChainId, WDEV as _WDEV, TradeType, Rounding, Token, TokenAmount, Pair, Route, Trade} from '../src'
+import { ChainId, WDEV as _WDEV, TradeType, Rounding, Token, TokenAmount, Pair, Route, Trade } from '../src'
 
 const ADDRESSES = [
   '0x0000000000000000000000000000000000000001',

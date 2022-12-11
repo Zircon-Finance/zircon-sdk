@@ -1,4 +1,4 @@
-import {ChainId, Token, TokenAmount, Pair, InsufficientInputAmountError, Pylon} from '../src'
+import { ChainId, Token, TokenAmount, Pair, InsufficientInputAmountError, Pylon } from '../src'
 import { sortedInsert } from '../src/utils'
 
 describe('miscellaneous', () => {
@@ -32,8 +32,6 @@ describe('miscellaneous', () => {
     expect(liquidity.raw.toString()).toEqual('1')
   })
 
-
-
   it('getLiquidityMinted:!0', async () => {
     const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
     const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
@@ -56,9 +54,9 @@ describe('miscellaneous', () => {
     const pair = new Pair(new TokenAmount(tokenA, '0'), new TokenAmount(tokenB, '0'))
     const pylon = new Pylon(pair, new TokenAmount(tokenA, '0'), new TokenAmount(tokenB, '0'))
     let init = pylon.initializeValues(
-        new TokenAmount(pair.liquidityToken, "3001666203960726876344"),
-        new TokenAmount(tokenA, "481818181818181818181"),
-        new TokenAmount(tokenB, "154545454545454545454")
+      new TokenAmount(pair.liquidityToken, '3001666203960726876344'),
+      new TokenAmount(tokenA, '481818181818181818181'),
+      new TokenAmount(tokenB, '154545454545454545454')
     )
     expect(init[0].toString(10)).toEqual('481818181818181817181')
     expect(init[1].toString(10)).toEqual('154545454545454544454')
