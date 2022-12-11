@@ -4,7 +4,6 @@ import JSBI from 'jsbi'
 import { AbiCoder } from '@ethersproject/abi'
 import { pack, keccak256 } from '@ethersproject/solidity'
 import { getCreate2Address } from '@ethersproject/address'
-import { bytecode as ptBytecode } from '../abis/ZirconPoolToken.json'
 import {
   BigintIsh,
   PYLON_CODE_HASH,
@@ -27,7 +26,7 @@ import {
   EN_CODE_HASH,
   _200,
   MIGRATION_PYLONS,
-  _112
+  PT_BYTECODE
 } from '../constants'
 import { sqrt, parseBigintIsh } from '../utils'
 import { InsufficientReservesError, InsufficientInputAmountError } from '../errors'
