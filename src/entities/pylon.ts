@@ -1253,13 +1253,17 @@ export class Pylon {
 
     // let amountA = JSBI.divide(JSBI.multiply(pairReserveTranslated0, JSBI.multiply(fee2.newAmount, TWO)), pairReserveTranslated1);
     // let amountB = JSBI.multiply(fee1.newAmount, TWO);
-    // //let finalAmount = JSBI.greaterThan(amountA, amountB) ? amountB: amountA;
+    // let finalAmount = JSBI.greaterThan(amountA, amountB) ? amountB: amountA;
 
-    //console.log("SDK:: amountA, amountB", amountA.toString(), amountB.toString());
+    // console.log("SDK:: amountA, amountB", amountA.toString(), amountB.toString());
 
-    //now we need to calculate new reserves + new gamma
+    // now we need to calculate new reserves + new gamma
 
-    let poolAddedLiquidity = JSBI.divide(JSBI.multiply(fee1.newAmount, newTotalSupply), this.getPairReserves()[0].raw)
+    let poolAddedLiquidity = JSBI.divide(
+        JSBI.multiply(fee1.newAmount,
+            newTotalSupply),
+        this.getPairReserves()[0].raw)
+
     let secondPoolLiq = JSBI.divide(JSBI.multiply(fee2.newAmount, newTotalSupply), this.getPairReserves()[1].raw)
 
     poolAddedLiquidity = JSBI.greaterThan(poolAddedLiquidity, secondPoolLiq) ? secondPoolLiq : poolAddedLiquidity
