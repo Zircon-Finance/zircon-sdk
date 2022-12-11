@@ -26,7 +26,7 @@ import {
   EN_CODE_HASH,
   _200,
   MIGRATION_PYLONS,
-  PT_BYTECODE
+  PT_BYTECODE, _112
 } from '../constants'
 import { sqrt, parseBigintIsh } from '../utils'
 import { InsufficientReservesError, InsufficientInputAmountError } from '../errors'
@@ -87,10 +87,10 @@ export class Pylon {
     }
     return MIGRATED_PYLON_ADDRESS_CACHE[pairAddress][tokenA.address]
   }
-  public static migratedPTCodeHash = (migrationAddress: string): string =>
+  public static migratedPTCodeHash = (migrationAddress: string, chainId: ChainId): string =>
       keccak256(
           ['bytes'],
-          [pack(['bytes', 'bytes'], [ptBytecode, new AbiCoder().encode(['address'], [migrationAddress])])]
+          [pack(['bytes', 'bytes'], [PT_BYTECODE[chainId], new AbiCoder().encode(['address'], [migrationAddress])])]
       )
   public static ptCodeHash = (token: Token): string =>
       keccak256(
@@ -98,7 +98,7 @@ export class Pylon {
           [
             pack(
                 ['bytes', 'bytes'],
-                [ptBytecode, new AbiCoder().encode(['address'], [PYLON_FACTORY_ADDRESS[token.chainId]])]
+                [token.chainId, new AbiCoder().encode(['address'], [PYLON_FACTORY_ADDRESS[token.chainId]])]
             )
           ]
       )
@@ -138,7 +138,7 @@ export class Pylon {
           [pylonAddress]: getCreate2Address(
               PT_FACTORY_ADDRESS[token.chainId],
               keccak256(['bytes'], [pack(['address', 'address'], [token.address, pylonAddress])]),
-              Pylon.migratedPTCodeHash(migrationAddress)
+              Pylon.migratedPTCodeHash(migrationAddress, token.chainId)
           )
         }
       }
