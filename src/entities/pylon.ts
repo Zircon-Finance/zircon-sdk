@@ -1260,8 +1260,7 @@ export class Pylon {
     // now we need to calculate new reserves + new gamma
 
     let poolAddedLiquidity = JSBI.divide(
-        JSBI.multiply(fee1.newAmount,
-            newTotalSupply),
+        JSBI.multiply(fee1.newAmount, newTotalSupply),
         this.getPairReserves()[0].raw)
 
     let secondPoolLiq = JSBI.divide(JSBI.multiply(fee2.newAmount, newTotalSupply), this.getPairReserves()[1].raw)

@@ -17,13 +17,13 @@ export interface BurnParams extends Params {
   reservesPTU?: JSBI
 }
 
-
 export interface MintSyncParams extends Params {
   amountsToInvest: { sync: JSBI; async: JSBI }
   extraSlippagePercentage: JSBI
   feePercentage: JSBI
   isDerivedVFB: boolean
 }
+
 export interface MintAsyncParams extends Params {
   feePercentage: JSBI
 }
