@@ -384,6 +384,10 @@ export class Pylon {
       isLineFormula: boolean
   ): { gamma: JSBI; isLineFormula: boolean } {
     let tpva = JSBI.multiply(resTR1, TWO)
+    console.log('tpva', tpva.toString())
+    console.log('adjVAB', adjVAB.toString())
+    console.log('anchorKFactor', anchorKFactor.toString())
+
 
     let sqrtKFactor = sqrt(
         JSBI.multiply(JSBI.subtract(JSBI.divide(JSBI.exponentiate(anchorKFactor, TWO), BASE), anchorKFactor), BASE)
@@ -1243,9 +1247,11 @@ export class Pylon {
     )
 
     console.log(
-        'SDK:: pairRes0, pairRes1, derVFB',
+        'SDK:: pairRes0, pairRes1, res0, gamma, derVFB',
         pairReserveTranslated0.toString(),
         pairReserveTranslated1.toString(),
+        this.reserve0.raw.toString(),
+        result.gamma.toString(),
         derVFB.toString()
     )
     console.log('SDK:: reserve0', this.reserve0.raw.toString())
@@ -1310,7 +1316,7 @@ export class Pylon {
         pairReserveTranslated1,
         parseBigintIsh(anchorKFactor),
         adjustedVab,
-        isLineFormula
+        result.isLineFormula
     )
 
     let newDerVFB = JSBI.add(
@@ -1319,11 +1325,14 @@ export class Pylon {
     )
 
     console.log(
-        'SDK:: pairRes0, pairRes1, derVFB',
+        'SDK:: pairRes0, pairRes1, res0, gamma, ndrvfb',
         pairReserveTranslated0.toString(),
         pairReserveTranslated1.toString(),
+        this.reserve0.raw.toString(),
+        newGamma.gamma.toString(),
         newDerVFB.toString()
     )
+
     console.log('SDK:: newGamma, adjustedVab', newGamma.gamma.toString(), adjustedVab.toString())
 
     let liquidity = JSBI.divide(
@@ -1331,11 +1340,12 @@ export class Pylon {
         BASE
     )
 
-    let pussy = JSBI.add(BASE, JSBI.divide(JSBI.multiply(JSBI.BigInt("5514603311808018073"), BASE), JSBI.BigInt("209035717137273630343582699")))
+    // let pussy = JSBI.add(BASE, JSBI.divide(JSBI.multiply(JSBI.BigInt("5514603311808018073"), BASE), JSBI.BigInt("209035717137273630343582699")))
+    // let ass = JSBI.divide(JSBI.multiply(pussy, derVFB), BASE)
 
+    // console.log('SDK:: liquidity, nvfb/vfb', pussy.toString(), ass.toString(), liquidity.toString(), JSBI.divide(JSBI.multiply(newDerVFB, BASE), derVFB).toString())
+    // let liquidity = this.getLiquidityFromPoolTokensLiquidity(fee1.newAmount, fee2.newAmount, newTotalSupply, ptb.raw, floatTotalSupply, false, result.vab, result.gamma)
 
-    console.log('SDK:: liquidity, nvfb/vfb', pussy.toString(), liquidity.toString(), JSBI.divide(JSBI.multiply(newDerVFB, BASE), derVFB).toString())
-    //let liquidity = this.getLiquidityFromPoolTokensLiquidity(fee1.newAmount, fee2.newAmount, newTotalSupply, ptb.raw, floatTotalSupply, false, result.vab, result.gamma)
     let feeLiquidity = this.getLiquidityFromPoolTokensLiquidity(
         fee1.fee,
         fee2.fee,
