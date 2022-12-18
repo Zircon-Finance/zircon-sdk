@@ -98,7 +98,7 @@ export class Pylon {
           [
             pack(
                 ['bytes', 'bytes'],
-                [token.chainId, new AbiCoder().encode(['address'], [PYLON_FACTORY_ADDRESS[token.chainId]])]
+                [PT_BYTECODE[token.chainId], new AbiCoder().encode(['address'], [PYLON_FACTORY_ADDRESS[token.chainId]])]
             )
           ]
       )
@@ -302,27 +302,46 @@ export class Pylon {
     if (JSBI.equal(parseBigintIsh(lastRootK), ZERO)) {
       return ''
     }
+    let rootK = sqrt(JSBI.multiply(
+        this.translateToPylon(this.getPairReserves()[0].raw, ptb.raw, ptt.raw),
+        this.translateToPylon(this.getPairReserves()[1].raw, ptb.raw, ptt.raw)))
+
     let ptMinted = this.publicMintFeeCalc(parseBigintIsh(kLast), ptt.raw, factory)
     let newTotalSupply = JSBI.add(ptt.raw, ptMinted)
-    //TODO
+    let pairReserveTranslated0 = this.translateToPylon(this.getPairReserves()[0].raw, ptb.raw, newTotalSupply)
+    let pairReserveTranslated1 = this.translateToPylon(this.getPairReserves()[1].raw, ptb.raw, newTotalSupply)
+
+    let updateRemovingExcess = this.updateRemovingExcess(
+        pairReserveTranslated0,
+        pairReserveTranslated1,
+        this.reserve0.raw,
+        this.reserve1.raw,
+        factory,
+        newTotalSupply,
+        parseBigintIsh(kLast)
+    )
+
+    let newPTB = JSBI.add(ptb.raw, updateRemovingExcess.liquidity)
+    newTotalSupply = JSBI.add(newTotalSupply, updateRemovingExcess.liquidity)
+
     let result = this.updateSync(
         parseBigintIsh(vab),
         parseBigintIsh(lastRootK),
         parseBigintIsh(anchorKFactor),
         isLineFormula,
-        ptb.raw,
+        newPTB,
         newTotalSupply,
         parseBigintIsh(muMulDecimals),
         parseBigintIsh(blockTimestamp),
         parseBigintIsh(lastFloatAccumulator),
         parseBigintIsh(this.token0.equals(this.pair.token0) ? price0CumulativeLast : price1CumulativeLast),
         parseBigintIsh(lastOracleTimestamp),
-        ZERO,
+        rootK,
         factory,
         parseBigintIsh(lastPrice)
     )
 
-    let resTR1 = this.translateToPylon(this.getPairReserves()[1].raw, ptb.raw, ptt.raw)
+    let resTR1 = this.translateToPylon(this.getPairReserves()[1].raw, newPTB, ptt.raw)
     let percentageAnchorEnergy = JSBI.divide(
         JSBI.multiply(JSBI.add(parseBigintIsh(reserveAnchorEnergy), this.reserve1.raw), BASE),
         result.vab
@@ -332,7 +351,7 @@ export class Pylon {
         JSBI.multiply(parseBigintIsh(ptbEnergy), JSBI.divide(JSBI.multiply(result.vab, BASE), resTR1)),
         BASE
     )
-    let omega = this.getOmegaSlashing(result.gamma, result.vab, ptb.raw, ptt.raw, BASE).newAmount
+    let omega = this.getOmegaSlashing(result.gamma, result.vab, newPTB, ptt.raw, BASE).newAmount
     if (JSBI.greaterThanOrEqual(omega, BASE) && !isLineFormula) {
       return 'high'
     } else if (
