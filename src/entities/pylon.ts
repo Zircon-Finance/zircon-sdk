@@ -309,21 +309,54 @@ export class Pylon {
     )
 
     let resTR1 = this.translateToPylon(this.getPairReserves()[1].raw, ptb.raw, ptt.raw)
-    let percentageAnchorEnergy = JSBI.divide(
-        JSBI.multiply(JSBI.add(parseBigintIsh(reserveAnchorEnergy), this.reserve1.raw), BASE),
-        result.vab
-    )
+    // let percentageAnchorEnergy = JSBI.divide(
+    //     JSBI.multiply(JSBI.add(parseBigintIsh(reserveAnchorEnergy), this.reserve1.raw), BASE),
+    //     result.vab
+    // )
 
-    let percentagePTBEnergy = JSBI.divide(
-        JSBI.multiply(parseBigintIsh(ptbEnergy), JSBI.divide(JSBI.multiply(result.vab, BASE), resTR1)),
-        BASE
-    )
+    let ptbInAnchor = JSBI.multiply(TWO,
+        JSBI.divide(
+            JSBI.multiply(parseBigintIsh(ptbEnergy),
+                this.getPairReserves()[1].raw),
+            ptt.raw))
+
+    let anchorOnTPV = JSBI.divide(
+        JSBI.multiply(
+            JSBI.add(
+                parseBigintIsh(reserveAnchorEnergy),
+                ptbInAnchor),
+            BASE),
+    JSBI.multiply(TWO, resTR1))
+
+    console.log(anchorOnTPV.toString())
+
+
+    // let percentagePTBEnergy = JSBI.divide(
+    //     JSBI.multiply(parseBigintIsh(ptbEnergy), JSBI.divide(JSBI.multiply(result.vab, BASE), resTR1)),
+    //     BASE
+    // )
+    console.log("ptbEnergy", JSBI.toNumber(parseBigintIsh(ptbEnergy)))
+    console.log("vab", result.vab.toString())
+    console.log("vab", result.vab.toString())
+
+
     let omega = this.getOmegaSlashing(result.gamma, result.vab, ptb.raw, ptt.raw, BASE).newAmount
+
+    console.log("omega", omega.toString())
+    console.log("gamma", result.gamma.toString())
+    console.log("vab", result.vab.toString())
+    // console.log("percentageAnchorEnergy", percentageAnchorEnergy.toString())
+    // console.log("percentagePTBEnergy", percentagePTBEnergy.toString())
+    console.log("ptb", ptb.raw.toString())
+    console.log("ptt", ptt.raw.toString())
+    console.log("res1", this.getPairReserves()[1].raw.toString())
+    console.log("isLineFormula", isLineFormula)
+
     if (JSBI.greaterThanOrEqual(omega, BASE) && !isLineFormula) {
       return 'high'
     } else if (
         JSBI.greaterThanOrEqual(omega, JSBI.subtract(BASE, JSBI.BigInt(4000000000000000))) ||
-        JSBI.greaterThanOrEqual(JSBI.add(percentageAnchorEnergy, percentagePTBEnergy), JSBI.subtract(BASE, omega))
+        JSBI.greaterThanOrEqual(anchorOnTPV, JSBI.subtract(BASE, omega))
     ) {
       return 'medium'
     } else {
