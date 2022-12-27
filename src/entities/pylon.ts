@@ -223,7 +223,12 @@ export class Pylon {
       anchorLiquidityAddress = Pylon.getPTAddress(tokenAmount0.token, tokenAmount1.token, true)
     }
 
-    this.floatLiquidityToken = new Token(tokenAmounts[0].token.chainId, floatLiquidityAddress, 18, 'ZR-FT', 'Zircon FT')
+    this.floatLiquidityToken = new Token(
+        tokenAmounts[0].token.chainId,
+        floatLiquidityAddress,
+        18,
+        'ZR-FT',
+        'Zircon FT')
 
     this.anchorLiquidityToken = new Token(
         tokenAmounts[0].token.chainId,
@@ -342,21 +347,27 @@ export class Pylon {
     )
 
     let resTR1 = this.translateToPylon(this.getPairReserves()[1].raw, newPTB, ptt.raw)
-    let percentageAnchorEnergy = JSBI.divide(
-        JSBI.multiply(JSBI.add(parseBigintIsh(reserveAnchorEnergy), this.reserve1.raw), BASE),
-        result.vab
-    )
 
-    let percentagePTBEnergy = JSBI.divide(
-        JSBI.multiply(parseBigintIsh(ptbEnergy), JSBI.divide(JSBI.multiply(result.vab, BASE), resTR1)),
-        BASE
-    )
+    let ptbInAnchor = JSBI.multiply(TWO,
+        JSBI.divide(
+            JSBI.multiply(parseBigintIsh(ptbEnergy),
+                this.getPairReserves()[1].raw),
+            ptt.raw))
+
+    let anchorOnTPV = JSBI.divide(
+        JSBI.multiply(
+            JSBI.add(
+                parseBigintIsh(reserveAnchorEnergy),
+                ptbInAnchor),
+            BASE),
+        JSBI.multiply(TWO, resTR1))
+
     let omega = this.getOmegaSlashing(result.gamma, result.vab, newPTB, ptt.raw, BASE).newAmount
     if (JSBI.greaterThanOrEqual(omega, BASE) && !isLineFormula) {
       return 'high'
     } else if (
         JSBI.greaterThanOrEqual(omega, JSBI.subtract(BASE, JSBI.BigInt(4000000000000000))) ||
-        JSBI.greaterThanOrEqual(JSBI.add(percentageAnchorEnergy, percentagePTBEnergy), JSBI.subtract(BASE, omega))
+        JSBI.greaterThanOrEqual(anchorOnTPV, JSBI.subtract(BASE, omega))
     ) {
       return 'medium'
     } else {
