@@ -1926,7 +1926,9 @@ export class Pylon {
       fee: new TokenAmount(this.anchorLiquidityToken, ZERO),
       deltaApplied: true,
       feePercentage: ZERO,
-      omegaSlashingPercentage: ZERO
+      omegaSlashingPercentage: ZERO,
+      slippage: ZERO,
+      reservesPTU: ZERO
     }
     if (JSBI.equal(parseBigintIsh(lastRootK), ZERO)) {
       return blockReturn
@@ -1997,6 +1999,7 @@ export class Pylon {
         : ZERO
 
     // amount: JSBI = ZERO;
+    let slippage = ZERO
     if (JSBI.lessThan(reservesPTU, tokenAmountOut.raw)) {
       let adjustedLiq = JSBI.subtract(tokenAmountOut.raw, reservesPTU)
       // console.log("adjustedLiq", adjustedLiq.toString(10))
@@ -2040,10 +2043,15 @@ export class Pylon {
         )
       }
       let amountTransformed = newPair.getOutputAmount(new TokenAmount(this.token1, amount1))
+      let amountTransformedComplete = JSBI.divide(
+          JSBI.multiply(amount1, this.getPairReserves()[0].raw),
+          this.getPairReserves()[1].raw
+      )
       let feeAmountTransformed = newPair.getOutputAmount(new TokenAmount(this.token1, feeAmount1))
       // console.log("amount", amount.toString(10))
 
       amount = JSBI.add(amount, JSBI.add(amount0, amountTransformed[0].raw))
+      slippage = JSBI.divide(JSBI.multiply(amount, BASE), JSBI.add(amount0, amountTransformedComplete))
       feePercentage = JSBI.greaterThan(amount, ZERO)
           ? JSBI.multiply(
               JSBI.divide(
@@ -2063,7 +2071,9 @@ export class Pylon {
       fee: new TokenAmount(this.anchorLiquidityToken, fee1.fee),
       deltaApplied: fee1.deltaApplied,
       feePercentage,
-      omegaSlashingPercentage
+      omegaSlashingPercentage,
+      slippage,
+      reservesPTU: reservesPTU
     }
   }
 
@@ -2096,7 +2106,9 @@ export class Pylon {
       fee: new TokenAmount(this.anchorLiquidityToken, ZERO),
       deltaApplied: true,
       feePercentage: ZERO,
-      omegaSlashingPercentage: ZERO
+      omegaSlashingPercentage: ZERO,
+      slippage: ZERO,
+      reservesPTU: ZERO
     }
 
     if (JSBI.equal(parseBigintIsh(lastRootK), ZERO)) {
@@ -2164,6 +2176,7 @@ export class Pylon {
     feePercentage = JSBI.greaterThan(fee1.newAmount, ZERO)
         ? JSBI.multiply(JSBI.divide(JSBI.multiply(fee1.fee, BASE), fee1.newAmount), _100)
         : ZERO
+    let slippage = ZERO
     if (JSBI.lessThan(reservesPTU, tokenAmountOut.raw)) {
       let adjustedLiq = JSBI.subtract(tokenAmountOut.raw, reservesPTU)
       // console.log("adjustedLiq", adjustedLiq.toString(10))
@@ -2221,9 +2234,14 @@ export class Pylon {
       let feeAmount0 = JSBI.divide(JSBI.multiply(fee.fee, this.getPairReserves()[0].raw), newTotalSupply)
       let feeAmount1 = JSBI.divide(JSBI.multiply(fee.fee, this.getPairReserves()[1].raw), newTotalSupply)
       let amountTransformed = newPair.getOutputAmount(new TokenAmount(this.token0, amount0))
+      let amountTransformedComplete = JSBI.divide(
+          JSBI.multiply(amount0, this.getPairReserves()[1].raw),
+          this.getPairReserves()[0].raw
+      )
       let feeAmountTransformed = newPair.getOutputAmount(new TokenAmount(this.token0, feeAmount0))
 
       amount = JSBI.add(fee1.newAmount, JSBI.add(amount1, amountTransformed[0].raw))
+      slippage = JSBI.divide(JSBI.multiply(amount, BASE), JSBI.add(amount0, amountTransformedComplete))
 
       let extraAmount1 = this.anchorSlash(
           JSBI.add(amount1, amountTransformed[0].raw),
@@ -2249,7 +2267,9 @@ export class Pylon {
       fee: new TokenAmount(this.anchorLiquidityToken, fee1.fee),
       deltaApplied: fee1.deltaApplied,
       feePercentage,
-      omegaSlashingPercentage
+      omegaSlashingPercentage,
+      slippage,
+      reservesPTU
     }
   }
 
