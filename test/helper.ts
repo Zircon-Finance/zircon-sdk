@@ -72,7 +72,7 @@ export const CASES: TestInput[] = [
         lastOracleTimestamp: '1668862595',
         lastBlockTimestamp: '1668873799',
         lastPrice: '0',//TO RETRIEVE
-        skip: true,
+        skip: false,
         isSync: true,
         isBurn: false
     },{
@@ -456,7 +456,7 @@ export const CASES: TestInput[] = [
         lastOracleTimestamp: '1669645510',
         lastBlockTimestamp: '1669645411',
         lastPrice: '0',//TO RETRIEVE
-        skip: false,
+        skip: true,
         isSync: false,
         isBurn: true,
         reservePtEnergy: '39290630168703357',
@@ -493,7 +493,7 @@ export const CASES: TestInput[] = [
         lastOracleTimestamp: '1669646652',
         lastBlockTimestamp: '1669646652',
         lastPrice: '0',//TO RETRIEVE
-        skip: false,
+        skip: true,
         isSync: false,
         isBurn: true,
         reservePtEnergy: '380401349474472200',
