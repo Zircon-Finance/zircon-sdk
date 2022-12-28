@@ -690,12 +690,13 @@ export class Pylon {
   private calculateEMA(
       pylonInfo: PylonInfo,
       currentBlockNumber: JSBI,
-      gamma: JSBI,
       EMASamples: JSBI,
+      gamma: JSBI
   ): JSBI {
     // Calculating Total Pool Value Anchor Prime
     let oldGamma = parseBigintIsh(pylonInfo.gammaMulDecimals)
     let blockDiff = JSBI.subtract(currentBlockNumber, parseBigintIsh(pylonInfo.EMABlockNumber))
+    console.log('zz:: ', blockDiff.toString(), gamma.toString(), oldGamma.toString())
     if (JSBI.equal(blockDiff, ZERO)) {
       let blockEMA: JSBI
       if (JSBI.greaterThan(gamma, oldGamma)) {
@@ -1607,11 +1608,13 @@ export class Pylon {
         factory,
     )
 
+    console.log("what", result.gamma.toString())
+
     let ema = this.calculateEMA(
         pylonInfo,
         parseBigintIsh(blockNumber),
         factory.EMASamples,
-        parseBigintIsh(result.gamma)
+        result.gamma
     )
 
     return {
