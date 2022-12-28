@@ -1,5 +1,6 @@
 import { TokenAmount } from 'entities'
 import JSBI from 'jsbi'
+import {BigintIsh} from "../constants";
 
 export interface Params {
   amountOut: TokenAmount;
@@ -30,4 +31,25 @@ export interface BurnAsyncParams  extends Params {
   asyncBlocked: boolean
   feePercentage: JSBI
   omegaSlashingPercentage: JSBI
+}
+
+export interface PylonInfo {
+  virtualAnchorBalance: BigintIsh,
+  muMulDecimals: BigintIsh,
+  gammaMulDecimals: BigintIsh,
+  "strikeBlock": BigintIsh,
+  "EMABlockNumber": BigintIsh,
+  "gammaEMA": BigintIsh,
+  "thisBlockEMA": BigintIsh,
+  "lastRootKTranslated": BigintIsh,
+  "anchorKFactor": BigintIsh,
+  "formulaSwitch": boolean
+  "lastFloatAccumulator": BigintIsh
+  "lastOracleTimestamp": BigintIsh,
+  "lastPrice": BigintIsh,
+}
+export interface PairInfo {
+  "price0CumulativeLast": BigintIsh,
+  "price1CumulativeLast": BigintIsh,
+  "kLast": BigintIsh
 }

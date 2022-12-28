@@ -1,7 +1,7 @@
-import { ChainId, Token, Pylon, Pair, TokenAmount, PylonFactory,  } from '../src'
+import {ChainId, Token, Pylon, Pair, TokenAmount, PylonFactory,} from '../src'
 import JSBI from 'jsbi'
 import {CASES} from "./helper";
-import {BurnAsyncParams, Params} from "interfaces/pylonInterface";
+import {BurnAsyncParams, Params, PylonInfo} from "interfaces/pylonInterface";
 describe('Pylon', () => {
   const USDC = new Token(ChainId.STANDALONE, '0x21dF544947ba3E8b3c32561399E88B52Dc8b2823', 18, 'USDC', 'USD Coin')
   const DAI = new Token(ChainId.STANDALONE, '0x4C4a2f8c81640e47606d3fd77B353E87Ba015584', 18, 'DAI', 'DAI Stablecoin')
@@ -57,7 +57,7 @@ describe('Pylon', () => {
   describe('Test Cases', () => {
     CASES.forEach((testCase, i) => {
       it('Test Case ' + i, () => {
-        if (!testCase.skip) {
+        if (testCase.skip) {
           const pylon = new Pylon(
               new Pair(
                   new TokenAmount(USDC, testCase.resPair0),
@@ -80,123 +80,87 @@ describe('Pylon', () => {
           )
           let amount = new TokenAmount(isFloat ? USDC : DAI, testCase.amountIn)
           let result: Params
+          let pylonInfo: PylonInfo = {
+            virtualAnchorBalance: testCase.vab,
+            muMulDecimals: testCase.mu,
+            gammaMulDecimals: testCase.gamma,
+            strikeBlock: testCase.strikeBlock,
+            EMABlockNumber: testCase.EMABlockNumber,
+            gammaEMA: testCase.gEMA,
+            thisBlockEMA: testCase.thisBlockEMA,
+            lastRootKTranslated: testCase.lrkt,
+            anchorKFactor: testCase.akv,
+            formulaSwitch: isLineFormula,
+            lastFloatAccumulator: testCase.lastFloatAccumulator,
+            lastOracleTimestamp: testCase.lastOracleTimestamp,
+            lastPrice: testCase.lastPrice,
+          }
+          let pairInfo = {
+            price0CumulativeLast: testCase.price0CumulativeLast,
+            price1CumulativeLast: testCase.price1CumulativeLast,
+            kLast: testCase.lastK
+          }
+
           if (testCase.isBurn) {
             if (testCase.isSync) {
               if(isFloat) {
                 result = pylon.burnFloat(
+                    pylonInfo,
+                    pairInfo,
                     totalSupply,
                     ptTotalSupply,
                     amount,
-                    testCase.vab,
-                    testCase.mu,
-                    testCase.gamma,
                     ptb,
-                    testCase.strikeBlock,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.EMABlockNumber,
-                    testCase.gEMA,
-                    testCase.thisBlockEMA,
-                    testCase.lrkt,
-                    testCase.akv,
-                    isLineFormula,
-                    testCase.lastK,
-                    testCase.timestamp,
-                    testCase.lastFloatAccumulator,
-                    testCase.price0CumulativeLast,
-                    testCase.price1CumulativeLast,
-                    testCase.lastOracleTimestamp,
-                    testCase.lastPrice
+                    testCase.lastBlockTimestamp
                 )
               }else{
                 let resPtEnergy = new TokenAmount(pylon.pair.liquidityToken, testCase.reservePtEnergy ?? "0")
                 let resAnchorEnergy = new TokenAmount(pylon.token1, testCase.reserveAnchorEnergy ?? "0")
                 result = pylon.burnAnchor(
+                    pylonInfo,
+                    pairInfo,
                     totalSupply,
                     ptTotalSupply,
                     amount,
-                    testCase.vab,
-                    testCase.mu,
-                    testCase.gamma,
                     ptb,
-                    testCase.strikeBlock,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.EMABlockNumber,
-                    testCase.gEMA,
-                    testCase.thisBlockEMA,
-                    testCase.lrkt,
-                    testCase.akv,
-                    isLineFormula,
-                    testCase.lastK,
+                    testCase.lastBlockTimestamp,
                     resPtEnergy,
-                    resAnchorEnergy,
-                    testCase.timestamp,
-                    testCase.lastFloatAccumulator,
-                    testCase.price0CumulativeLast,
-                    testCase.price1CumulativeLast,
-                    testCase.lastOracleTimestamp,
-                    testCase.lastPrice
+                    resAnchorEnergy
                 )
               }
 
             }else{
               if(isFloat) {
                 result = pylon.burnAsyncFloat(
+                    pylonInfo,
+                    pairInfo,
                     totalSupply,
                     ptTotalSupply,
                     amount,
-                    testCase.vab,
-                    testCase.mu,
-                    testCase.gamma,
                     ptb,
-                    testCase.strikeBlock,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.EMABlockNumber,
-                    testCase.gEMA,
-                    testCase.thisBlockEMA,
-                    testCase.lrkt,
-                    testCase.akv,
-                    isLineFormula,
-                    testCase.lastK,
-                    testCase.timestamp,
-                    testCase.lastFloatAccumulator,
-                    testCase.price0CumulativeLast,
-                    testCase.price1CumulativeLast,
-                    testCase.lastOracleTimestamp,
-                    testCase.lastPrice
+                    testCase.lastBlockTimestamp,
                 )
               }else{
                 let resPtEnergy = new TokenAmount(pylon.pair.liquidityToken, testCase.reservePtEnergy ?? "0")
                 let resAnchorEnergy = new TokenAmount(pylon.token1, testCase.reserveAnchorEnergy ?? "0")
                 result = pylon.burnAsyncAnchor(
+                    pylonInfo,
+                    pairInfo,
                     totalSupply,
                     ptTotalSupply,
                     amount,
-                    testCase.vab,
-                    testCase.mu,
-                    testCase.gamma,
                     ptb,
-                    testCase.strikeBlock,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.EMABlockNumber,
-                    testCase.gEMA,
-                    testCase.thisBlockEMA,
-                    testCase.lrkt,
-                    testCase.akv,
-                    isLineFormula,
-                    testCase.lastK,
+                    testCase.lastBlockTimestamp,
                     resPtEnergy,
                     resAnchorEnergy,
-                    testCase.timestamp,
-                    testCase.lastFloatAccumulator,
-                    testCase.price0CumulativeLast,
-                    testCase.price1CumulativeLast,
-                    testCase.lastOracleTimestamp,
-                    testCase.lastPrice
-
                 )
               }
               expect((result as BurnAsyncParams).amountOut2.raw.toString()).toEqual(testCase.amountOut2)
@@ -205,57 +169,27 @@ describe('Pylon', () => {
             if (testCase.isSync) {
               if (isFloat) {
                 result = pylon.getFloatSyncLiquidityMinted(
+                    pylonInfo,
+                    pairInfo,
                     totalSupply,
                     ptTotalSupply,
                     amount,
-                    testCase.vab,
-                    testCase.mu,
-                    testCase.gamma,
                     ptb,
-                    testCase.strikeBlock,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.EMABlockNumber,
-                    testCase.gEMA,
-                    testCase.thisBlockEMA,
-                    testCase.lrkt,
-                    testCase.akv,
-                    isLineFormula,
-                    testCase.lastK,
-                    testCase.timestamp,
-                    testCase.lastFloatAccumulator,
-                    testCase.price0CumulativeLast,
-                    testCase.price1CumulativeLast,
-                    testCase.lastOracleTimestamp,
-                    testCase.lastPrice
-
+                    testCase.lastBlockTimestamp,
                 )
               } else {
                 result = pylon.getAnchorSyncLiquidityMinted(
+                    pylonInfo,
+                    pairInfo,
                     totalSupply,
                     ptTotalSupply,
                     amount,
-                    testCase.vab,
-                    testCase.mu,
-                    testCase.gamma,
                     ptb,
-                    testCase.strikeBlock,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.EMABlockNumber,
-                    testCase.gEMA,
-                    testCase.thisBlockEMA,
-                    testCase.lrkt,
-                    testCase.akv,
-                    isLineFormula,
-                    testCase.lastK,
-                    testCase.timestamp,
-                    testCase.lastFloatAccumulator,
-                    testCase.price0CumulativeLast,
-                    testCase.price1CumulativeLast,
-                    testCase.lastOracleTimestamp,
-                    testCase.lastPrice
-
+                    testCase.lastBlockTimestamp,
                 )
               }
             }else{
@@ -264,59 +198,29 @@ describe('Pylon', () => {
 
               if (isFloat) {
                 result = pylon.getFloatAsyncLiquidityMinted(
+                    pylonInfo,
+                    pairInfo,
                     totalSupply,
                     ptTotalSupply,
                     amount1,
                     amount2,
-                    testCase.vab,
-                    testCase.mu,
-                    testCase.gamma,
                     ptb,
-                    testCase.strikeBlock,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.EMABlockNumber,
-                    testCase.gEMA,
-                    testCase.thisBlockEMA,
-                    testCase.lrkt,
-                    testCase.akv,
-                    isLineFormula,
-                    testCase.lastK,
-                    testCase.timestamp,
-                    testCase.lastFloatAccumulator,
-                    testCase.price0CumulativeLast,
-                    testCase.price1CumulativeLast,
-                    testCase.lastOracleTimestamp,
-                    testCase.lastPrice
-
+                    testCase.lastBlockTimestamp,
                 )
               } else {
                 result = pylon.getAnchorAsyncLiquidityMinted(
+                    pylonInfo,
+                    pairInfo,
                     totalSupply,
                     ptTotalSupply,
                     amount1,
                     amount2,
-                    testCase.vab,
-                    testCase.mu,
-                    testCase.gamma,
                     ptb,
-                    testCase.strikeBlock,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.EMABlockNumber,
-                    testCase.gEMA,
-                    testCase.thisBlockEMA,
-                    testCase.lrkt,
-                    testCase.akv,
-                    isLineFormula,
-                    testCase.lastK,
-                    testCase.timestamp,
-                    testCase.lastFloatAccumulator,
-                    testCase.price0CumulativeLast,
-                    testCase.price1CumulativeLast,
-                    testCase.lastOracleTimestamp,
-                    testCase.lastPrice
-
+                    testCase.lastBlockTimestamp,
                 )
               }
             }
