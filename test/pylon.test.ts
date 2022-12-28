@@ -57,7 +57,7 @@ describe('Pylon', () => {
   describe('Test Cases', () => {
     CASES.forEach((testCase, i) => {
       it('Test Case ' + i, () => {
-        if (testCase.skip) {
+        if (!testCase.skip) {
           const pylon = new Pylon(
               new Pair(
                   new TokenAmount(USDC, testCase.resPair0),
@@ -113,7 +113,7 @@ describe('Pylon', () => {
                     ptb,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.lastBlockTimestamp
+                    testCase.timestamp
                 )
               }else{
                 let resPtEnergy = new TokenAmount(pylon.pair.liquidityToken, testCase.reservePtEnergy ?? "0")
@@ -127,7 +127,7 @@ describe('Pylon', () => {
                     ptb,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.lastBlockTimestamp,
+                    testCase.timestamp,
                     resPtEnergy,
                     resAnchorEnergy
                 )
@@ -144,7 +144,7 @@ describe('Pylon', () => {
                     ptb,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.lastBlockTimestamp,
+                    testCase.timestamp,
                 )
               }else{
                 let resPtEnergy = new TokenAmount(pylon.pair.liquidityToken, testCase.reservePtEnergy ?? "0")
@@ -158,7 +158,7 @@ describe('Pylon', () => {
                     ptb,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.lastBlockTimestamp,
+                    testCase.timestamp,
                     resPtEnergy,
                     resAnchorEnergy,
                 )
@@ -177,7 +177,7 @@ describe('Pylon', () => {
                     ptb,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.lastBlockTimestamp,
+                    testCase.timestamp,
                 )
               } else {
                 result = pylon.getAnchorSyncLiquidityMinted(
@@ -189,7 +189,7 @@ describe('Pylon', () => {
                     ptb,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.lastBlockTimestamp,
+                    testCase.timestamp,
                 )
               }
             }else{
@@ -207,7 +207,7 @@ describe('Pylon', () => {
                     ptb,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.lastBlockTimestamp,
+                    testCase.timestamp,
                 )
               } else {
                 result = pylon.getAnchorAsyncLiquidityMinted(
@@ -220,7 +220,7 @@ describe('Pylon', () => {
                     ptb,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.lastBlockTimestamp,
+                    testCase.timestamp,
                 )
               }
             }
