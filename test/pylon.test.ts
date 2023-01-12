@@ -76,7 +76,7 @@ describe('Pylon', () => {
           const isFloat = !testCase.isAnchor
           let ptTotalSupply = new TokenAmount(
             isFloat ? pylon.floatLiquidityToken : pylon.anchorLiquidityToken,
-            testCase.ptTotalSupply
+            isFloat ? testCase.floatTotalSupply : testCase.anchorTotalSupply
           )
           let amount = new TokenAmount(isFloat ? USDC : DAI, testCase.amountIn)
           let result: Params
@@ -89,7 +89,6 @@ describe('Pylon', () => {
             gammaEMA: testCase.gEMA,
             thisBlockEMA: testCase.thisBlockEMA,
             lastRootKTranslated: testCase.lrkt,
-            anchorKFactor: testCase.akv,
             formulaSwitch: isLineFormula,
             lastFloatAccumulator: testCase.lastFloatAccumulator,
             lastOracleTimestamp: testCase.lastOracleTimestamp,

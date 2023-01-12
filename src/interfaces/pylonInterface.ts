@@ -42,7 +42,6 @@ export interface PylonInfo {
   gammaEMA: BigintIsh
   thisBlockEMA: BigintIsh
   lastRootKTranslated: BigintIsh
-  anchorKFactor: BigintIsh
   formulaSwitch: boolean
   lastFloatAccumulator: BigintIsh
   lastOracleTimestamp: BigintIsh

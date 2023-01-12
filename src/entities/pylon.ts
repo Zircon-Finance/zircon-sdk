@@ -30,7 +30,7 @@ import {
 import { sqrt, parseBigintIsh } from '../utils'
 import { InsufficientReservesError, InsufficientInputAmountError } from '../errors'
 import { Token } from './token'
-import { Pair } from '../entities'
+import { Pair, Library } from '../entities'
 import { PylonFactory } from 'entities/pylonFactory'
 import {
   BurnAsyncParams,
@@ -40,7 +40,6 @@ import {
   PairInfo,
   PylonInfo, SyncAsyncParams
 } from 'interfaces/pylonInterface'
-import { Library } from 'library'
 
 let PYLON_ADDRESS_CACHE: { [pair: string]: { [tokenAddress: string]: string } } = {}
 let MIGRATED_PYLON_ADDRESS_CACHE: { [pair: string]: { [tokenAddress: string]: string } } = {}
@@ -74,6 +73,7 @@ export class Pylon {
     }
     return PYLON_ADDRESS_CACHE[pairAddress][tokenA.address]
   }
+
   public static getMigratedAddress(tokenA: Token, tokenB: Token, address: string, bytecode: string): string {
     const pairAddress: string = Pair.getAddress(tokenA, tokenB)
     if (MIGRATED_PYLON_ADDRESS_CACHE?.[pairAddress]?.[tokenA.address] === undefined) {
@@ -94,11 +94,13 @@ export class Pylon {
     }
     return MIGRATED_PYLON_ADDRESS_CACHE[pairAddress][tokenA.address]
   }
+
   public static migratedPTCodeHash = (migrationAddress: string, chainId: ChainId): string =>
     keccak256(
       ['bytes'],
       [pack(['bytes', 'bytes'], [PT_BYTECODE[chainId], new AbiCoder().encode(['address'], [migrationAddress])])]
     )
+
   public static ptCodeHash = (token: Token): string =>
     keccak256(
       ['bytes'],
@@ -109,6 +111,7 @@ export class Pylon {
         )
       ]
     )
+
   private static getPTAddress(tokenA: Token, tokenB: Token, isAnchor: boolean): string {
     let token = isAnchor ? tokenB : tokenA
     let pylonAddress = this.getAddress(tokenA, tokenB)
@@ -463,7 +466,6 @@ export class Pylon {
   ): {
     gamma: JSBI
     vab: JSBI
-    anchorKFactor: JSBI
     isLineFormula: boolean
     lastPrice: JSBI
   } {
@@ -506,7 +508,7 @@ export class Pylon {
       ),
       parseBigintIsh(pylonInfo.lastRootKTranslated)
     )
-    let anchorK = parseBigintIsh(pylonInfo.anchorKFactor)
+    // let anchorK = parseBigintIsh(pylonInfo.anchorKFactor)
     let vabLast = parseBigintIsh(pylonInfo.virtualAnchorBalance)
     if (JSBI.notEqual(feeValuePercentageAnchor, ZERO)) {
       let feeToAnchor = JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, resTR1), feeValuePercentageAnchor), BASE)
@@ -521,8 +523,7 @@ export class Pylon {
       gamma.gamma.toString(),
       'vab',
       vabLast.toString(),
-      'anchorK',
-      anchorK.toString(),
+
       'isLineFormula',
       gamma.isLineFormula,
       'lastPrice',
@@ -532,7 +533,6 @@ export class Pylon {
     return {
       gamma: gamma.gamma,
       vab: vabLast,
-      anchorKFactor: anchorK,
       isLineFormula: gamma.isLineFormula,
       lastPrice: avgPrice
     }
@@ -996,7 +996,6 @@ export class Pylon {
     ema: JSBI
     gamma: JSBI
     vab: JSBI
-    anchorKFactor: JSBI
     isLineFormula: boolean
     lastPrice: JSBI
     totalSupply: JSBI
@@ -1041,7 +1040,6 @@ export class Pylon {
       ema: ema,
       gamma: result.gamma,
       vab: result.vab,
-      anchorKFactor: result.anchorKFactor,
       isLineFormula: result.isLineFormula,
       lastPrice: result.lastPrice,
       totalSupply: newTotalSupply,
@@ -1467,7 +1465,7 @@ export class Pylon {
       parseBigintIsh(blockNumber)
     )
 
-    let pairReserveTranslated0 = Library.translateToPylon(this.getPairReserves()[0].raw, result.ptb, result.totalSupply)
+    let pairReserveTranslated0 = this.getPairReservesTranslated(result.ptb, result.totalSupply)[0]
 
     // BURN
     let reservePTU = JSBI.divide(
@@ -1885,7 +1883,7 @@ export class Pylon {
       parseBigintIsh(blockTimestamp),
       parseBigintIsh(blockNumber)
     )
-    let pairReserveTranslated0 = Library.translateToPylon(this.getPairReserves()[0].raw, result.ptb, result.totalSupply)
+    let pairReserveTranslated0 = this.getPairReservesTranslated(result.ptb, result.totalSupply)[0]
 
     let lptu = this.calculateLPTU(
       result.totalSupply,

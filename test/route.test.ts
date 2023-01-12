@@ -1,4 +1,4 @@
-import { Token, WDEV, ChainId, Pair, TokenAmount, Route, DEV } from '../src'
+import { Token, WDEV, ChainId, Pair, TokenAmount, Route, NATIVE_TOKEN} from '../src'
 
 describe('Route', () => {
   const token0 = new Token(ChainId.STANDALONE, '0x0000000000000000000000000000000000000001', 18, 't0')
@@ -24,17 +24,17 @@ describe('Route', () => {
     expect(route.output).toEqual(weth)
   })
 
-  it('supports DEV input', () => {
-    const route = new Route([pair_0_weth], DEV)
+  it('supports NATIVE_TOKEN[token0.chainId] input', () => {
+    const route = new Route([pair_0_weth], NATIVE_TOKEN[token0.chainId])
     expect(route.pairs).toEqual([pair_0_weth])
-    expect(route.input).toEqual(DEV)
+    expect(route.input).toEqual(NATIVE_TOKEN[token0.chainId])
     expect(route.output).toEqual(token0)
   })
 
-  it('supports DEV output', () => {
-    const route = new Route([pair_0_weth], token0, DEV)
+  it('supports NATIVE_TOKEN[token0.chainId] output', () => {
+    const route = new Route([pair_0_weth], token0, NATIVE_TOKEN[token0.chainId])
     expect(route.pairs).toEqual([pair_0_weth])
     expect(route.input).toEqual(token0)
-    expect(route.output).toEqual(DEV)
+    expect(route.output).toEqual(NATIVE_TOKEN[token0.chainId])
   })
 })

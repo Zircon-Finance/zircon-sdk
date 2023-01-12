@@ -1,6 +1,6 @@
 import JSBI from 'jsbi'
-import {_42E45, BASE, DOUBLE_BASE, ONE, TEN, TWO, ZERO} from './constants'
-import {parseBigintIsh, sqrt} from './utils'
+import {_42E45, BASE, DOUBLE_BASE, ONE, TEN, TWO, ZERO} from '../constants'
+import {parseBigintIsh, sqrt} from '../utils'
 import {PylonInfo} from "interfaces/pylonInterface";
 
 export abstract class Library {
