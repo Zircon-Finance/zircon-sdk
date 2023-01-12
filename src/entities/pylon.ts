@@ -462,13 +462,15 @@ export class Pylon {
     blockTimestamp: JSBI,
     priceCumulativeLast: JSBI,
     rootK: JSBI,
-    constants: PylonFactory
+    constants: PylonFactory,
+    debug: boolean = false
   ): {
     gamma: JSBI
     vab: JSBI
     isLineFormula: boolean
     lastPrice: JSBI
   } {
+    Pylon.logger(debug, "UPDATE SYNC")
     // Calculating Total Pool Value Anchor Prime
     let [resTR0, resTR1] = this.getPairReservesTranslated(ptb, ptt)
 
@@ -483,21 +485,26 @@ export class Pylon {
     ) {
       if (JSBI.greaterThan(blockTimestamp, this.pair.lastBlockTimestamp)) {
         let timeElapsed = JSBI.subtract(blockTimestamp, this.pair.lastBlockTimestamp)
-        console.log('timeElapsed', timeElapsed.toString())
+        Pylon.logger(debug, "block timestamp > last block timestamp", timeElapsed.toString())
+
         let resPair1 = JSBI.leftShift(resTR1, _112)
 
         currentFloatAccumulator = JSBI.add(
           currentFloatAccumulator,
           JSBI.multiply(JSBI.divide(resPair1, resTR0), timeElapsed)
         )
+        Pylon.logger(debug, "currentFloatAccumulator:", currentFloatAccumulator.toString())
       }
 
       if (JSBI.greaterThan(currentFloatAccumulator, parseBigintIsh(pylonInfo.lastFloatAccumulator))) {
+
         avgPrice = JSBI.signedRightShift(
           JSBI.multiply(JSBI.subtract(currentFloatAccumulator, parseBigintIsh(pylonInfo.lastFloatAccumulator)), BASE),
           _112
         )
         avgPrice = JSBI.divide(avgPrice, JSBI.subtract(blockTimestamp, parseBigintIsh(pylonInfo.lastOracleTimestamp)))
+        Pylon.logger(debug, "current float accumulator > last float accumulator")
+        Pylon.logger(debug, "avg price: ", avgPrice.toString())
       }
     }
 
@@ -508,22 +515,25 @@ export class Pylon {
       ),
       parseBigintIsh(pylonInfo.lastRootKTranslated)
     )
-    // let anchorK = parseBigintIsh(pylonInfo.anchorKFactor)
+    Pylon.logger(debug, "fee value percentage anchor: ", feeValuePercentageAnchor.toString())
+
     let vabLast = parseBigintIsh(pylonInfo.virtualAnchorBalance)
     if (JSBI.notEqual(feeValuePercentageAnchor, ZERO)) {
       let feeToAnchor = JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, resTR1), feeValuePercentageAnchor), BASE)
       vabLast = JSBI.add(vabLast, feeToAnchor)
+      Pylon.logger(debug, "new VAB: ", vabLast.toString())
+
     }
     let adjVAB = JSBI.subtract(vabLast, this.reserve1.raw)
 
-    let gamma = Library.calculateGamma(resTR0, resTR1, adjVAB, parseBigintIsh(pylonInfo.p2x), parseBigintIsh(pylonInfo.p2y))
+    let gamma = Library.calculateGamma(resTR0, resTR1, adjVAB, parseBigintIsh(pylonInfo.p2x), parseBigintIsh(pylonInfo.p2y), debug)
 
-    console.log(
+    Pylon.logger(
+        debug,
       'gamma',
       gamma.gamma.toString(),
       'vab',
       vabLast.toString(),
-
       'isLineFormula',
       gamma.isLineFormula,
       'lastPrice',
@@ -722,14 +732,15 @@ export class Pylon {
     pylonFactory: PylonFactory,
     maxDerivative: JSBI,
     isSync: boolean,
-    lastPrice: JSBI
+    lastPrice: JSBI,
+    debug: boolean = false
   ): { newAmount: JSBI; fee: JSBI; deltaApplied: boolean; blocked: boolean; asyncBlocked: boolean; feeBPS: JSBI } {
     let instantPrice = JSBI.divide(JSBI.multiply(BASE, this.getPairReserves()[1].raw), this.getPairReserves()[0].raw)
-    console.log('instant Price =====> ', instantPrice.toString())
-    console.log('last Price =====> ', lastPrice.toString())
-    // 10274744793400104233
-    // 2878764591642686146
+    Pylon.logger(debug,'Instant Price =====> ', instantPrice.toString())
+    Pylon.logger(debug,'Last Price =====> ', lastPrice.toString())
     let feeByGamma = Library.getFeeByGamma(gamma, pylonFactory.minFee, pylonFactory.maxFee)
+    Pylon.logger(debug,'Fee By Gamma =====> ', feeByGamma.toString())
+
     let feeBPS
     if (isSync) {
       feeBPS = feeByGamma
@@ -754,7 +765,7 @@ export class Pylon {
           ),
           feeBPS
         )
-        console.log('feeBPS ==== >>>> ', feeBPS.toString())
+        Pylon.logger(debug, 'feeBPS ==== >>>> ', feeBPS.toString())
 
         if (JSBI.greaterThan(feeBPS, _10000)) {
           return {
@@ -990,7 +1001,8 @@ export class Pylon {
     totalSupply: TokenAmount,
     factory: PylonFactory,
     blockTimestamp: JSBI,
-    blockNumber: JSBI
+    blockNumber: JSBI,
+    debug: boolean = false
   ): {
     kLast: JSBI
     ema: JSBI
@@ -1001,12 +1013,12 @@ export class Pylon {
     totalSupply: JSBI
     ptb: JSBI
   } {
+    Pylon.logger(debug, 'INIT SYNC')
     let ptMinted = this.publicMintFeeCalc(parseBigintIsh(pairInfo.kLast), totalSupply.raw, factory)
     let newTotalSupply = JSBI.add(totalSupply.raw, ptMinted)
     let [pairReserveTranslated0, pairReserveTranslated1] = this.getPairReservesTranslated(ptb.raw, newTotalSupply)
 
     let rootK = sqrt(JSBI.multiply(pairReserveTranslated0, pairReserveTranslated1))
-
     let updateRemovingExcess = this.updateRemovingExcess(
       pairReserveTranslated0,
       pairReserveTranslated1,
@@ -1030,7 +1042,8 @@ export class Pylon {
         this.token0.equals(this.pair.token0) ? pairInfo.price0CumulativeLast : pairInfo.price1CumulativeLast
       ),
       rootK,
-      factory
+      factory,
+        debug
     )
 
     let ema = Library.calculateEMA(pylonInfo, parseBigintIsh(blockNumber), factory.EMASamples, result.gamma)
@@ -1046,6 +1059,11 @@ export class Pylon {
       ptb: newPTB
     }
   }
+  public static logger(debug: boolean, ...args: any[]) {
+    if (debug) {
+      console.log("SDK::", ...args)
+    }
+  }
 
   public mintSync(
     pylonInfo: PylonInfo,
@@ -1057,8 +1075,10 @@ export class Pylon {
     blockNumber: BigintIsh,
     factory: PylonFactory,
     blockTimestamp: BigintIsh,
-    isAnchor: boolean
+    isAnchor: boolean,
+    debug: boolean = false
   ): MintSyncParams {
+    Pylon.logger(debug, 'Mint Sync: ' + (isAnchor ? "Anchor" : "Float"))
     const blockedReturn = {
       isDerivedVFB: false,
       blocked: true,
@@ -1100,7 +1120,8 @@ export class Pylon {
       factory,
       result.ema,
       true,
-      result.lastPrice
+      result.lastPrice,
+        debug
     )
 
     // If fee is blocked, time to return
@@ -1352,7 +1373,8 @@ export class Pylon {
     balance1: JSBI,
     factory: PylonFactory,
     totalSupply: JSBI,
-    kLast: JSBI
+    kLast: JSBI,
+    debug: boolean = false
   ): { newReserve0: JSBI; newReserve1: JSBI; liquidity: JSBI } {
     let update = false
     let max0 = JSBI.divide(JSBI.multiply(reserveTranslated0, factory.maxSync), _100)
@@ -1365,7 +1387,6 @@ export class Pylon {
     let excess1 = ZERO
 
     if (JSBI.greaterThan(balance0, max0)) {
-      console.log('00')
       excess0 = JSBI.subtract(balance0, max0)
       liquidity = JSBI.add(
         liquidity,
@@ -1378,15 +1399,11 @@ export class Pylon {
         )
       )
       newReserve0 = max0
-
+      Pylon.logger(debug, 'Removed Excess 0: ', excess0, 'Liquidity: ', liquidity)
       update = true
     } else {
       newReserve0 = balance0
     }
-    console.log('b1, m1', max1.toString(), balance1.toString(), reserveTranslated1.toString())
-    //19786860154876221800
-    //906569208188320213
-    //9065692081883202131
     if (JSBI.greaterThan(balance1, max1)) {
       excess1 = JSBI.subtract(balance1, max1)
       liquidity = JSBI.add(
@@ -1399,8 +1416,9 @@ export class Pylon {
           totalSupply
         )
       )
-
       newReserve1 = max1
+      Pylon.logger(debug, 'Removed Excess 1: ', excess1, 'Liquidity: ', liquidity)
+
       update = true
     } else {
       newReserve1 = balance1
@@ -1475,6 +1493,7 @@ export class Pylon {
         JSBI.divide(JSBI.multiply(JSBI.multiply(pairReserveTranslated0, result.gamma), TWO), BASE)
       )
     )
+
 
     let ptAmount = reservePTU
     if (JSBI.greaterThan(reservePTU, poolTokensIn.raw)) {

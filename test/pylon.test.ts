@@ -57,7 +57,7 @@ describe('Pylon', () => {
   describe('Test Cases', () => {
     CASES.forEach((testCase, i) => {
       it('Test Case ' + i, () => {
-        if (testCase.skip) {
+        if (!testCase.skip) {
           const pylon = new Pylon(
             new Pair(
               new TokenAmount(USDC, testCase.resPair0),
@@ -177,7 +177,8 @@ describe('Pylon', () => {
                   testCase.blockNumber,
                   pylonFactory,
                   testCase.timestamp,
-                  !isFloat
+                  !isFloat,
+                  true
               )
             } else {
               let amount1 = new TokenAmount(USDC, testCase.amountIn)
@@ -197,6 +198,7 @@ describe('Pylon', () => {
               )
             }
           }
+          console.log("hello amountOut: ", result.amountOut.raw.toString())
           expect(result.amountOut.raw.toString()).toEqual(testCase.amountOut)
           expect(result.blocked).toEqual(testCase.isBlocked)
         }

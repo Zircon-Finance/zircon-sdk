@@ -2,7 +2,8 @@ import JSBI from 'jsbi'
 import {_42E45, BASE, DOUBLE_BASE, ONE, TEN, TWO, ZERO} from '../constants'
 import {parseBigintIsh, sqrt} from '../utils'
 import {PylonInfo} from "interfaces/pylonInterface";
-
+import {Pylon} from "../entities";
+interface Coefficients { a: JSBI; b: JSBI; isANegative: boolean }
 export abstract class Library {
   public static getFTVForX(x: JSBI, p2x: JSBI, p2y: JSBI, reserve0: JSBI, reserve1: JSBI, adjVAB: JSBI): JSBI {
     let ftv = ZERO
@@ -19,15 +20,7 @@ export abstract class Library {
         !coefficients.isANegative ||
         JSBI.greaterThan(coefficients.b, JSBI.divide(JSBI.multiply(TWO, JSBI.multiply(coefficients.a, p3x)), BASE))
       ) {
-        ftv = coefficients.isANegative
-          ? JSBI.subtract(
-              JSBI.multiply(coefficients.b, x),
-              JSBI.multiply(JSBI.divide(JSBI.multiply(coefficients.a, x), BASE), x)
-            )
-          : JSBI.add(
-              JSBI.multiply(coefficients.b, x),
-              JSBI.multiply(JSBI.divide(JSBI.multiply(coefficients.a, x), BASE), x)
-            )
+        ftv = this.getFTV(coefficients, x)
       } else {
         throw new Error('ZP: ExFlt2')
       }
@@ -66,13 +59,14 @@ export abstract class Library {
     }
   }
 
+
   public static calculateParabolaCoefficients(
     p2x: JSBI,
     p2y: JSBI,
     p3x: JSBI,
     p3y: JSBI,
     check: boolean
-  ): { a: JSBI; b: JSBI; isANegative: boolean } {
+  ): Coefficients {
     if (JSBI.lessThan(p3x, p2x)) {
       if (!check) {
         throw new Error('p3x < p2x')
@@ -112,21 +106,39 @@ export abstract class Library {
     return { a, b, isANegative }
   }
 
+  public static getFTV(coefficients: Coefficients, x: JSBI) {
+    return coefficients.isANegative
+        ? JSBI.subtract(
+            JSBI.multiply(coefficients.b, x),
+            JSBI.multiply(JSBI.divide(JSBI.multiply(coefficients.a, x), BASE), x)
+        )
+        : JSBI.add(
+            JSBI.multiply(coefficients.b, x),
+            JSBI.multiply(JSBI.divide(JSBI.multiply(coefficients.a, x), BASE), x)
+        )
+  }
+
   public static calculateGamma(
     resTR0: JSBI,
     resTR1: JSBI,
     adjVAB: JSBI,
     p2x: JSBI,
-    p2y: JSBI
+    p2y: JSBI,
+    debug: boolean = false
   ): { gamma: JSBI; isLineFormula: boolean } {
+    Pylon.logger(debug, 'CALCULATE GAMMA')
     let tpva = JSBI.multiply(resTR1, TWO)
 
     let gamma = ZERO
     let formulaSwitch = false
     let p3x = JSBI.divide(JSBI.exponentiate(adjVAB, TWO), resTR0)
     p3x = JSBI.divide(JSBI.multiply(p3x, BASE), resTR1)
+    Pylon.logger(debug, 'P2 (', p2x, ',', p2y, ')' + ' P3 (', p3x, ',', adjVAB, ')')
+
     let x = JSBI.divide(JSBI.multiply(resTR1, BASE), resTR0)
+    // TODO: linear when b neg
     if (JSBI.greaterThanOrEqual(x, p3x)) {
+      Pylon.logger(debug, 'x over p3x')
       gamma = JSBI.subtract(BASE, JSBI.divide(JSBI.multiply(adjVAB, BASE), tpva))
       formulaSwitch = false
     } else {
@@ -135,16 +147,8 @@ export abstract class Library {
         !coefficients.isANegative ||
         JSBI.greaterThan(coefficients.b, JSBI.divide(JSBI.multiply(TWO, JSBI.multiply(coefficients.a, p3x)), BASE))
       ) {
-        let ftv = coefficients.isANegative
-          ? JSBI.subtract(
-              JSBI.multiply(coefficients.b, x),
-              JSBI.multiply(JSBI.divide(JSBI.multiply(coefficients.a, x), BASE), x)
-            )
-          : JSBI.add(
-              JSBI.multiply(coefficients.b, x),
-              JSBI.multiply(JSBI.divide(JSBI.multiply(coefficients.a, x), BASE), x)
-            )
-
+        let ftv = this.getFTV(coefficients, x)
+        Pylon.logger(debug, 'x under p3x =>', 'ftv: ', ftv)
         gamma = JSBI.divide(ftv, tpva)
         formulaSwitch = true
       } else {
@@ -162,7 +166,6 @@ export abstract class Library {
     // Calculating Total Pool Value Anchor Prime
     let oldGamma = parseBigintIsh(pylonInfo.gammaMulDecimals)
     let blockDiff = JSBI.subtract(currentBlockNumber, parseBigintIsh(pylonInfo.EMABlockNumber))
-    console.log('zz:: ', blockDiff.toString(), gamma.toString(), oldGamma.toString())
     if (JSBI.equal(blockDiff, ZERO)) {
       let blockEMA: JSBI
       if (JSBI.greaterThan(gamma, oldGamma)) {
