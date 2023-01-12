@@ -1,11 +1,11 @@
 import { TokenAmount } from 'entities'
 import JSBI from 'jsbi'
-import {BigintIsh} from "../constants";
+import { BigintIsh } from '../constants'
 
 export interface Params {
-  amountOut: TokenAmount;
-  blocked: boolean;
-  fee: TokenAmount;
+  amountOut: TokenAmount
+  blocked: boolean
+  fee: TokenAmount
   deltaApplied: boolean
 }
 
@@ -16,17 +16,17 @@ export interface BurnParams extends Params {
   reservesPTU: JSBI
 }
 
-export interface MintSyncParams extends Params{
+export interface MintSyncParams extends Params {
   amountsToInvest: { sync: JSBI; async: JSBI }
   extraSlippagePercentage: JSBI
   feePercentage: JSBI
   isDerivedVFB: boolean
 }
-export interface MintAsyncParams  extends Params{
+export interface MintAsyncParams extends Params {
   feePercentage: JSBI
 }
 
-export interface BurnAsyncParams  extends Params {
+export interface BurnAsyncParams extends Params {
   amountOut2: TokenAmount
   asyncBlocked: boolean
   feePercentage: JSBI
@@ -34,22 +34,32 @@ export interface BurnAsyncParams  extends Params {
 }
 
 export interface PylonInfo {
-  virtualAnchorBalance: BigintIsh,
-  muMulDecimals: BigintIsh,
-  gammaMulDecimals: BigintIsh,
-  "strikeBlock": BigintIsh,
-  "EMABlockNumber": BigintIsh,
-  "gammaEMA": BigintIsh,
-  "thisBlockEMA": BigintIsh,
-  "lastRootKTranslated": BigintIsh,
-  "anchorKFactor": BigintIsh,
-  "formulaSwitch": boolean
-  "lastFloatAccumulator": BigintIsh
-  "lastOracleTimestamp": BigintIsh,
-  "lastPrice": BigintIsh,
+  virtualAnchorBalance: BigintIsh
+  muMulDecimals: BigintIsh
+  gammaMulDecimals: BigintIsh
+  strikeBlock: BigintIsh
+  EMABlockNumber: BigintIsh
+  gammaEMA: BigintIsh
+  thisBlockEMA: BigintIsh
+  lastRootKTranslated: BigintIsh
+  anchorKFactor: BigintIsh
+  formulaSwitch: boolean
+  lastFloatAccumulator: BigintIsh
+  lastOracleTimestamp: BigintIsh
+  lastPrice: BigintIsh
+  p2x: BigintIsh
+  p2y: BigintIsh
 }
 export interface PairInfo {
-  "price0CumulativeLast": BigintIsh,
-  "price1CumulativeLast": BigintIsh,
-  "kLast": BigintIsh
+  price0CumulativeLast: BigintIsh
+  price1CumulativeLast: BigintIsh
+  kLast: BigintIsh
+}
+
+export interface SyncAsyncParams {
+  amountOut: JSBI
+  amountPool: JSBI
+  trueAmountOut: JSBI
+  amounts: { sync: JSBI; async: JSBI }
+  syncMinting?: { newReserve0: JSBI; newReserve1: JSBI; liquidity: JSBI; px: JSBI; py: JSBI }
 }

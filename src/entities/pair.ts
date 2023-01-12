@@ -50,7 +50,7 @@ export class Pair {
     tokenAmountA: TokenAmount,
     tokenAmountB: TokenAmount,
     lastBlockTimestamp: BigintIsh,
-    liquidityFee: BigintIsh = "15"
+    liquidityFee: BigintIsh = '15'
   ) {
     const tokenAmounts = tokenAmountA.token.sortsBefore(tokenAmountB.token) // does safety checks
       ? [tokenAmountA, tokenAmountB]

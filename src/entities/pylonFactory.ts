@@ -46,7 +46,7 @@ export class PylonFactory {
     this.dynamicRatio = parseBigintIsh(dynamicRatio)
     this.oracleUpdateSecs = parseBigintIsh(oracleUpdateSecs)
   }
-  public setMaxSync(maximumPercentageSync: BigintIsh)  {
+  public setMaxSync(maximumPercentageSync: BigintIsh) {
     this.maxSync = parseBigintIsh(maximumPercentageSync)
   }
 }

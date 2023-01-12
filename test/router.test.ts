@@ -13,9 +13,19 @@ describe('Router', () => {
   const token0 = new Token(ChainId.STANDALONE, '0x0000000000000000000000000000000000000001', 18, 't0')
   const token1 = new Token(ChainId.STANDALONE, '0x0000000000000000000000000000000000000002', 18, 't1')
 
-  const pair_0_1 = new Pair(new TokenAmount(token0, JSBI.BigInt(1000)), new TokenAmount(token1, JSBI.BigInt(1000)), '0', '30')
+  const pair_0_1 = new Pair(
+    new TokenAmount(token0, JSBI.BigInt(1000)),
+    new TokenAmount(token1, JSBI.BigInt(1000)),
+    '0',
+    '30'
+  )
 
-  const pair_WDEV_0 = new Pair(new TokenAmount(WDEV[ChainId.STANDALONE], '1000'), new TokenAmount(token0, '1000'), '0', '30')
+  const pair_WDEV_0 = new Pair(
+    new TokenAmount(WDEV[ChainId.STANDALONE], '1000'),
+    new TokenAmount(token0, '1000'),
+    '0',
+    '30'
+  )
 
   describe('#swapCallParameters', () => {
     describe('exact in', () => {

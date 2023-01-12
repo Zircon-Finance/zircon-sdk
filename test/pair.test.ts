@@ -64,7 +64,7 @@ describe('Pair', () => {
 
   describe('#token0Price', () => {
     it('returns price of token0 in terms of token1', () => {
-      expect(new Pair(new TokenAmount(USDC, '101'), new TokenAmount(DAI, '100'),'0', '30').token0Price).toEqual(
+      expect(new Pair(new TokenAmount(USDC, '101'), new TokenAmount(DAI, '100'), '0', '30').token0Price).toEqual(
         new Price(DAI, USDC, '100', '101')
       )
       expect(new Pair(new TokenAmount(DAI, '100'), new TokenAmount(USDC, '101'), '0', '30').token0Price).toEqual(
@@ -85,7 +85,7 @@ describe('Pair', () => {
   })
 
   describe('#priceOf', () => {
-    const pair = new Pair(new TokenAmount(USDC, '101'), new TokenAmount(DAI, '100'),'0', '30')
+    const pair = new Pair(new TokenAmount(USDC, '101'), new TokenAmount(DAI, '100'), '0', '30')
     it('returns price of token in terms of other token', () => {
       expect(pair.priceOf(DAI)).toEqual(pair.token0Price)
       expect(pair.priceOf(USDC)).toEqual(pair.token1Price)
@@ -115,15 +115,25 @@ describe('Pair', () => {
 
   describe('#chainId', () => {
     it('returns the token0 chainId', () => {
-      expect(new Pair(new TokenAmount(USDC, '100'), new TokenAmount(DAI, '100'), '0', '30').chainId).toEqual(ChainId.MOONBASE)
-      expect(new Pair(new TokenAmount(DAI, '100'), new TokenAmount(USDC, '100'), '0', '30').chainId).toEqual(ChainId.MOONBASE)
+      expect(new Pair(new TokenAmount(USDC, '100'), new TokenAmount(DAI, '100'), '0', '30').chainId).toEqual(
+        ChainId.MOONBASE
+      )
+      expect(new Pair(new TokenAmount(DAI, '100'), new TokenAmount(USDC, '100'), '0', '30').chainId).toEqual(
+        ChainId.MOONBASE
+      )
     })
   })
   describe('#involvesToken', () => {
-    expect(new Pair(new TokenAmount(USDC, '100'), new TokenAmount(DAI, '100'), '0', '30').involvesToken(USDC)).toEqual(true)
-    expect(new Pair(new TokenAmount(USDC, '100'), new TokenAmount(DAI, '100'), '0', '30').involvesToken(DAI)).toEqual(true)
+    expect(new Pair(new TokenAmount(USDC, '100'), new TokenAmount(DAI, '100'), '0', '30').involvesToken(USDC)).toEqual(
+      true
+    )
+    expect(new Pair(new TokenAmount(USDC, '100'), new TokenAmount(DAI, '100'), '0', '30').involvesToken(DAI)).toEqual(
+      true
+    )
     expect(
-      new Pair(new TokenAmount(USDC, '100'), new TokenAmount(DAI, '100'), '0', '30').involvesToken(WDEV[ChainId.MOONBASE])
+      new Pair(new TokenAmount(USDC, '100'), new TokenAmount(DAI, '100'), '0', '30').involvesToken(
+        WDEV[ChainId.MOONBASE]
+      )
     ).toEqual(false)
   })
 })
