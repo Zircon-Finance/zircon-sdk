@@ -77,7 +77,7 @@ export const MOONRIVER_ADDRESSES = {
   }
 }
 export const BSC_ADDRESSES = {
-  WETH: '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c',
+  WETH: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
   factory: '0xc1C536407E292C1d9dE4cc0Cb6FAF4a5DAAE932D',
   router: '0x5F75d4329148764539cE28Ef62fA735c8ACA0a4B',
   multicall: '0x1Ee38d535d541c55C9dae27B12edf090C608E6Fb',
