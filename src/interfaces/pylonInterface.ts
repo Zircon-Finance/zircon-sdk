@@ -35,6 +35,7 @@ export interface BurnAsyncParams extends Params {
 
 export interface PylonInfo {
   virtualAnchorBalance: BigintIsh
+  virtualFloatBalance: BigintIsh
   muMulDecimals: BigintIsh
   gammaMulDecimals: BigintIsh
   strikeBlock: BigintIsh

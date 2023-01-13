@@ -12,6 +12,15 @@ describe('Pylon', () => {
   //     muUpdatePeriod: BigintIsh, muChangeFactor: BigintIsh, liquidityFee: BigintIsh, dynamicRatio: BigintIsh,
   //     feePercentageRev: BigintIsh, feePercentageEnergy: BigintIsh, minFee: BigintIsh, maxFee: BigintIsh
 
+  // function checkApproximation(a: JSBI, b: JSBI, error: number) {
+  //   const diff = JSBI.subtract(a, b)
+  //   const diffAbs = JSBI.greaterThan(diff, JSBI.BigInt(0)) ? diff : JSBI.unaryMinus(diff)
+  //   const errorAbs = JSBI.BigInt(error)
+  //   expect(JSBI.lessThanOrEqual(diffAbs, errorAbs)).toBeTruthy()
+  // }
+  // checkApproximation(result.amountOut.raw, JSBI.BigInt(testCase.amountOut), 1e15)
+
+
   const pylonFactory = new PylonFactory(
     JSBI.BigInt(10),
     JSBI.BigInt(4e16),
@@ -82,6 +91,7 @@ describe('Pylon', () => {
           let result: Params
           let pylonInfo: PylonInfo = {
             virtualAnchorBalance: testCase.vab,
+            virtualFloatBalance: testCase.vfb,
             muMulDecimals: testCase.mu,
             gammaMulDecimals: testCase.gamma,
             strikeBlock: testCase.strikeBlock,
@@ -198,7 +208,6 @@ describe('Pylon', () => {
               )
             }
           }
-          console.log("hello amountOut: ", result.amountOut.raw.toString())
           expect(result.amountOut.raw.toString()).toEqual(testCase.amountOut)
           expect(result.blocked).toEqual(testCase.isBlocked)
         }

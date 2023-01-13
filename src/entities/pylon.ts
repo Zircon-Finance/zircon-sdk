@@ -61,12 +61,12 @@ export class Pylon {
         [pairAddress]: {
           ...PYLON_ADDRESS_CACHE?.[pairAddress],
           [tokenA.address]: getCreate2Address(
-            PYLON_FACTORY_ADDRESS[tokenA.chainId],
-            keccak256(
-              ['bytes'],
-              [pack(['address', 'address', 'address'], [tokenA.address, tokenB.address, pairAddress])]
-            ),
-            PYLON_CODE_HASH[tokenA.chainId]
+              PYLON_FACTORY_ADDRESS[tokenA.chainId],
+              keccak256(
+                  ['bytes'],
+                  [pack(['address', 'address', 'address'], [tokenA.address, tokenB.address, pairAddress])]
+              ),
+              PYLON_CODE_HASH[tokenA.chainId]
           )
         }
       }
@@ -82,12 +82,12 @@ export class Pylon {
         [pairAddress]: {
           ...MIGRATED_PYLON_ADDRESS_CACHE?.[pairAddress],
           [tokenA.address]: getCreate2Address(
-            address,
-            keccak256(
-              ['bytes'],
-              [pack(['address', 'address', 'address'], [tokenA.address, tokenB.address, pairAddress])]
-            ),
-            bytecode
+              address,
+              keccak256(
+                  ['bytes'],
+                  [pack(['address', 'address', 'address'], [tokenA.address, tokenB.address, pairAddress])]
+              ),
+              bytecode
           )
         }
       }
@@ -96,21 +96,21 @@ export class Pylon {
   }
 
   public static migratedPTCodeHash = (migrationAddress: string, chainId: ChainId): string =>
-    keccak256(
-      ['bytes'],
-      [pack(['bytes', 'bytes'], [PT_BYTECODE[chainId], new AbiCoder().encode(['address'], [migrationAddress])])]
-    )
+      keccak256(
+          ['bytes'],
+          [pack(['bytes', 'bytes'], [PT_BYTECODE[chainId], new AbiCoder().encode(['address'], [migrationAddress])])]
+      )
 
   public static ptCodeHash = (token: Token): string =>
-    keccak256(
-      ['bytes'],
-      [
-        pack(
-          ['bytes', 'bytes'],
-          [PT_BYTECODE[token.chainId], new AbiCoder().encode(['address'], [PYLON_FACTORY_ADDRESS[token.chainId]])]
-        )
-      ]
-    )
+      keccak256(
+          ['bytes'],
+          [
+            pack(
+                ['bytes', 'bytes'],
+                [PT_BYTECODE[token.chainId], new AbiCoder().encode(['address'], [PYLON_FACTORY_ADDRESS[token.chainId]])]
+            )
+          ]
+      )
 
   private static getPTAddress(tokenA: Token, tokenB: Token, isAnchor: boolean): string {
     let token = isAnchor ? tokenB : tokenA
@@ -121,9 +121,9 @@ export class Pylon {
         [token.address]: {
           ...PT_ADDRESS_CACHE?.[token.address],
           [pylonAddress]: getCreate2Address(
-            PT_FACTORY_ADDRESS[token.chainId],
-            keccak256(['bytes'], [pack(['address', 'address'], [token.address, pylonAddress])]),
-            Pylon.ptCodeHash(token)
+              PT_FACTORY_ADDRESS[token.chainId],
+              keccak256(['bytes'], [pack(['address', 'address'], [token.address, pylonAddress])]),
+              Pylon.ptCodeHash(token)
           )
         }
       }
@@ -132,11 +132,11 @@ export class Pylon {
     return PT_ADDRESS_CACHE[token.address][pylonAddress]
   }
   private static getMigratedPTAddress(
-    tokenA: Token,
-    tokenB: Token,
-    isAnchor: boolean,
-    migrationAddress: string,
-    bytecode: string
+      tokenA: Token,
+      tokenB: Token,
+      isAnchor: boolean,
+      migrationAddress: string,
+      bytecode: string
   ): string {
     let token = isAnchor ? tokenB : tokenA
     let pylonAddress = this.getMigratedAddress(tokenA, tokenB, migrationAddress, bytecode)
@@ -146,9 +146,9 @@ export class Pylon {
         [token.address]: {
           ...PT_ADDRESS_CACHE?.[token.address],
           [pylonAddress]: getCreate2Address(
-            PT_FACTORY_ADDRESS[token.chainId],
-            keccak256(['bytes'], [pack(['address', 'address'], [token.address, pylonAddress])]),
-            Pylon.migratedPTCodeHash(migrationAddress, token.chainId)
+              PT_FACTORY_ADDRESS[token.chainId],
+              keccak256(['bytes'], [pack(['address', 'address'], [token.address, pylonAddress])]),
+              Pylon.migratedPTCodeHash(migrationAddress, token.chainId)
           )
         }
       }
@@ -166,9 +166,9 @@ export class Pylon {
           [tokenA.address]: {
             ...ENERGY_ADDRESS_CACHE?.[tokenA.address],
             [pairAddress]: getCreate2Address(
-              EN_FACTORY_ADDRESS[tokenA.chainId],
-              keccak256(['bytes'], [pack(['address', 'address'], [pairAddress, tokenA.address])]),
-              EN_CODE_HASH[tokenA.chainId]
+                EN_FACTORY_ADDRESS[tokenA.chainId],
+                keccak256(['bytes'], [pack(['address', 'address'], [pairAddress, tokenA.address])]),
+                EN_CODE_HASH[tokenA.chainId]
             )
           }
         }
@@ -186,18 +186,18 @@ export class Pylon {
     let migrationInformation = MIGRATION_PYLONS[pylonAddress]
     if (migrationInformation) {
       floatLiquidityAddress = Pylon.getMigratedPTAddress(
-        tokenA,
-        tokenB,
-        false,
-        migrationInformation.migrationAddress,
-        migrationInformation.bytecode
+          tokenA,
+          tokenB,
+          false,
+          migrationInformation.migrationAddress,
+          migrationInformation.bytecode
       )
       anchorLiquidityAddress = Pylon.getMigratedPTAddress(
-        tokenA,
-        tokenB,
-        true,
-        migrationInformation.migrationAddress,
-        migrationInformation.bytecode
+          tokenA,
+          tokenB,
+          true,
+          migrationInformation.migrationAddress,
+          migrationInformation.bytecode
       )
     } else {
       floatLiquidityAddress = Pylon.getPTAddress(tokenA, tokenB, false)
@@ -215,18 +215,18 @@ export class Pylon {
     let migrationInformation = MIGRATION_PYLONS[this.address]
     if (migrationInformation) {
       floatLiquidityAddress = Pylon.getMigratedPTAddress(
-        tokenAmount0.token,
-        tokenAmount1.token,
-        false,
-        migrationInformation.migrationAddress,
-        migrationInformation.bytecode
+          tokenAmount0.token,
+          tokenAmount1.token,
+          false,
+          migrationInformation.migrationAddress,
+          migrationInformation.bytecode
       )
       anchorLiquidityAddress = Pylon.getMigratedPTAddress(
-        tokenAmount0.token,
-        tokenAmount1.token,
-        true,
-        migrationInformation.migrationAddress,
-        migrationInformation.bytecode
+          tokenAmount0.token,
+          tokenAmount1.token,
+          true,
+          migrationInformation.migrationAddress,
+          migrationInformation.bytecode
       )
     } else {
       floatLiquidityAddress = Pylon.getPTAddress(tokenAmount0.token, tokenAmount1.token, false)
@@ -236,11 +236,11 @@ export class Pylon {
     this.floatLiquidityToken = new Token(tokenAmounts[0].token.chainId, floatLiquidityAddress, 18, 'ZR-FT', 'Zircon FT')
 
     this.anchorLiquidityToken = new Token(
-      tokenAmounts[0].token.chainId,
-      anchorLiquidityAddress,
-      18,
-      'ZR-AT',
-      'Zircon AT'
+        tokenAmounts[0].token.chainId,
+        anchorLiquidityAddress,
+        18,
+        'ZR-AT',
+        'Zircon AT'
     )
 
     this.tokenAmounts = tokenAmounts as [TokenAmount, TokenAmount]
@@ -262,8 +262,8 @@ export class Pylon {
     const numerator = JSBI.multiply(inputAmountWithFee, outputReserve.raw)
     const denominator = JSBI.add(JSBI.multiply(inputReserve.raw, _1000), inputAmountWithFee)
     const outputAmount = new TokenAmount(
-      inputAmount.token.equals(this.token0) ? this.token1 : this.token0,
-      JSBI.divide(numerator, denominator)
+        inputAmount.token.equals(this.token0) ? this.token1 : this.token0,
+        JSBI.divide(numerator, denominator)
     )
     if (JSBI.equal(outputAmount.raw, ZERO)) {
       throw new InsufficientInputAmountError()
@@ -271,10 +271,10 @@ export class Pylon {
     return [
       outputAmount,
       new Pair(
-        inputReserve.add(inputAmount),
-        outputReserve.subtract(outputAmount),
-        this.pair.lastBlockTimestamp,
-        this.pair.liquidityFee
+          inputReserve.add(inputAmount),
+          outputReserve.subtract(outputAmount),
+          this.pair.lastBlockTimestamp,
+          this.pair.liquidityFee
       )
     ]
   }
@@ -282,9 +282,9 @@ export class Pylon {
   public getInputAmount(outputAmount: TokenAmount): [TokenAmount, Pair] {
     invariant(this.involvesToken(outputAmount.token), 'TOKEN')
     if (
-      JSBI.equal(this.reserve0.raw, ZERO) ||
-      JSBI.equal(this.reserve1.raw, ZERO) ||
-      JSBI.greaterThanOrEqual(outputAmount.raw, this.reserveOf(outputAmount.token).raw)
+        JSBI.equal(this.reserve0.raw, ZERO) ||
+        JSBI.equal(this.reserve1.raw, ZERO) ||
+        JSBI.greaterThanOrEqual(outputAmount.raw, this.reserveOf(outputAmount.token).raw)
     ) {
       throw new InsufficientReservesError()
     }
@@ -294,16 +294,16 @@ export class Pylon {
     const numerator = JSBI.multiply(JSBI.multiply(inputReserve.raw, outputAmount.raw), _1000)
     const denominator = JSBI.multiply(JSBI.subtract(outputReserve.raw, outputAmount.raw), _997)
     const inputAmount = new TokenAmount(
-      outputAmount.token.equals(this.token0) ? this.token1 : this.token0,
-      JSBI.add(JSBI.divide(numerator, denominator), ONE)
+        outputAmount.token.equals(this.token0) ? this.token1 : this.token0,
+        JSBI.add(JSBI.divide(numerator, denominator), ONE)
     )
     return [
       inputAmount,
       new Pair(
-        inputReserve.add(inputAmount),
-        outputReserve.subtract(outputAmount),
-        this.pair.lastBlockTimestamp,
-        this.pair.liquidityFee
+          inputReserve.add(inputAmount),
+          outputReserve.subtract(outputAmount),
+          this.pair.lastBlockTimestamp,
+          this.pair.liquidityFee
       )
     ]
   }
@@ -348,7 +348,7 @@ export class Pylon {
   }
 
   private getPairReservesTranslated(ptb: JSBI, totalSupply: JSBI): [JSBI, JSBI] {
-    let r0 = Library.translateToPylon(this.getPairReserves()[1].raw, ptb, totalSupply)
+    let r0 = Library.translateToPylon(this.getPairReserves()[0].raw, ptb, totalSupply)
     let r1 = Library.translateToPylon(this.getPairReserves()[1].raw, ptb, totalSupply)
     return [r0, r1]
   }
@@ -359,48 +359,48 @@ export class Pylon {
   // Medium -> Omega >= .95 && anchorReserve + poolTokenReserve > (1-Omega) * TPV
   // Low -> Omega <= .95 || anchorReserve + poolTokenReserve < (1-Omega) * TPV
   public getHealthFactor(
-    pylonInfo: PylonInfo,
-    pairInfo: PairInfo,
-    totalSupply: TokenAmount,
-    ptb: TokenAmount,
-    blockNumber: BigintIsh,
-    factory: PylonFactory,
-    blockTimestamp: BigintIsh,
-    ptbEnergy: BigintIsh,
-    reserveAnchorEnergy: BigintIsh
+      pylonInfo: PylonInfo,
+      pairInfo: PairInfo,
+      totalSupply: TokenAmount,
+      ptb: TokenAmount,
+      blockNumber: BigintIsh,
+      factory: PylonFactory,
+      blockTimestamp: BigintIsh,
+      ptbEnergy: BigintIsh,
+      reserveAnchorEnergy: BigintIsh
   ): String {
     if (JSBI.equal(parseBigintIsh(pylonInfo.lastRootKTranslated), ZERO)) {
       return ''
     }
 
     let result = this.initSync(
-      pylonInfo,
-      pairInfo,
-      ptb,
-      totalSupply,
-      factory,
-      parseBigintIsh(blockTimestamp),
-      parseBigintIsh(blockNumber)
+        pylonInfo,
+        pairInfo,
+        ptb,
+        totalSupply,
+        factory,
+        parseBigintIsh(blockTimestamp),
+        parseBigintIsh(blockNumber)
     )
 
     let resTR1 = this.getPairReservesTranslated(result.ptb, result.totalSupply)[1]
 
     let ptbInAnchor = JSBI.multiply(
-      TWO,
-      JSBI.divide(JSBI.multiply(parseBigintIsh(ptbEnergy), this.getPairReserves()[1].raw), result.totalSupply)
+        TWO,
+        JSBI.divide(JSBI.multiply(parseBigintIsh(ptbEnergy), this.getPairReserves()[1].raw), result.totalSupply)
     )
 
     let anchorOnTPV = JSBI.divide(
-      JSBI.multiply(JSBI.add(parseBigintIsh(reserveAnchorEnergy), ptbInAnchor), BASE),
-      JSBI.multiply(TWO, resTR1)
+        JSBI.multiply(JSBI.add(parseBigintIsh(reserveAnchorEnergy), ptbInAnchor), BASE),
+        JSBI.multiply(TWO, resTR1)
     )
 
     let omega = this.getOmegaSlashing(result.gamma, result.vab, result.ptb, result.totalSupply, BASE).newAmount
     if (JSBI.greaterThanOrEqual(omega, BASE) && !result.isLineFormula) {
       return 'high'
     } else if (
-      JSBI.greaterThanOrEqual(omega, JSBI.subtract(BASE, JSBI.BigInt(4000000000000000))) ||
-      JSBI.greaterThanOrEqual(anchorOnTPV, JSBI.subtract(BASE, omega))
+        JSBI.greaterThanOrEqual(omega, JSBI.subtract(BASE, JSBI.BigInt(4000000000000000))) ||
+        JSBI.greaterThanOrEqual(anchorOnTPV, JSBI.subtract(BASE, omega))
     ) {
       return 'medium'
     } else {
@@ -456,14 +456,14 @@ export class Pylon {
   // private calculate
 
   private updateSync(
-    pylonInfo: PylonInfo,
-    ptb: JSBI,
-    ptt: JSBI,
-    blockTimestamp: JSBI,
-    priceCumulativeLast: JSBI,
-    rootK: JSBI,
-    constants: PylonFactory,
-    debug: boolean = false
+      pylonInfo: PylonInfo,
+      ptb: JSBI,
+      ptt: JSBI,
+      blockTimestamp: JSBI,
+      priceCumulativeLast: JSBI,
+      rootK: JSBI,
+      constants: PylonFactory,
+      debug: boolean = false
   ): {
     gamma: JSBI
     vab: JSBI
@@ -473,15 +473,16 @@ export class Pylon {
     Pylon.logger(debug, "UPDATE SYNC")
     // Calculating Total Pool Value Anchor Prime
     let [resTR0, resTR1] = this.getPairReservesTranslated(ptb, ptt)
+    console.log("resTR0", resTR0.toString(), "resTR1", resTR1.toString())
 
     let currentFloatAccumulator = priceCumulativeLast
     let avgPrice = parseBigintIsh(pylonInfo.lastPrice)
 
     if (
-      JSBI.greaterThan(
-        blockTimestamp,
-        JSBI.add(constants.oracleUpdateSecs, parseBigintIsh(pylonInfo.lastOracleTimestamp))
-      )
+        JSBI.greaterThan(
+            blockTimestamp,
+            JSBI.add(constants.oracleUpdateSecs, parseBigintIsh(pylonInfo.lastOracleTimestamp))
+        )
     ) {
       if (JSBI.greaterThan(blockTimestamp, this.pair.lastBlockTimestamp)) {
         let timeElapsed = JSBI.subtract(blockTimestamp, this.pair.lastBlockTimestamp)
@@ -490,8 +491,8 @@ export class Pylon {
         let resPair1 = JSBI.leftShift(resTR1, _112)
 
         currentFloatAccumulator = JSBI.add(
-          currentFloatAccumulator,
-          JSBI.multiply(JSBI.divide(resPair1, resTR0), timeElapsed)
+            currentFloatAccumulator,
+            JSBI.multiply(JSBI.divide(resPair1, resTR0), timeElapsed)
         )
         Pylon.logger(debug, "currentFloatAccumulator:", currentFloatAccumulator.toString())
       }
@@ -499,8 +500,8 @@ export class Pylon {
       if (JSBI.greaterThan(currentFloatAccumulator, parseBigintIsh(pylonInfo.lastFloatAccumulator))) {
 
         avgPrice = JSBI.signedRightShift(
-          JSBI.multiply(JSBI.subtract(currentFloatAccumulator, parseBigintIsh(pylonInfo.lastFloatAccumulator)), BASE),
-          _112
+            JSBI.multiply(JSBI.subtract(currentFloatAccumulator, parseBigintIsh(pylonInfo.lastFloatAccumulator)), BASE),
+            _112
         )
         avgPrice = JSBI.divide(avgPrice, JSBI.subtract(blockTimestamp, parseBigintIsh(pylonInfo.lastOracleTimestamp)))
         Pylon.logger(debug, "current float accumulator > last float accumulator")
@@ -509,11 +510,11 @@ export class Pylon {
     }
 
     let feeValuePercentageAnchor = JSBI.divide(
-      JSBI.multiply(
-        JSBI.subtract(rootK, parseBigintIsh(pylonInfo.lastRootKTranslated)),
-        parseBigintIsh(pylonInfo.muMulDecimals)
-      ),
-      parseBigintIsh(pylonInfo.lastRootKTranslated)
+        JSBI.multiply(
+            JSBI.subtract(rootK, parseBigintIsh(pylonInfo.lastRootKTranslated)),
+            parseBigintIsh(pylonInfo.muMulDecimals)
+        ),
+        parseBigintIsh(pylonInfo.lastRootKTranslated)
     )
     Pylon.logger(debug, "fee value percentage anchor: ", feeValuePercentageAnchor.toString())
 
@@ -530,14 +531,14 @@ export class Pylon {
 
     Pylon.logger(
         debug,
-      'gamma',
-      gamma.gamma.toString(),
-      'vab',
-      vabLast.toString(),
-      'isLineFormula',
-      gamma.isLineFormula,
-      'lastPrice',
-      avgPrice.toString()
+        'gamma',
+        gamma.gamma.toString(),
+        'vab',
+        vabLast.toString(),
+        'isLineFormula',
+        gamma.isLineFormula,
+        'lastPrice',
+        avgPrice.toString()
     )
 
     return {
@@ -559,24 +560,24 @@ export class Pylon {
       let ta1 = new TokenAmount(this.token1, JSBI.subtract(reserves[1].raw, outputAmount[0].raw))
 
       this.pair = new Pair(
-        isFloatR0 ? ta0 : ta1,
-        isFloatR0 ? ta1 : ta0,
-        this.pair.lastBlockTimestamp,
-        this.pair.liquidityFee
+          isFloatR0 ? ta0 : ta1,
+          isFloatR0 ? ta1 : ta0,
+          this.pair.lastBlockTimestamp,
+          this.pair.liquidityFee
       )
     }
   }
 
   public static calculateLiquidity(gamme: BigintIsh, reserve: BigintIsh, ptb: BigintIsh, ptt: BigintIsh): JSBI {
     return JSBI.divide(
-      JSBI.multiply(
-        JSBI.subtract(BASE, parseBigintIsh(gamme)),
-        JSBI.divide(
-          JSBI.multiply(JSBI.multiply(parseBigintIsh(reserve), TWO), parseBigintIsh(ptb)),
-          parseBigintIsh(ptt)
-        )
-      ),
-      BASE
+        JSBI.multiply(
+            JSBI.subtract(BASE, parseBigintIsh(gamme)),
+            JSBI.divide(
+                JSBI.multiply(JSBI.multiply(parseBigintIsh(reserve), TWO), parseBigintIsh(ptb)),
+                parseBigintIsh(ptt)
+            )
+        ),
+        BASE
     )
   }
 
@@ -585,17 +586,17 @@ export class Pylon {
 
 
   private calculatePTU(
-    isAnchor: boolean,
-    tokenAmount: JSBI,
-    ptt: JSBI,
-    ptb: JSBI,
-    ptTotalSupply: TokenAmount,
-    anchorVirtualBalance?: JSBI,
-    gamma?: JSBI
+      isAnchor: boolean,
+      tokenAmount: JSBI,
+      ptt: JSBI,
+      ptb: JSBI,
+      ptTotalSupply: TokenAmount,
+      anchorVirtualBalance?: JSBI,
+      gamma?: JSBI
   ): JSBI {
     invariant(
-      ptTotalSupply.token.equals(this.anchorLiquidityToken) || ptTotalSupply.token.equals(this.floatLiquidityToken),
-      'NEGATIVE'
+        ptTotalSupply.token.equals(this.anchorLiquidityToken) || ptTotalSupply.token.equals(this.floatLiquidityToken),
+        'NEGATIVE'
     )
     let liquidity: JSBI
     if (isAnchor) {
@@ -611,8 +612,8 @@ export class Pylon {
       } else {
         let [pairReserveTranslated] = this.getPairReservesTranslated(ptb, ptt)
         denominator = JSBI.add(
-          JSBI.divide(JSBI.multiply(JSBI.multiply(pairReserveTranslated, gamma!), TWO), BASE),
-          this.reserve0.raw
+            JSBI.divide(JSBI.multiply(JSBI.multiply(pairReserveTranslated, gamma!), TWO), BASE),
+            this.reserve0.raw
         )
       }
 
@@ -627,15 +628,18 @@ export class Pylon {
   }
 
   private handleSyncAndAsync(
-    reserveTranslated0: JSBI,
-    reserveTranslated1: JSBI,
-    reserve: JSBI,
-    amountIn0: JSBI,
-    amountIn1: JSBI,
-    isAnchor: boolean,
-    factory: PylonFactory,
-    totalSupply: JSBI
+      reserveTranslated0: JSBI,
+      reserveTranslated1: JSBI,
+      reserve: JSBI,
+      amountIn0: JSBI,
+      amountIn1: JSBI,
+      isAnchor: boolean,
+      factory: PylonFactory,
+      totalSupply: JSBI,
+      debug: boolean = false
   ): SyncAsyncParams {
+    Pylon.logger(debug, "Sync and Async")
+
     let amountIn = isAnchor ? amountIn1 : amountIn0
     let maxSync = factory.maxSync
     let max = JSBI.divide(JSBI.multiply(isAnchor ? reserveTranslated1 : reserveTranslated0, maxSync), _100)
@@ -648,6 +652,7 @@ export class Pylon {
     let max1 = JSBI.divide(JSBI.multiply(reserveTranslated1, maxSync), _200)
 
     if (JSBI.greaterThan(amountIn0, max0) && JSBI.greaterThan(amountIn1, max1)) {
+      Pylon.logger(debug, "Sync a1 > max0 && a2 > max1")
       let maxes = this.getMaximum(JSBI.subtract(amountIn0, max0), JSBI.subtract(amountIn1, max1))
       if (isAnchor) {
         max = JSBI.divide(JSBI.multiply(JSBI.add(reserveTranslated1, maxes.maxY), maxSync), _100)
@@ -656,20 +661,22 @@ export class Pylon {
         max = JSBI.divide(JSBI.multiply(JSBI.add(reserveTranslated0, maxes.maxX), maxSync), _100)
         syncMint = maxes.maxX
       }
+      Pylon.logger(debug, "Sync", "max", max.toString(), "syncMint", syncMint.toString())
     }
 
     if (JSBI.greaterThan(max, reserve)) {
       freeSpace = JSBI.subtract(JSBI.add(max, syncMint), reserve)
+      Pylon.logger(debug, "Sync", "freeSpace", freeSpace.toString())
       if (JSBI.greaterThan(freeSpace, ZERO)) {
         if (JSBI.lessThanOrEqual(amountIn, freeSpace)) {
           // sync  mint
           let syncMinting = this.syncMinting(
-            reserveTranslated0,
-            reserveTranslated1,
-            amountIn0,
-            amountIn1,
-            factory,
-            totalSupply
+              reserveTranslated0,
+              reserveTranslated1,
+              amountIn0,
+              amountIn1,
+              factory,
+              totalSupply
           )
 
           return { amountOut: amountIn, amountPool: syncMinting.px, trueAmountOut: amountIn, syncMinting, amounts: {sync: amountIn, async: ZERO} }
@@ -684,8 +691,8 @@ export class Pylon {
     let _amountOut
     let sqrtK = sqrt(JSBI.multiply(reserveTranslated0, reserveTranslated1))
     let amountInWithFee = JSBI.multiply(
-      asyncToMint,
-      JSBI.divide(JSBI.subtract(_10000, JSBI.add(JSBI.divide(factory.liquidityFee, TWO), ONE)), _10000)
+        asyncToMint,
+        JSBI.divide(JSBI.subtract(_10000, JSBI.add(JSBI.divide(factory.liquidityFee, TWO), ONE)), _10000)
     )
 
     if (isAnchor) {
@@ -705,12 +712,12 @@ export class Pylon {
     amountOut = JSBI.add(amountOut, _amountOut)
 
     let syncMinting = this.syncMinting(
-      reserveTranslated0,
-      reserveTranslated1,
-      amountIn0,
-      amountIn1,
-      factory,
-      totalSupply
+        reserveTranslated0,
+        reserveTranslated1,
+        amountIn0,
+        amountIn1,
+        factory,
+        totalSupply
     )
 
     return {
@@ -725,15 +732,15 @@ export class Pylon {
 
 
   private applyDeltaAndGammaTax(
-    amount: JSBI,
-    strikeBlock: JSBI,
-    blockNumber: JSBI,
-    gamma: JSBI,
-    pylonFactory: PylonFactory,
-    maxDerivative: JSBI,
-    isSync: boolean,
-    lastPrice: JSBI,
-    debug: boolean = false
+      amount: JSBI,
+      strikeBlock: JSBI,
+      blockNumber: JSBI,
+      gamma: JSBI,
+      pylonFactory: PylonFactory,
+      maxDerivative: JSBI,
+      isSync: boolean,
+      lastPrice: JSBI,
+      debug: boolean = false
   ): { newAmount: JSBI; fee: JSBI; deltaApplied: boolean; blocked: boolean; asyncBlocked: boolean; feeBPS: JSBI } {
     let instantPrice = JSBI.divide(JSBI.multiply(BASE, this.getPairReserves()[1].raw), this.getPairReserves()[0].raw)
     Pylon.logger(debug,'Instant Price =====> ', instantPrice.toString())
@@ -754,18 +761,22 @@ export class Pylon {
     }
 
     if (JSBI.greaterThanOrEqual(maxDerivative, pylonFactory.deltaGammaThreshold)) {
+      Pylon.logger(debug,'maxDerivative > deltaGammaThreshold')
+
       let strikeDiff = JSBI.subtract(blockNumber, strikeBlock)
       let cooldownBlocks = JSBI.divide(BASE, pylonFactory.deltaGammaThreshold)
 
       if (JSBI.lessThanOrEqual(strikeDiff, cooldownBlocks)) {
+        Pylon.logger(debug, 'strikeDiff < cooldownBlocks')
+
         feeBPS = JSBI.add(
-          JSBI.add(
-            JSBI.subtract(JSBI.divide(JSBI.multiply(maxDerivative, _10000), pylonFactory.deltaGammaThreshold), _10000),
-            pylonFactory.deltaGammaFee
-          ),
-          feeBPS
+            JSBI.add(
+                JSBI.subtract(JSBI.divide(JSBI.multiply(maxDerivative, _10000), pylonFactory.deltaGammaThreshold), _10000),
+                pylonFactory.deltaGammaFee
+            ),
+            feeBPS
         )
-        Pylon.logger(debug, 'feeBPS ==== >>>> ', feeBPS.toString())
+        Pylon.logger(debug, 'feeBPS ===>>>> ', feeBPS.toString())
 
         if (JSBI.greaterThan(feeBPS, _10000)) {
           return {
@@ -789,7 +800,10 @@ export class Pylon {
           }
         }
       } else {
+        Pylon.logger(debug, 'strikeDiff > cooldownBlocks')
         let fee = JSBI.divide(JSBI.multiply(feeBPS, amount), _10000)
+        Pylon.logger(debug, 'feeBPS ===>>>> ', fee.toString())
+
         return {
           newAmount: JSBI.subtract(amount, fee),
           fee,
@@ -819,13 +833,13 @@ export class Pylon {
   // 21590909090909090
   // 21590909090909090
   private calculateLPTU(
-    totalSupply: JSBI,
-    ptTotalSupply: TokenAmount,
-    tokenAmount: JSBI,
-    anchorVirtualBalance: JSBI,
-    gamma: JSBI,
-    ptb: JSBI,
-    isAnchor: boolean
+      totalSupply: JSBI,
+      ptTotalSupply: TokenAmount,
+      tokenAmount: JSBI,
+      anchorVirtualBalance: JSBI,
+      gamma: JSBI,
+      ptb: JSBI,
+      isAnchor: boolean
   ): JSBI {
     let pylonShare: JSBI
     let maxPoolTK: JSBI
@@ -833,22 +847,22 @@ export class Pylon {
 
     if (isAnchor) {
       pylonShare = JSBI.divide(
-        JSBI.multiply(ptb, JSBI.subtract(anchorVirtualBalance, this.reserve1.raw)),
-        JSBI.multiply(TWO, ptTR1)
+          JSBI.multiply(ptb, JSBI.subtract(anchorVirtualBalance, this.reserve1.raw)),
+          JSBI.multiply(TWO, ptTR1)
       )
       maxPoolTK = JSBI.subtract(
-        ptTotalSupply.raw,
-        JSBI.divide(JSBI.multiply(ptTotalSupply.raw, this.reserve1.raw), anchorVirtualBalance)
+          ptTotalSupply.raw,
+          JSBI.divide(JSBI.multiply(ptTotalSupply.raw, this.reserve1.raw), anchorVirtualBalance)
       )
       // pylonShare = JSBI.add(pylonShare, JSBI.divide(JSBI.multiply(pylonShare, this.reserve1.raw), JSBI.multiply(ptTR1, TWO) ))
     } else {
       pylonShare = JSBI.divide(JSBI.multiply(gamma, ptb), BASE)
       maxPoolTK = JSBI.subtract(
-        ptTotalSupply.raw,
-        JSBI.divide(
-          JSBI.multiply(ptTotalSupply.raw, this.reserve0.raw),
-          JSBI.add(JSBI.divide(JSBI.multiply(JSBI.multiply(ptTR0, TWO), gamma), BASE), this.reserve0.raw)
-        )
+          ptTotalSupply.raw,
+          JSBI.divide(
+              JSBI.multiply(ptTotalSupply.raw, this.reserve0.raw),
+              JSBI.add(JSBI.divide(JSBI.multiply(JSBI.multiply(ptTR0, TWO), gamma), BASE), this.reserve0.raw)
+          )
       )
       // pylonShare =  JSBI.add(pylonShare, JSBI.divide(JSBI.multiply(pylonShare, this.reserve0.raw), JSBI.multiply(ptTR0, TWO) ))
     }
@@ -861,17 +875,17 @@ export class Pylon {
   //589288951922912
   //589288951922912
   private getOmegaSlashing(
-    gamma: JSBI,
-    vab: JSBI,
-    ptb: JSBI,
-    ptt: JSBI,
-    amount: JSBI
+      gamma: JSBI,
+      vab: JSBI,
+      ptb: JSBI,
+      ptt: JSBI,
+      amount: JSBI
   ): { omega: JSBI; newAmount: JSBI } {
     let [, pairRSTR] = this.getPairReservesTranslated(ptb, ptt)
 
     let omegaSlashing = JSBI.divide(
-      JSBI.multiply(JSBI.subtract(BASE, gamma), JSBI.multiply(pairRSTR, TWO)),
-      JSBI.subtract(vab, this.reserve1.raw)
+        JSBI.multiply(JSBI.subtract(BASE, gamma), JSBI.multiply(pairRSTR, TWO)),
+        JSBI.subtract(vab, this.reserve1.raw)
     )
     omegaSlashing = JSBI.lessThan(omegaSlashing, BASE) ? omegaSlashing : BASE
 
@@ -879,9 +893,9 @@ export class Pylon {
   }
 
   public slashedTokens(
-    energyPTBalance: JSBI,
-    amountPTU: JSBI,
-    omegaSlashing: JSBI
+      energyPTBalance: JSBI,
+      amountPTU: JSBI,
+      omegaSlashing: JSBI
   ): { ptuToAdd: JSBI; percentage: JSBI } {
     if (JSBI.lessThan(omegaSlashing, BASE)) {
       let amountToAdd = JSBI.divide(JSBI.multiply(JSBI.subtract(BASE, omegaSlashing), amountPTU), BASE)
@@ -896,15 +910,15 @@ export class Pylon {
   }
 
   public anchorSlash(
-    stableAmount: JSBI,
-    floatAmount: JSBI,
-    extraPercentage: JSBI,
-    anchorEnergyBalance: JSBI
+      stableAmount: JSBI,
+      floatAmount: JSBI,
+      extraPercentage: JSBI,
+      anchorEnergyBalance: JSBI
   ): { extraStable: JSBI } {
     if (JSBI.greaterThan(extraPercentage, ZERO)) {
       let totalAmount = JSBI.add(
-        stableAmount,
-        JSBI.divide(JSBI.multiply(floatAmount, this.getPairReserves()[1].raw), this.getPairReserves()[0].raw)
+          stableAmount,
+          JSBI.divide(JSBI.multiply(floatAmount, this.getPairReserves()[1].raw), this.getPairReserves()[0].raw)
       )
       let originalAmount = JSBI.divide(JSBI.multiply(totalAmount, BASE), JSBI.subtract(BASE, extraPercentage))
       let amountToTransfer = JSBI.subtract(originalAmount, totalAmount)
@@ -916,9 +930,9 @@ export class Pylon {
   }
 
   public initializeValues(
-    totalSupply: TokenAmount,
-    tokenAmountA: TokenAmount,
-    tokenAmountB: TokenAmount
+      totalSupply: TokenAmount,
+      tokenAmountA: TokenAmount,
+      tokenAmountB: TokenAmount
   ): [JSBI, JSBI] {
     let balance0 = tokenAmountA.raw
     let vab = tokenAmountB.raw
@@ -928,8 +942,8 @@ export class Pylon {
       gamma = JSBI.BigInt('500000000000000000')
     } else {
       let tpva = JSBI.add(
-        vab,
-        JSBI.multiply(balance0, JSBI.divide(this.getPairReserves()[1].raw, this.getPairReserves()[0].raw))
+          vab,
+          JSBI.multiply(balance0, JSBI.divide(this.getPairReserves()[1].raw, this.getPairReserves()[0].raw))
       )
       if (JSBI.lessThan(vab, JSBI.divide(tpva, TWO))) {
         gamma = JSBI.subtract(BASE, JSBI.divide(JSBI.multiply(vab, JSBI.multiply(vab, BASE)), tpva))
@@ -939,39 +953,39 @@ export class Pylon {
     }
 
     let liquidityFloat: JSBI = this.calculatePTU(
-      false,
-      tokenAmountA.raw,
-      totalSupply.raw,
-      ZERO,
-      new TokenAmount(this.floatLiquidityToken, ZERO),
-      vab,
-      gamma
+        false,
+        tokenAmountA.raw,
+        totalSupply.raw,
+        ZERO,
+        new TokenAmount(this.floatLiquidityToken, ZERO),
+        vab,
+        gamma
     )
     let liquidityAnchor: JSBI = this.calculatePTU(
-      true,
-      tokenAmountB.raw,
-      totalSupply.raw,
-      ZERO,
-      new TokenAmount(this.anchorLiquidityToken, ZERO),
-      vab,
-      gamma
+        true,
+        tokenAmountB.raw,
+        totalSupply.raw,
+        ZERO,
+        new TokenAmount(this.anchorLiquidityToken, ZERO),
+        vab,
+        gamma
     )
     return [liquidityFloat, liquidityAnchor]
   }
 
   public getOneSideLiquidity(
-    reserve: JSBI,
-    otherReserve: JSBI,
-    amount: JSBI,
-    factory: PylonFactory,
-    totalSupply: JSBI
+      reserve: JSBI,
+      otherReserve: JSBI,
+      amount: JSBI,
+      factory: PylonFactory,
+      totalSupply: JSBI
   ): JSBI {
     let fee = JSBI.add(JSBI.divide(factory.liquidityFee, TWO), ONE)
     let k = sqrt(
-      JSBI.multiply(
-        otherReserve,
-        JSBI.add(reserve, JSBI.divide(JSBI.multiply(JSBI.subtract(_10000, fee), amount), _10000))
-      )
+        JSBI.multiply(
+            otherReserve,
+            JSBI.add(reserve, JSBI.divide(JSBI.multiply(JSBI.subtract(_10000, fee), amount), _10000))
+        )
     )
     let kBefore = sqrt(JSBI.multiply(reserve, otherReserve))
 
@@ -993,16 +1007,46 @@ export class Pylon {
     return ZERO
   }
 
+  private getDesiredFTV(
+      adjVAB: JSBI,
+      change: JSBI,
+      ptb: JSBI,
+      totalSupply: JSBI,
+      p2x: JSBI,
+      p2y: JSBI,
+      isPercentage: boolean
+  ): JSBI {
+    let [pairTR0, pairTR1] = this.getPairReservesTranslated(ptb, totalSupply)
+
+    let desiredFTV = Library.getFTVForX(
+        JSBI.divide(JSBI.multiply(pairTR1, BASE), pairTR0),
+        p2x,
+        p2y,
+        pairTR0,
+        pairTR1,
+        adjVAB
+    )
+
+    if (isPercentage) {
+      if (JSBI.notEqual(change, BASE)) {
+        desiredFTV = JSBI.divide(JSBI.multiply(desiredFTV, change), BASE)
+      }
+    } else {
+      desiredFTV = JSBI.add(desiredFTV, change)
+    }
+    return desiredFTV
+  }
+
 
   private initSync(
-    pylonInfo: PylonInfo,
-    pairInfo: PairInfo,
-    ptb: TokenAmount,
-    totalSupply: TokenAmount,
-    factory: PylonFactory,
-    blockTimestamp: JSBI,
-    blockNumber: JSBI,
-    debug: boolean = false
+      pylonInfo: PylonInfo,
+      pairInfo: PairInfo,
+      ptb: TokenAmount,
+      totalSupply: TokenAmount,
+      factory: PylonFactory,
+      blockTimestamp: JSBI,
+      blockNumber: JSBI,
+      debug: boolean = false
   ): {
     kLast: JSBI
     ema: JSBI
@@ -1012,6 +1056,8 @@ export class Pylon {
     lastPrice: JSBI
     totalSupply: JSBI
     ptb: JSBI
+    p2x: JSBI
+    p2y: JSBI
   } {
     Pylon.logger(debug, 'INIT SYNC')
     let ptMinted = this.publicMintFeeCalc(parseBigintIsh(pairInfo.kLast), totalSupply.raw, factory)
@@ -1019,32 +1065,53 @@ export class Pylon {
     let [pairReserveTranslated0, pairReserveTranslated1] = this.getPairReservesTranslated(ptb.raw, newTotalSupply)
 
     let rootK = sqrt(JSBI.multiply(pairReserveTranslated0, pairReserveTranslated1))
+
     let updateRemovingExcess = this.updateRemovingExcess(
-      pairReserveTranslated0,
-      pairReserveTranslated1,
-      this.reserve0.raw,
-      this.reserve1.raw,
-      factory,
-      newTotalSupply,
-      parseBigintIsh(pairInfo.kLast)
+        pairReserveTranslated0,
+        pairReserveTranslated1,
+        this.reserve0.raw,
+        this.reserve1.raw,
+        factory,
+        newTotalSupply,
+        parseBigintIsh(pairInfo.kLast)
     )
     let kLast = JSBI.multiply(this.getPairReserves()[0].raw, this.getPairReserves()[1].raw)
-
     let newPTB = JSBI.add(ptb.raw, updateRemovingExcess.liquidity)
     newTotalSupply = JSBI.add(newTotalSupply, updateRemovingExcess.liquidity)
+    if (JSBI.greaterThan(updateRemovingExcess.liquidity0, ZERO)) {
+      // Calculating new p2X and p2Y
+      let desiredFTV = this.getDesiredFTV(
+          JSBI.subtract(parseBigintIsh(pylonInfo.virtualAnchorBalance), this.reserve1.raw),
+          JSBI.divide(JSBI.multiply(updateRemovingExcess.liquidity0, JSBI.multiply(TWO, pairReserveTranslated1)),BASE),
+          newPTB,
+          newTotalSupply,
+          parseBigintIsh(pylonInfo.p2x),
+          parseBigintIsh(pylonInfo.p2y),
+          false
+      )
 
+      let newP2 = Library.evaluateP2(
+          JSBI.divide(JSBI.multiply(pairReserveTranslated1, BASE), pairReserveTranslated0),
+          JSBI.subtract(parseBigintIsh(pylonInfo.virtualAnchorBalance), this.reserve1.raw),
+          JSBI.subtract(parseBigintIsh(pylonInfo.virtualFloatBalance), this.reserve0.raw),
+          pairReserveTranslated0, pairReserveTranslated1, desiredFTV
+      )
+      pylonInfo.p2x = newP2.p2x.toString()
+      pylonInfo.p2y = newP2.p2y.toString()
+    }
     let result = this.updateSync(
-      pylonInfo,
-      newPTB,
-      newTotalSupply,
-      parseBigintIsh(blockTimestamp),
-      parseBigintIsh(
-        this.token0.equals(this.pair.token0) ? pairInfo.price0CumulativeLast : pairInfo.price1CumulativeLast
-      ),
-      rootK,
-      factory,
+        pylonInfo,
+        newPTB,
+        newTotalSupply,
+        parseBigintIsh(blockTimestamp),
+        parseBigintIsh(
+            this.token0.equals(this.pair.token0) ? pairInfo.price0CumulativeLast : pairInfo.price1CumulativeLast
+        ),
+        rootK,
+        factory,
         debug
     )
+
 
     let ema = Library.calculateEMA(pylonInfo, parseBigintIsh(blockNumber), factory.EMASamples, result.gamma)
 
@@ -1056,9 +1123,12 @@ export class Pylon {
       isLineFormula: result.isLineFormula,
       lastPrice: result.lastPrice,
       totalSupply: newTotalSupply,
-      ptb: newPTB
+      ptb: newPTB,
+      p2x: parseBigintIsh(pylonInfo.p2x),
+      p2y: parseBigintIsh(pylonInfo.p2y)
     }
   }
+
   public static logger(debug: boolean, ...args: any[]) {
     if (debug) {
       console.log("SDK::", ...args)
@@ -1066,17 +1136,17 @@ export class Pylon {
   }
 
   public mintSync(
-    pylonInfo: PylonInfo,
-    pairInfo: PairInfo,
-    totalSupply: TokenAmount,
-    ptTotalSupply: TokenAmount,
-    tokenAmount: TokenAmount,
-    ptb: TokenAmount,
-    blockNumber: BigintIsh,
-    factory: PylonFactory,
-    blockTimestamp: BigintIsh,
-    isAnchor: boolean,
-    debug: boolean = false
+      pylonInfo: PylonInfo,
+      pairInfo: PairInfo,
+      totalSupply: TokenAmount,
+      ptTotalSupply: TokenAmount,
+      tokenAmount: TokenAmount,
+      ptb: TokenAmount,
+      blockNumber: BigintIsh,
+      factory: PylonFactory,
+      blockTimestamp: BigintIsh,
+      isAnchor: boolean,
+      debug: boolean = false
   ): MintSyncParams {
     Pylon.logger(debug, 'Mint Sync: ' + (isAnchor ? "Anchor" : "Float"))
     const blockedReturn = {
@@ -1095,37 +1165,38 @@ export class Pylon {
     // Doing some checks on the inputs
     invariant(totalSupply.token.equals(this.pair.liquidityToken), 'LIQUIDITY')
     invariant(
-      ptTotalSupply.token.equals(isAnchor ? this.anchorLiquidityToken : this.floatLiquidityToken),
-      'FLOAT LIQUIDITY'
+        ptTotalSupply.token.equals(isAnchor ? this.anchorLiquidityToken : this.floatLiquidityToken),
+        'FLOAT LIQUIDITY'
     )
-    invariant(tokenAmount.token.equals(this.token0), 'TOKEN')
+    invariant(tokenAmount.token.equals(isAnchor ? this.token1 : this.token0), 'TOKEN')
 
     let result = this.initSync(
-      pylonInfo,
-      pairInfo,
-      ptb,
-      totalSupply,
-      factory,
-      parseBigintIsh(blockTimestamp),
-      parseBigintIsh(blockNumber)
+        pylonInfo,
+        pairInfo,
+        ptb,
+        totalSupply,
+        factory,
+        parseBigintIsh(blockTimestamp),
+        parseBigintIsh(blockNumber),
+        debug
     )
     // TODO: handle skim of excess in case balance of the other token is higher than the reserve
 
     // Calculating gamma tax and fee
     let fee = this.applyDeltaAndGammaTax(
-      tokenAmount.raw,
-      parseBigintIsh(pylonInfo.strikeBlock),
-      parseBigintIsh(blockNumber),
-      result.gamma,
-      factory,
-      result.ema,
-      true,
-      result.lastPrice,
+        tokenAmount.raw,
+        parseBigintIsh(pylonInfo.strikeBlock),
+        parseBigintIsh(blockNumber),
+        result.gamma,
+        factory,
+        result.ema,
+        true,
+        result.lastPrice,
         debug
     )
-
     // If fee is blocked, time to return
     if (fee.blocked) {
+      Pylon.logger(debug, 'Mint Sync: Blocked')
       return blockedReturn
     }
 
@@ -1137,15 +1208,16 @@ export class Pylon {
     let [pairReserveTranslated0, pairReserveTranslated1] = this.getPairReservesTranslated(result.ptb, result.totalSupply)
 
     let investment = this.handleSyncAndAsync(
-      pairReserveTranslated0,
-      pairReserveTranslated1,
-      this.reserve0.raw,
-      tokenAmount.raw,
-      ZERO,
-      false,
-      factory,
-      result.totalSupply
+        pairReserveTranslated0,
+        pairReserveTranslated1,
+        this.reserve0.raw,
+        tokenAmount.raw,
+        ZERO,
+        false,
+        factory,
+        result.totalSupply
     )
+
 
     // let desiredFTV = this.getDesiredFTV(
     //     pairReserveTranslated0,
@@ -1164,16 +1236,16 @@ export class Pylon {
       liquidity = JSBI.divide(JSBI.multiply(investment.amountOut, ptTotalSupply.raw), result.vab)
     } else {
       let floatLiquidityOwned = JSBI.add(
-        JSBI.divide(JSBI.multiply(result.ptb, this.reserve0.raw), JSBI.multiply(TWO, pairReserveTranslated0)),
-        JSBI.divide(JSBI.multiply(result.ptb, result.gamma), BASE)
+          JSBI.divide(JSBI.multiply(result.ptb, this.reserve0.raw), JSBI.multiply(TWO, pairReserveTranslated0)),
+          JSBI.divide(JSBI.multiply(result.ptb, result.gamma), BASE)
       )
 
       liquidity = JSBI.divide(
-        JSBI.multiply(
-          ptTotalSupply.raw,
-          JSBI.divide(JSBI.multiply(investment.amountOut, result.ptb), JSBI.multiply(TWO, pairReserveTranslated0))
-        ),
-        floatLiquidityOwned
+          JSBI.multiply(
+              ptTotalSupply.raw,
+              JSBI.divide(JSBI.multiply(investment.amountOut, result.ptb), JSBI.multiply(TWO, pairReserveTranslated0))
+          ),
+          floatLiquidityOwned
       )
     }
     return {
@@ -1288,7 +1360,7 @@ export class Pylon {
 
       liquidity = JSBI.divide(JSBI.multiply(ptbMax, ptTotalSupply.raw), floatLiqOwned)
     }else{
-        liquidity = JSBI.divide(JSBI.multiply(amount, ptTotalSupply.raw), result.vab)
+      liquidity = JSBI.divide(JSBI.multiply(amount, ptTotalSupply.raw), result.vab)
     }
 
     return {
@@ -1329,22 +1401,22 @@ export class Pylon {
       let ta0 = new TokenAmount(this.token0, JSBI.add(reserves[0].raw, amount0))
       let ta1 = new TokenAmount(this.token1, JSBI.add(reserves[1].raw, amount1))
       this.pair = new Pair(
-        isFloatR0 ? ta0 : ta1,
-        isFloatR0 ? ta1 : ta0,
-        this.pair.lastBlockTimestamp,
-        this.pair.liquidityFee
+          isFloatR0 ? ta0 : ta1,
+          isFloatR0 ? ta1 : ta0,
+          this.pair.lastBlockTimestamp,
+          this.pair.liquidityFee
       )
     }
     return liquidity
   }
 
   private syncMinting(
-    reserveTranslated0: JSBI,
-    reserveTranslated1: JSBI,
-    balance0: JSBI,
-    balance1: JSBI,
-    factory: PylonFactory,
-    totalSupply: JSBI
+      reserveTranslated0: JSBI,
+      reserveTranslated1: JSBI,
+      balance0: JSBI,
+      balance1: JSBI,
+      factory: PylonFactory,
+      totalSupply: JSBI
   ): { newReserve0: JSBI; newReserve1: JSBI; liquidity: JSBI; px: JSBI; py: JSBI } {
     let max0 = JSBI.divide(JSBI.multiply(reserveTranslated0, factory.maxSync), _200)
     let max1 = JSBI.divide(JSBI.multiply(reserveTranslated1, factory.maxSync), _200)
@@ -1367,15 +1439,15 @@ export class Pylon {
   }
 
   private updateRemovingExcess(
-    reserveTranslated0: JSBI,
-    reserveTranslated1: JSBI,
-    balance0: JSBI,
-    balance1: JSBI,
-    factory: PylonFactory,
-    totalSupply: JSBI,
-    kLast: JSBI,
-    debug: boolean = false
-  ): { newReserve0: JSBI; newReserve1: JSBI; liquidity: JSBI } {
+      reserveTranslated0: JSBI,
+      reserveTranslated1: JSBI,
+      balance0: JSBI,
+      balance1: JSBI,
+      factory: PylonFactory,
+      totalSupply: JSBI,
+      kLast: JSBI,
+      debug: boolean = false
+  ): { newReserve0: JSBI; newReserve1: JSBI; liquidity: JSBI; liquidity0: JSBI } {
     let update = false
     let max0 = JSBI.divide(JSBI.multiply(reserveTranslated0, factory.maxSync), _100)
     let max1 = JSBI.divide(JSBI.multiply(reserveTranslated1, factory.maxSync), _100)
@@ -1383,21 +1455,23 @@ export class Pylon {
     let newReserve0;
     let newReserve1;
     let liquidity = ZERO
+    let liquidity0 = ZERO
     let excess0 = ZERO
     let excess1 = ZERO
 
     if (JSBI.greaterThan(balance0, max0)) {
       excess0 = JSBI.subtract(balance0, max0)
       liquidity = JSBI.add(
-        liquidity,
-        this.getOneSideLiquidity(
-          this.getPairReserves()[0].raw,
-          this.getPairReserves()[1].raw,
-          excess0,
-          factory,
-          totalSupply
-        )
+          liquidity,
+          this.getOneSideLiquidity(
+              this.getPairReserves()[0].raw,
+              this.getPairReserves()[1].raw,
+              excess0,
+              factory,
+              totalSupply
+          )
       )
+      liquidity0 = liquidity
       newReserve0 = max0
       Pylon.logger(debug, 'Removed Excess 0: ', excess0, 'Liquidity: ', liquidity)
       update = true
@@ -1407,14 +1481,14 @@ export class Pylon {
     if (JSBI.greaterThan(balance1, max1)) {
       excess1 = JSBI.subtract(balance1, max1)
       liquidity = JSBI.add(
-        liquidity,
-        this.getOneSideLiquidity(
-          this.getPairReserves()[1].raw,
-          this.getPairReserves()[0].raw,
-          excess1,
-          factory,
-          totalSupply
-        )
+          liquidity,
+          this.getOneSideLiquidity(
+              this.getPairReserves()[1].raw,
+              this.getPairReserves()[0].raw,
+              excess1,
+              factory,
+              totalSupply
+          )
       )
       newReserve1 = max1
       Pylon.logger(debug, 'Removed Excess 1: ', excess1, 'Liquidity: ', liquidity)
@@ -1435,27 +1509,27 @@ export class Pylon {
     let isFloatR0 = this.token0.equals(this.pair.token0)
 
     this.pair = new Pair(
-      isFloatR0 ? ta0 : ta1,
-      isFloatR0 ? ta1 : ta0,
-      this.pair.lastBlockTimestamp,
-      this.pair.liquidityFee
+        isFloatR0 ? ta0 : ta1,
+        isFloatR0 ? ta1 : ta0,
+        this.pair.lastBlockTimestamp,
+        this.pair.liquidityFee
     )
 
     this.tokenAmounts = [new TokenAmount(this.token0, newReserve0), new TokenAmount(this.token1, newReserve1)]
-    return { newReserve0: newReserve0, newReserve1: newReserve1, liquidity: JSBI.add(ptMinted, liquidity) }
+    return { newReserve0: newReserve0, newReserve1: newReserve1, liquidity: JSBI.add(ptMinted, liquidity), liquidity0: liquidity0 }
   }
 
 
   public burnFloat(
-    pylonInfo: PylonInfo,
-    pairInfo: PairInfo,
-    totalSupply: TokenAmount,
-    floatTotalSupply: TokenAmount,
-    poolTokensIn: TokenAmount,
-    ptb: TokenAmount,
-    blockNumber: BigintIsh,
-    factory: PylonFactory,
-    blockTimestamp: BigintIsh
+      pylonInfo: PylonInfo,
+      pairInfo: PairInfo,
+      totalSupply: TokenAmount,
+      floatTotalSupply: TokenAmount,
+      poolTokensIn: TokenAmount,
+      ptb: TokenAmount,
+      blockNumber: BigintIsh,
+      factory: PylonFactory,
+      blockTimestamp: BigintIsh
   ): BurnParams {
     const blockReturn = {
       amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
@@ -1474,24 +1548,24 @@ export class Pylon {
     let omegaSlashingPercentage = ZERO
 
     let result = this.initSync(
-      pylonInfo,
-      pairInfo,
-      ptb,
-      totalSupply,
-      factory,
-      parseBigintIsh(blockTimestamp),
-      parseBigintIsh(blockNumber)
+        pylonInfo,
+        pairInfo,
+        ptb,
+        totalSupply,
+        factory,
+        parseBigintIsh(blockTimestamp),
+        parseBigintIsh(blockNumber)
     )
 
     let pairReserveTranslated0 = this.getPairReservesTranslated(result.ptb, result.totalSupply)[0]
 
     // BURN
     let reservePTU = JSBI.divide(
-      JSBI.multiply(this.reserve0.raw, floatTotalSupply.raw),
-      JSBI.add(
-        this.reserve0.raw,
-        JSBI.divide(JSBI.multiply(JSBI.multiply(pairReserveTranslated0, result.gamma), TWO), BASE)
-      )
+        JSBI.multiply(this.reserve0.raw, floatTotalSupply.raw),
+        JSBI.add(
+            this.reserve0.raw,
+            JSBI.divide(JSBI.multiply(JSBI.multiply(pairReserveTranslated0, result.gamma), TWO), BASE)
+        )
     )
 
 
@@ -1501,25 +1575,25 @@ export class Pylon {
     }
 
     let amount = JSBI.divide(
-      JSBI.multiply(
-        JSBI.add(
-          this.reserve0.raw,
-          JSBI.divide(JSBI.multiply(pairReserveTranslated0, JSBI.multiply(result.gamma, TWO)), BASE)
+        JSBI.multiply(
+            JSBI.add(
+                this.reserve0.raw,
+                JSBI.divide(JSBI.multiply(pairReserveTranslated0, JSBI.multiply(result.gamma, TWO)), BASE)
+            ),
+            ptAmount
         ),
-        ptAmount
-      ),
-      floatTotalSupply.raw
+        floatTotalSupply.raw
     )
 
     let fee1 = this.applyDeltaAndGammaTax(
-      amount,
-      parseBigintIsh(pylonInfo.strikeBlock),
-      parseBigintIsh(blockNumber),
-      result.gamma,
-      factory,
-      result.ema,
-      true,
-      result.lastPrice
+        amount,
+        parseBigintIsh(pylonInfo.strikeBlock),
+        parseBigintIsh(blockNumber),
+        result.gamma,
+        factory,
+        result.ema,
+        true,
+        result.lastPrice
     )
     let amounNofee = amount
     amount = JSBI.subtract(amount, JSBI.divide(JSBI.multiply(amount, fee1.feeBPS), _10000))
@@ -1530,19 +1604,19 @@ export class Pylon {
     let fee = JSBI.subtract(amounNofee, amount)
 
     feePercentage = JSBI.greaterThan(fee1.newAmount, ZERO)
-      ? JSBI.multiply(JSBI.divide(JSBI.multiply(fee, BASE), amounNofee), _100)
-      : ZERO
+        ? JSBI.multiply(JSBI.divide(JSBI.multiply(fee, BASE), amounNofee), _100)
+        : ZERO
     let slippage = ZERO
     if (JSBI.lessThan(reservePTU, poolTokensIn.raw)) {
       let adjustedLiq = JSBI.subtract(poolTokensIn.raw, reservePTU)
       let lptu = this.calculateLPTU(
-        result.totalSupply,
-        floatTotalSupply,
-        adjustedLiq,
-        result.vab,
-        result.gamma,
-        result.ptb,
-        false
+          result.totalSupply,
+          floatTotalSupply,
+          adjustedLiq,
+          result.vab,
+          result.gamma,
+          result.ptb,
+          false
       )
       let lptuWithFee = JSBI.subtract(lptu, JSBI.divide(JSBI.multiply(lptu, fee1.feeBPS), _10000))
       let fee = JSBI.subtract(lptu, lptuWithFee)
@@ -1558,31 +1632,31 @@ export class Pylon {
       let feeAmount1 = JSBI.divide(JSBI.multiply(fee, this.getPairReserves()[1].raw), newTotalSupply)
       let newPair = this.pair
       if (
-        JSBI.lessThan(amount0, this.getPairReserves()[0].raw) &&
-        JSBI.lessThan(amount1, this.getPairReserves()[1].raw)
+          JSBI.lessThan(amount0, this.getPairReserves()[0].raw) &&
+          JSBI.lessThan(amount1, this.getPairReserves()[1].raw)
       ) {
         newPair = new Pair(
-          new TokenAmount(this.getPairReserves()[0].token, JSBI.subtract(this.getPairReserves()[0].raw, amount0)),
-          new TokenAmount(this.getPairReserves()[1].token, JSBI.subtract(this.getPairReserves()[1].raw, amount1)),
-          this.pair.lastBlockTimestamp,
-          this.pair.liquidityFee
+            new TokenAmount(this.getPairReserves()[0].token, JSBI.subtract(this.getPairReserves()[0].raw, amount0)),
+            new TokenAmount(this.getPairReserves()[1].token, JSBI.subtract(this.getPairReserves()[1].raw, amount1)),
+            this.pair.lastBlockTimestamp,
+            this.pair.liquidityFee
         )
       }
       let amountTransformed = newPair.getOutputAmount(new TokenAmount(this.token1, amount1))
       let amountTransformedComplete = JSBI.divide(
-        JSBI.multiply(amount1, this.getPairReserves()[0].raw),
-        this.getPairReserves()[1].raw
+          JSBI.multiply(amount1, this.getPairReserves()[0].raw),
+          this.getPairReserves()[1].raw
       )
       let feeAmountTransformed = newPair.getOutputAmount(new TokenAmount(this.token1, feeAmount1))
 
       amount = JSBI.add(amount, JSBI.add(amount0, amountTransformed[0].raw))
       slippage = JSBI.divide(JSBI.multiply(amount, BASE), JSBI.add(amount0, amountTransformedComplete))
       feePercentage = JSBI.greaterThan(amount, ZERO)
-        ? JSBI.multiply(
-            JSBI.divide(JSBI.multiply(JSBI.add(fee, JSBI.add(feeAmount0, feeAmountTransformed[0].raw)), BASE), amount),
-            _100
+          ? JSBI.multiply(
+              JSBI.divide(JSBI.multiply(JSBI.add(fee, JSBI.add(feeAmount0, feeAmountTransformed[0].raw)), BASE), amount),
+              _100
           )
-        : feePercentage
+          : feePercentage
     }
     return {
       amountOut: new TokenAmount(poolTokensIn.token, amount),
@@ -1597,17 +1671,17 @@ export class Pylon {
   }
 
   public burnAnchor(
-    pylonInfo: PylonInfo,
-    pairInfo: PairInfo,
-    totalSupply: TokenAmount,
-    anchorTotalSupply: TokenAmount,
-    poolTokensIn: TokenAmount,
-    ptb: TokenAmount,
-    blockNumber: BigintIsh,
-    factory: PylonFactory,
-    blockTimestamp: BigintIsh,
-    reservePTEnergy: TokenAmount,
-    reserveAnchorEnergy: TokenAmount
+      pylonInfo: PylonInfo,
+      pairInfo: PairInfo,
+      totalSupply: TokenAmount,
+      anchorTotalSupply: TokenAmount,
+      poolTokensIn: TokenAmount,
+      ptb: TokenAmount,
+      blockNumber: BigintIsh,
+      factory: PylonFactory,
+      blockTimestamp: BigintIsh,
+      reservePTEnergy: TokenAmount,
+      reserveAnchorEnergy: TokenAmount
   ): BurnParams {
     const blockReturn = {
       amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
@@ -1626,13 +1700,13 @@ export class Pylon {
     let feePercentage = ZERO
     let omegaSlashingPercentage = ZERO
     let result = this.initSync(
-      pylonInfo,
-      pairInfo,
-      ptb,
-      totalSupply,
-      factory,
-      parseBigintIsh(blockTimestamp),
-      parseBigintIsh(blockNumber)
+        pylonInfo,
+        pairInfo,
+        ptb,
+        totalSupply,
+        factory,
+        parseBigintIsh(blockTimestamp),
+        parseBigintIsh(blockNumber)
     )
     // let pairReserveTranslated0 = Library.translateToPylon(this.getPairReserves()[0].raw, ptb.raw, result.totalSupply)
     let reservePTU = JSBI.divide(JSBI.multiply(this.reserve1.raw, anchorTotalSupply.raw), result.vab)
@@ -1645,14 +1719,14 @@ export class Pylon {
     let amount = JSBI.divide(JSBI.multiply(result.vab, ptAmount), anchorTotalSupply.raw)
 
     let fee1 = this.applyDeltaAndGammaTax(
-      amount,
-      parseBigintIsh(pylonInfo.strikeBlock),
-      parseBigintIsh(blockNumber),
-      result.gamma,
-      factory,
-      result.ema,
-      true,
-      result.lastPrice
+        amount,
+        parseBigintIsh(pylonInfo.strikeBlock),
+        parseBigintIsh(blockNumber),
+        result.gamma,
+        factory,
+        result.ema,
+        true,
+        result.lastPrice
     )
 
     let amounNofee = amount
@@ -1663,38 +1737,38 @@ export class Pylon {
     let fee = JSBI.subtract(amounNofee, amount)
 
     feePercentage = JSBI.greaterThan(fee1.newAmount, ZERO)
-      ? JSBI.multiply(JSBI.divide(JSBI.multiply(fee, BASE), amounNofee), _100)
-      : ZERO
+        ? JSBI.multiply(JSBI.divide(JSBI.multiply(fee, BASE), amounNofee), _100)
+        : ZERO
     let slippage = ZERO
 
     if (JSBI.lessThan(reservePTU, poolTokensIn.raw)) {
       let adjustedLiq = JSBI.subtract(poolTokensIn.raw, reservePTU)
       // console.log("adjustedLiq", adjustedLiq.toString(10))
       let lptu = this.calculateLPTU(
-        result.totalSupply,
-        anchorTotalSupply,
-        adjustedLiq,
-        result.vab,
-        result.gamma,
-        result.ptb,
-        true
+          result.totalSupply,
+          anchorTotalSupply,
+          adjustedLiq,
+          result.vab,
+          result.gamma,
+          result.ptb,
+          true
       )
       let totalLPTU = this.calculateLPTU(
-        result.totalSupply,
-        anchorTotalSupply,
-        poolTokensIn.raw,
-        result.vab,
-        result.gamma,
-        result.ptb,
-        true
+          result.totalSupply,
+          anchorTotalSupply,
+          poolTokensIn.raw,
+          result.vab,
+          result.gamma,
+          result.ptb,
+          true
       )
       let lptuWithFee = JSBI.subtract(lptu, JSBI.divide(JSBI.multiply(lptu, fee1.feeBPS), _10000))
       let fee = JSBI.subtract(lptu, lptuWithFee)
 
       let omegaPTU = this.getOmegaSlashing(result.gamma, result.vab, result.ptb, result.totalSupply, lptuWithFee)
       omegaSlashingPercentage = JSBI.multiply(
-        JSBI.divide(JSBI.multiply(JSBI.subtract(lptuWithFee, omegaPTU.newAmount), BASE), totalLPTU),
-        _100
+          JSBI.divide(JSBI.multiply(JSBI.subtract(lptuWithFee, omegaPTU.newAmount), BASE), totalLPTU),
+          _100
       )
       // let adjustedLiq = JSBI.divide(JSBI.multiply(omega, JSBI.subtract(poolTokensIn.raw, reservesPTU)), BASE);
       // let lptu = this.calculateLPTU(newTotalSupply, anchorTotalSupply, adjustedLiq, result.vab, result.gamma, newPTB, true);
@@ -1706,22 +1780,22 @@ export class Pylon {
 
       let newPair = this.pair
       if (
-        JSBI.lessThan(amount0, this.getPairReserves()[0].raw) &&
-        JSBI.lessThan(amount1, this.getPairReserves()[1].raw)
+          JSBI.lessThan(amount0, this.getPairReserves()[0].raw) &&
+          JSBI.lessThan(amount1, this.getPairReserves()[1].raw)
       ) {
         newPair = new Pair(
-          new TokenAmount(this.getPairReserves()[0].token, JSBI.subtract(this.getPairReserves()[0].raw, amount0)),
-          new TokenAmount(this.getPairReserves()[1].token, JSBI.subtract(this.getPairReserves()[1].raw, amount1)),
-          this.pair.lastBlockTimestamp,
-          this.pair.liquidityFee
+            new TokenAmount(this.getPairReserves()[0].token, JSBI.subtract(this.getPairReserves()[0].raw, amount0)),
+            new TokenAmount(this.getPairReserves()[1].token, JSBI.subtract(this.getPairReserves()[1].raw, amount1)),
+            this.pair.lastBlockTimestamp,
+            this.pair.liquidityFee
         )
       }
       let feeAmount0 = JSBI.divide(JSBI.multiply(fee, this.getPairReserves()[0].raw), result.totalSupply)
       let feeAmount1 = JSBI.divide(JSBI.multiply(fee, this.getPairReserves()[1].raw), result.totalSupply)
       let amountTransformed = newPair.getOutputAmount(new TokenAmount(this.token0, amount0))
       let amountTransformedComplete = JSBI.divide(
-        JSBI.multiply(amount0, this.getPairReserves()[1].raw),
-        this.getPairReserves()[0].raw
+          JSBI.multiply(amount0, this.getPairReserves()[1].raw),
+          this.getPairReserves()[0].raw
       )
 
       let feeAmountTransformed = newPair.getOutputAmount(new TokenAmount(this.token0, feeAmount0))
@@ -1730,22 +1804,22 @@ export class Pylon {
       slippage = JSBI.divide(JSBI.multiply(amount, BASE), JSBI.add(amount0, amountTransformedComplete))
 
       let extraAmount1 = this.anchorSlash(
-        JSBI.add(amount1, amountTransformed[0].raw),
-        ZERO,
-        slash.percentage,
-        parseBigintIsh(reserveAnchorEnergy.raw)
+          JSBI.add(amount1, amountTransformed[0].raw),
+          ZERO,
+          slash.percentage,
+          parseBigintIsh(reserveAnchorEnergy.raw)
       )
       amount = JSBI.add(amount, extraAmount1.extraStable)
 
       feePercentage = JSBI.greaterThan(amount, ZERO)
-        ? JSBI.multiply(
-            JSBI.divide(
-              JSBI.multiply(JSBI.add(fee1.fee, JSBI.add(feeAmount1, feeAmountTransformed[0].raw)), BASE),
-              amount
-            ),
-            _100
+          ? JSBI.multiply(
+              JSBI.divide(
+                  JSBI.multiply(JSBI.add(fee1.fee, JSBI.add(feeAmount1, feeAmountTransformed[0].raw)), BASE),
+                  amount
+              ),
+              _100
           )
-        : feePercentage
+          : feePercentage
     }
     return {
       amountOut: new TokenAmount(poolTokensIn.token, amount),
@@ -1760,17 +1834,17 @@ export class Pylon {
   }
 
   public burnAsyncAnchor(
-    pylonInfo: PylonInfo,
-    pairInfo: PairInfo,
-    totalSupply: TokenAmount,
-    anchorTotalSupply: TokenAmount,
-    amountIn: TokenAmount,
-    ptb: TokenAmount,
-    blockNumber: BigintIsh,
-    factory: PylonFactory,
-    blockTimestamp: BigintIsh,
-    reservePTEnergy: TokenAmount,
-    reserveAnchorEnergy: TokenAmount
+      pylonInfo: PylonInfo,
+      pairInfo: PairInfo,
+      totalSupply: TokenAmount,
+      anchorTotalSupply: TokenAmount,
+      amountIn: TokenAmount,
+      ptb: TokenAmount,
+      blockNumber: BigintIsh,
+      factory: PylonFactory,
+      blockTimestamp: BigintIsh,
+      reservePTEnergy: TokenAmount,
+      reserveAnchorEnergy: TokenAmount
   ): BurnAsyncParams {
     const blockReturn = {
       amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
@@ -1787,40 +1861,40 @@ export class Pylon {
     }
 
     let result = this.initSync(
-      pylonInfo,
-      pairInfo,
-      ptb,
-      totalSupply,
-      factory,
-      parseBigintIsh(blockTimestamp),
-      parseBigintIsh(blockNumber)
+        pylonInfo,
+        pairInfo,
+        ptb,
+        totalSupply,
+        factory,
+        parseBigintIsh(blockTimestamp),
+        parseBigintIsh(blockNumber)
     )
 
     let lptu = this.calculateLPTU(
-      result.totalSupply,
-      anchorTotalSupply,
-      amountIn.raw,
-      result.vab,
-      result.gamma,
-      result.ptb,
-      true
+        result.totalSupply,
+        anchorTotalSupply,
+        amountIn.raw,
+        result.vab,
+        result.gamma,
+        result.ptb,
+        true
     )
 
     console.log('ptuuu', lptu.toString())
     // 546624880858550112
     let fee = this.applyDeltaAndGammaTax(
-      lptu,
-      parseBigintIsh(pylonInfo.strikeBlock),
-      parseBigintIsh(blockNumber),
-      result.gamma,
-      factory,
-      result.ema,
-      false,
-      result.lastPrice
+        lptu,
+        parseBigintIsh(pylonInfo.strikeBlock),
+        parseBigintIsh(blockNumber),
+        result.gamma,
+        factory,
+        result.ema,
+        false,
+        result.lastPrice
     )
     let maxPoolTokens = JSBI.subtract(
-      anchorTotalSupply.raw,
-      JSBI.divide(JSBI.multiply(anchorTotalSupply.raw, this.reserve1.raw), result.vab)
+        anchorTotalSupply.raw,
+        JSBI.divide(JSBI.multiply(anchorTotalSupply.raw, this.reserve1.raw), result.vab)
     )
 
     if (JSBI.greaterThan(amountIn.raw, maxPoolTokens)) {
@@ -1833,23 +1907,23 @@ export class Pylon {
     let feeC = JSBI.subtract(lptu, ptuWithFee)
 
     let feePercentage = JSBI.greaterThan(ptuWithFee, ZERO)
-      ? JSBI.multiply(JSBI.divide(JSBI.multiply(feeC, BASE), ptuWithFee), _100)
-      : ZERO
+        ? JSBI.multiply(JSBI.divide(JSBI.multiply(feeC, BASE), ptuWithFee), _100)
+        : ZERO
     let omegaPTU = this.getOmegaSlashing(result.gamma, result.vab, result.ptb, result.totalSupply, ptuWithFee)
     let omegaSlashingPercentage = JSBI.multiply(
-      JSBI.divide(JSBI.multiply(JSBI.subtract(ptuWithFee, omegaPTU.newAmount), BASE), ptuWithFee),
-      _100
+        JSBI.divide(JSBI.multiply(JSBI.subtract(ptuWithFee, omegaPTU.newAmount), BASE), ptuWithFee),
+        _100
     )
 
     let slash = this.slashedTokens(parseBigintIsh(reservePTEnergy.raw), ptuWithFee, omegaPTU.omega)
 
     let amount0 = JSBI.divide(
-      JSBI.multiply(JSBI.add(omegaPTU.newAmount, slash.ptuToAdd), this.getPairReserves()[0].raw),
-      result.totalSupply
+        JSBI.multiply(JSBI.add(omegaPTU.newAmount, slash.ptuToAdd), this.getPairReserves()[0].raw),
+        result.totalSupply
     )
     let amount1 = JSBI.divide(
-      JSBI.multiply(JSBI.add(omegaPTU.newAmount, slash.ptuToAdd), this.getPairReserves()[1].raw),
-      result.totalSupply
+        JSBI.multiply(JSBI.add(omegaPTU.newAmount, slash.ptuToAdd), this.getPairReserves()[1].raw),
+        result.totalSupply
     )
 
     let extraAmount1 = this.anchorSlash(amount1, amount0, slash.percentage, parseBigintIsh(reserveAnchorEnergy.raw))
@@ -1867,15 +1941,15 @@ export class Pylon {
   }
 
   public burnAsyncFloat(
-    pylonInfo: PylonInfo,
-    pairInfo: PairInfo,
-    totalSupply: TokenAmount,
-    floatTotalSupply: TokenAmount,
-    amountIn: TokenAmount,
-    ptb: TokenAmount,
-    blockNumber: BigintIsh,
-    factory: PylonFactory,
-    blockTimestamp: BigintIsh
+      pylonInfo: PylonInfo,
+      pairInfo: PairInfo,
+      totalSupply: TokenAmount,
+      floatTotalSupply: TokenAmount,
+      amountIn: TokenAmount,
+      ptb: TokenAmount,
+      blockNumber: BigintIsh,
+      factory: PylonFactory,
+      blockTimestamp: BigintIsh
   ): BurnAsyncParams {
     const blockedReturn = {
       amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
@@ -1894,44 +1968,44 @@ export class Pylon {
     }
 
     let result = this.initSync(
-      pylonInfo,
-      pairInfo,
-      ptb,
-      totalSupply,
-      factory,
-      parseBigintIsh(blockTimestamp),
-      parseBigintIsh(blockNumber)
+        pylonInfo,
+        pairInfo,
+        ptb,
+        totalSupply,
+        factory,
+        parseBigintIsh(blockTimestamp),
+        parseBigintIsh(blockNumber)
     )
     let pairReserveTranslated0 = this.getPairReservesTranslated(result.ptb, result.totalSupply)[0]
 
     let lptu = this.calculateLPTU(
-      result.totalSupply,
-      floatTotalSupply,
-      amountIn.raw,
-      result.vab,
-      result.gamma,
-      result.ptb,
-      false
+        result.totalSupply,
+        floatTotalSupply,
+        amountIn.raw,
+        result.vab,
+        result.gamma,
+        result.ptb,
+        false
     )
     let fee = this.applyDeltaAndGammaTax(
-      lptu,
-      parseBigintIsh(pylonInfo.strikeBlock),
-      parseBigintIsh(blockNumber),
-      result.gamma,
-      factory,
-      result.ema,
-      false,
-      result.lastPrice
+        lptu,
+        parseBigintIsh(pylonInfo.strikeBlock),
+        parseBigintIsh(blockNumber),
+        result.gamma,
+        factory,
+        result.ema,
+        false,
+        result.lastPrice
     )
     let maxPoolTokens = JSBI.subtract(
-      floatTotalSupply.raw,
-      JSBI.divide(
-        JSBI.multiply(floatTotalSupply.raw, this.reserve0.raw),
-        JSBI.add(
-          JSBI.divide(JSBI.multiply(JSBI.multiply(pairReserveTranslated0, result.gamma), TWO), BASE),
-          this.reserve0.raw
+        floatTotalSupply.raw,
+        JSBI.divide(
+            JSBI.multiply(floatTotalSupply.raw, this.reserve0.raw),
+            JSBI.add(
+                JSBI.divide(JSBI.multiply(JSBI.multiply(pairReserveTranslated0, result.gamma), TWO), BASE),
+                this.reserve0.raw
+            )
         )
-      )
     )
     if (JSBI.greaterThan(amountIn.raw, maxPoolTokens)) {
       return blockedReturn
@@ -1942,8 +2016,8 @@ export class Pylon {
     let ptuWithFee = JSBI.subtract(lptu, JSBI.divide(JSBI.multiply(lptu, fee.feeBPS), _10000))
     let feeC = JSBI.subtract(lptu, ptuWithFee)
     let feePercentage = JSBI.greaterThan(fee.newAmount, ZERO)
-      ? JSBI.multiply(JSBI.divide(JSBI.multiply(feeC, BASE), ptuWithFee), _100)
-      : ZERO
+        ? JSBI.multiply(JSBI.divide(JSBI.multiply(feeC, BASE), ptuWithFee), _100)
+        : ZERO
 
     let amount0 = JSBI.divide(JSBI.multiply(fee.newAmount, this.getPairReserves()[0].raw), result.totalSupply)
     let amount1 = JSBI.divide(JSBI.multiply(fee.newAmount, this.getPairReserves()[1].raw), result.totalSupply)
@@ -1961,40 +2035,40 @@ export class Pylon {
   }
 
   public getLiquidityValue(
-    pylonInfo: PylonInfo,
-    pairInfo: PairInfo,
-    totalSupply: TokenAmount,
-    ptTotalSupply: TokenAmount,
-    liquidity: TokenAmount,
-    ptb: TokenAmount,
-    blockNumber: BigintIsh,
-    factory: PylonFactory,
-    blockTimestamp: BigintIsh,
-    isAnchor: boolean
+      pylonInfo: PylonInfo,
+      pairInfo: PairInfo,
+      totalSupply: TokenAmount,
+      ptTotalSupply: TokenAmount,
+      liquidity: TokenAmount,
+      ptb: TokenAmount,
+      blockNumber: BigintIsh,
+      factory: PylonFactory,
+      blockTimestamp: BigintIsh,
+      isAnchor: boolean
   ): [TokenAmount, TokenAmount] {
     // invariant(this.involvesToken(token), 'TOKEN')
     invariant(
-      totalSupply.token.equals(this.anchorLiquidityToken) || totalSupply.token.equals(this.floatLiquidityToken),
-      'TOTAL_SUPPLY'
+        totalSupply.token.equals(this.anchorLiquidityToken) || totalSupply.token.equals(this.floatLiquidityToken),
+        'TOTAL_SUPPLY'
     )
 
     let result = this.initSync(
-      pylonInfo,
-      pairInfo,
-      ptb,
-      totalSupply,
-      factory,
-      parseBigintIsh(blockTimestamp),
-      parseBigintIsh(blockNumber)
+        pylonInfo,
+        pairInfo,
+        ptb,
+        totalSupply,
+        factory,
+        parseBigintIsh(blockTimestamp),
+        parseBigintIsh(blockNumber)
     )
     let lptu = this.calculateLPTU(
-      result.totalSupply,
-      ptTotalSupply,
-      liquidity.raw,
-      result.vab,
-      result.gamma,
-      result.ptb,
-      isAnchor
+        result.totalSupply,
+        ptTotalSupply,
+        liquidity.raw,
+        result.vab,
+        result.gamma,
+        result.ptb,
+        isAnchor
     )
 
     return [
@@ -2851,37 +2925,7 @@ export class Pylon {
 //   }
 // }
 
-// private getDesiredFTV(
-//   oldRes0: JSBI,
-//   oldRes1: JSBI,
-//   adjVAB: JSBI,
-//   change: JSBI,
-//   ptb: JSBI,
-//   totalSupply: JSBI,
-//   p2x: JSBI,
-//   p2y: JSBI,
-//   isPercentage: boolean
-// ): JSBI {
-//   let [pairTR0, pairTR1] = this.getPairReservesTranslated(ptb, totalSupply)
-//
-//   let desiredFTV = Library.getFTVForX(
-//     JSBI.divide(JSBI.multiply(pairTR1, BASE), pairTR0),
-//     p2x,
-//     p2y,
-//     oldRes0,
-//     oldRes1,
-//     adjVAB
-//   )
-//
-//   if (isPercentage) {
-//     if (JSBI.notEqual(change, BASE)) {
-//       desiredFTV = JSBI.divide(JSBI.multiply(desiredFTV, change), BASE)
-//     }
-//   } else {
-//     desiredFTV = JSBI.add(desiredFTV, change)
-//   }
-//   return desiredFTV
-// }
+
 
 // private calculatePTUToAmount(
 //     totalSupply: JSBI,

@@ -11,6 +11,7 @@ export interface TestInput {
   gamma:  string
   mu:  string
   vab:  string
+  vfb:  string
   gEMA:  string
   fs: boolean
   isAnchor: boolean
