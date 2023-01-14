@@ -31,7 +31,7 @@
     "lastOracleTimestamp": "1673617224",
     "lastBlockTimestamp": "1673617227",
     "lastPrice": "2000000000000000000",
-    "skip": true,
+    "skip": false,
     "isSync": true,
     "isBurn": false,
     "p2x": "2000000000000000000",
