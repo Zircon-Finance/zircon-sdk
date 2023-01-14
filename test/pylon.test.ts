@@ -66,7 +66,7 @@ describe('Pylon', () => {
   describe('Test Cases', () => {
     CASES.forEach((testCase, i) => {
       it('Test Case ' + i, () => {
-        if (!testCase.skip) {
+        if (testCase.skip) {
           const pylon = new Pylon(
             new Pair(
               new TokenAmount(USDC, testCase.resPair0),

@@ -630,17 +630,14 @@ export class Pylon {
   private handleSyncAndAsync(
       reserveTranslated0: JSBI,
       reserveTranslated1: JSBI,
-      reserve: JSBI,
-      amountIn0: JSBI,
-      amountIn1: JSBI,
+      amountIn: JSBI,
       isAnchor: boolean,
       factory: PylonFactory,
       totalSupply: JSBI,
       debug: boolean = false
   ): SyncAsyncParams {
     Pylon.logger(debug, "Sync and Async")
-
-    let amountIn = isAnchor ? amountIn1 : amountIn0
+    let reserve = isAnchor ? this.reserve1.raw : this.reserve0.raw
     let maxSync = factory.maxSync
     let max = JSBI.divide(JSBI.multiply(isAnchor ? reserveTranslated1 : reserveTranslated0, maxSync), _100)
     let freeSpace = ZERO
@@ -651,9 +648,13 @@ export class Pylon {
     let max0 = JSBI.divide(JSBI.multiply(reserveTranslated0, maxSync), _200)
     let max1 = JSBI.divide(JSBI.multiply(reserveTranslated1, maxSync), _200)
 
-    if (JSBI.greaterThan(amountIn0, max0) && JSBI.greaterThan(amountIn1, max1)) {
+    let balance0 = JSBI.add(this.reserve0.raw, isAnchor ? ZERO : amountIn)
+    let balance1 = JSBI.add(this.reserve1.raw, isAnchor ? amountIn : ZERO)
+    Pylon.logger(debug, "aIn0 max0", balance0.toString(), max0.toString())
+    Pylon.logger(debug, "aIn1 max1", balance1.toString(), max1.toString())
+    if (JSBI.greaterThan(balance0, max0) && JSBI.greaterThan(balance1, max1)) {
       Pylon.logger(debug, "Sync a1 > max0 && a2 > max1")
-      let maxes = this.getMaximum(JSBI.subtract(amountIn0, max0), JSBI.subtract(amountIn1, max1))
+      let maxes = this.getMaximum(JSBI.subtract(balance0, max0), JSBI.subtract(balance1, max1))
       if (isAnchor) {
         max = JSBI.divide(JSBI.multiply(JSBI.add(reserveTranslated1, maxes.maxY), maxSync), _100)
         syncMint = maxes.maxY
@@ -661,8 +662,13 @@ export class Pylon {
         max = JSBI.divide(JSBI.multiply(JSBI.add(reserveTranslated0, maxes.maxX), maxSync), _100)
         syncMint = maxes.maxX
       }
+      Pylon.logger(debug, "Sync", "X:", maxes.maxX.toString(), "Y:", maxes.maxY.toString())
       Pylon.logger(debug, "Sync", "max", max.toString(), "syncMint", syncMint.toString())
     }
+    // SDK:: Sync X: 12513455785338593 Y: 25024345547006450
+    // Maxes::  12500268846416436 25000486448219776
+
+    // SDK:: Sync max 476275704552892833 syncMint 12513455785338593
 
     if (JSBI.greaterThan(max, reserve)) {
       freeSpace = JSBI.subtract(JSBI.add(max, syncMint), reserve)
@@ -673,8 +679,8 @@ export class Pylon {
           let syncMinting = this.syncMinting(
               reserveTranslated0,
               reserveTranslated1,
-              amountIn0,
-              amountIn1,
+              balance0,
+              balance1,
               factory,
               totalSupply
           )
@@ -714,8 +720,8 @@ export class Pylon {
     let syncMinting = this.syncMinting(
         reserveTranslated0,
         reserveTranslated1,
-        amountIn0,
-        amountIn1,
+        balance0,
+        balance1,
         factory,
         totalSupply
     )
@@ -1210,12 +1216,11 @@ export class Pylon {
     let investment = this.handleSyncAndAsync(
         pairReserveTranslated0,
         pairReserveTranslated1,
-        this.reserve0.raw,
-        tokenAmount.raw,
-        ZERO,
-        false,
+        fee.newAmount,
+        isAnchor,
         factory,
-        result.totalSupply
+        result.totalSupply,
+        debug
     )
 
 
