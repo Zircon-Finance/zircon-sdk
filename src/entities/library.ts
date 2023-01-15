@@ -59,7 +59,6 @@ export abstract class Library {
     }
   }
 
-
   public static calculateParabolaCoefficients(
     p2x: JSBI,
     p2y: JSBI,
@@ -67,6 +66,7 @@ export abstract class Library {
     p3y: JSBI,
     check: boolean
   ): Coefficients {
+    console.log("p2x", p2x)
     if (JSBI.lessThan(p3x, p2x) && JSBI.lessThan(p3y, p2y)) {
       if (!check) {
         throw new Error('p3x < p2x')

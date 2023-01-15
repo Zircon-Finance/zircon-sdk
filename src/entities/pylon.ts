@@ -757,7 +757,6 @@ export class Pylon {
     Pylon.logger(debug,'Instant Price =====> ', instantPrice.toString())
     Pylon.logger(debug,'Last Price =====> ', lastPrice.toString())
     let feeByGamma = Library.getFeeByGamma(gamma, pylonFactory.minFee, pylonFactory.maxFee)
-    Pylon.logger(debug,'Fee By Gamma =====> ', feeByGamma.toString())
 
     let feeBPS
     if (isSync) {
@@ -770,6 +769,8 @@ export class Pylon {
         feeBPS = JSBI.add(feeBPS, JSBI.subtract(_10000, JSBI.divide(JSBI.multiply(instantPrice, _10000), lastPrice)))
       }
     }
+    Pylon.logger(debug,'FeeBPS =====> ', feeBPS.toString())
+
 
     if (JSBI.greaterThanOrEqual(maxDerivative, pylonFactory.deltaGammaThreshold)) {
       Pylon.logger(debug,'maxDerivative > deltaGammaThreshold')
@@ -1091,6 +1092,7 @@ export class Pylon {
     newTotalSupply = JSBI.add(newTotalSupply, updateRemovingExcess.liquidity)
     if (JSBI.greaterThan(updateRemovingExcess.liquidity0, ZERO)) {
       // Calculating new p2X and p2Y
+      Pylon.logger(debug, 'CALCULATING NEW P2X AND P2Y removeExcess::liq0 > 0')
       let desiredFTV = this.getDesiredFTV(
           JSBI.subtract(parseBigintIsh(pylonInfo.virtualAnchorBalance), this.reserve1.raw),
           JSBI.divide(JSBI.multiply(updateRemovingExcess.liquidity0, JSBI.multiply(TWO, pairReserveTranslated1)),BASE),
@@ -1282,8 +1284,10 @@ export class Pylon {
       blockNumber: BigintIsh,
       factory: PylonFactory,
       blockTimestamp: BigintIsh,
-      isAnchor: boolean
+      isAnchor: boolean,
+      debug: boolean = false
   ): MintAsyncParams {
+    Pylon.logger(debug, 'Mint Async: ' + (isAnchor ? "Anchor" : "Float") + ' ' + tokenAmountA.raw.toString() + ' ' + tokenAmountB.raw.toString())
     const blockedReturn = {
       amountOut: new TokenAmount(this.anchorLiquidityToken, ZERO),
       blocked: true,
@@ -1302,6 +1306,9 @@ export class Pylon {
     )
     invariant(tokenAmountA.token.equals(this.token0), 'TOKEN')
 
+    // keeping this old value since iss going to come handy to calculate liquidity at the end
+    let syncReserve0 = this.reserve0.raw
+
     let result = this.initSync(
         pylonInfo,
         pairInfo,
@@ -1309,11 +1316,13 @@ export class Pylon {
         totalSupply,
         factory,
         parseBigintIsh(blockTimestamp),
-        parseBigintIsh(blockNumber)
+        parseBigintIsh(blockNumber),
+        debug
     )
     // TODO: handle skim of excess in case balance of the other token is higher than the reserve
 
     // Calculating gamma tax and fee
+    // In Mint Async is used just to get the FeeBPS
     let feeA = this.applyDeltaAndGammaTax(
         tokenAmountA.raw,
         parseBigintIsh(pylonInfo.strikeBlock),
@@ -1321,30 +1330,23 @@ export class Pylon {
         result.gamma,
         factory,
         result.ema,
-        true,
-        result.lastPrice
+        false,
+        result.lastPrice,
+        debug
     )
+    feeA.fee = JSBI.divide(JSBI.multiply(tokenAmountA.raw, JSBI.multiply(feeA.feeBPS, TWO)), _10000)
+    feeA.newAmount = JSBI.subtract(tokenAmountA.raw, feeA.fee)
     // If fee is blocked, time to return
     if (feeA.blocked) {
       return blockedReturn
     }
-    this.changePairReserveOnFloatSwap(feeA.fee)
-
-    let feeB = this.applyDeltaAndGammaTax(
-        tokenAmountB.raw,
-        parseBigintIsh(pylonInfo.strikeBlock),
-        parseBigintIsh(blockNumber),
-        result.gamma,
-        factory,
-        result.ema,
-        true,
-        result.lastPrice
-    )
-
-    // If fee is blocked, time to return
-    if (feeB.blocked) {
-      return blockedReturn
+    // this.changePairReserveOnFloatSwap(feeA.fee)
+    let feeB = {
+      fee: JSBI.divide(JSBI.multiply(tokenAmountB.raw, JSBI.multiply(feeA.feeBPS, TWO)), _10000),
+      newAmount: JSBI.subtract(tokenAmountB.raw, JSBI.divide(JSBI.multiply(tokenAmountB.raw, JSBI.multiply(feeA.feeBPS, TWO)), _10000)),
     }
+    Pylon.logger(debug, 'Mint Async: Fee A: ' + feeA.fee.toString(), 'Fee B: ' + feeB.fee.toString())
+    Pylon.logger(debug, 'Mint Async: New Amount A: ' + feeA.newAmount.toString(), 'New Amount B: ' + feeB.newAmount.toString())
 
     // Changing total supply and pair reserves because when paying float fees we are doing a swap
     let feePercentage = JSBI.multiply(JSBI.divide(JSBI.multiply(feeA.fee, BASE), feeA.newAmount), _100) // This is the percentage to show in the UI
@@ -1360,25 +1362,47 @@ export class Pylon {
 
     let aCase2 = JSBI.multiply(isAnchor ? feeB.newAmount : feeA.newAmount, TWO)
     let amount = JSBI.greaterThan(aCase1, aCase2) ? aCase2 : aCase1
+    Pylon.logger(debug, 'Amount: ' + amount.toString())
+    // Extra liquidity from float extra
+    let sqrtK = sqrt(JSBI.multiply(JSBI.add(pairReserveTranslated0, feeA.newAmount), JSBI.add(pairReserveTranslated1, feeB.newAmount)))
+    let sqrtKP = sqrt(JSBI.multiply(JSBI.add(pairReserveTranslated0, tokenAmountA.raw), JSBI.add(pairReserveTranslated1, feeB.newAmount)))
+
+    if (JSBI.greaterThan(sqrtKP, sqrtK)) {
+      let extra = isAnchor ?  JSBI.multiply(JSBI.add(pairReserveTranslated1, feeB.newAmount), TWO) :
+          JSBI.multiply(JSBI.add(pairReserveTranslated0, feeA.newAmount), TWO)
+      amount = JSBI.add(amount, JSBI.divide(JSBI.multiply(JSBI.subtract(sqrtKP, sqrtK), extra), sqrtK))
+    }
+
+    Pylon.logger(debug, 'Amount after extra liquidity from float extra: ' + amount.toString())
     let liquidity;
     if (!isAnchor) {
       let floatLiqOwned = JSBI.add(
-          JSBI.divide(JSBI.multiply(this.reserve0.raw, result.ptb), JSBI.multiply(TWO, pairReserveTranslated0)),
+          JSBI.divide(JSBI.multiply(syncReserve0, result.ptb), JSBI.multiply(TWO, pairReserveTranslated0)),
           JSBI.divide(JSBI.multiply(result.ptb, result.gamma), BASE)
       )
+      console.log("floatLiqOwned", syncReserve0.toString(), result.ptb.toString(), pairReserveTranslated0.toString(), result.gamma.toString(), floatLiqOwned.toString())
 
       let ptbMax = JSBI.divide(JSBI.multiply(amount, result.ptb), JSBI.multiply(TWO, pairReserveTranslated0))
-
+      console.log("ptbMax", ptbMax.toString())
       liquidity = JSBI.divide(JSBI.multiply(ptbMax, ptTotalSupply.raw), floatLiqOwned)
     }else{
       liquidity = JSBI.divide(JSBI.multiply(amount, ptTotalSupply.raw), result.vab)
     }
 
+    // ptb 84150000000000000000
+    // 84150000000000000000
+    // 1785417725197367980103
+    // 1785417725197367980103
+    // 2823067064825063627160
+    // 1785417725197367980103
+    // 447817706268916784
+    // 447816972445734949
+
     return {
-      amountOut: new TokenAmount(this.anchorLiquidityToken, liquidity),
+      amountOut: new TokenAmount(isAnchor ? this.anchorLiquidityToken : this.floatLiquidityToken, liquidity),
       blocked: false,
-      fee: new TokenAmount(this.anchorLiquidityToken, JSBI.add(feeA.fee, feeB.fee)),
-      deltaApplied: feeA.deltaApplied || feeB.deltaApplied,
+      fee: new TokenAmount(isAnchor ? this.anchorLiquidityToken : this.floatLiquidityToken, JSBI.add(feeA.fee, feeB.fee)),
+      deltaApplied: feeA.deltaApplied,
       feePercentage: feePercentage
 
     }
