@@ -693,26 +693,31 @@ export class Pylon {
     }
 
     let asyncToMint = JSBI.subtract(amountIn, freeSpace)
+    Pylon.logger(debug, "Async", "asyncToMint", asyncToMint.toString())
 
     let _amountOut
     let sqrtK = sqrt(JSBI.multiply(reserveTranslated0, reserveTranslated1))
-    let amountInWithFee = JSBI.multiply(
-        asyncToMint,
-        JSBI.divide(JSBI.subtract(_10000, JSBI.add(JSBI.divide(factory.liquidityFee, TWO), ONE)), _10000)
-    )
+    let amountInWithFee = JSBI.divide(
+        JSBI.multiply(
+            asyncToMint,
+            JSBI.subtract(_10000, JSBI.add(JSBI.divide(factory.liquidityFee, TWO), ONE))),
+        _10000)
+    Pylon.logger(debug, "Async", "amountInWithFee", amountInWithFee.toString())
 
     if (isAnchor) {
       let sqrtKPrime = sqrt(JSBI.multiply(reserveTranslated0, JSBI.add(reserveTranslated1, amountInWithFee)))
-      invariant(JSBI.greaterThanOrEqual(sqrtK, sqrtKPrime), 'ZP: SK')
+      invariant(JSBI.lessThan(sqrtK, sqrtKPrime), 'ZP: SK')
       let liqPercentage = JSBI.divide(JSBI.multiply(JSBI.subtract(sqrtKPrime, sqrtK), BASE), sqrtK)
       _amountOut = JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, liqPercentage), reserveTranslated1), BASE)
     } else {
       let sqrtKPrime = sqrt(JSBI.multiply(reserveTranslated1, JSBI.add(reserveTranslated0, amountInWithFee)))
-      invariant(JSBI.greaterThanOrEqual(sqrtK, sqrtKPrime), 'ZP: SK')
+      Pylon.logger(debug, "Async", "sqrtKPrime", sqrtKPrime.toString(), "sqrtK", sqrtK.toString())
+      invariant(JSBI.lessThan(sqrtK, sqrtKPrime), 'ZP: SK')
       let liqPercentage = JSBI.divide(JSBI.multiply(JSBI.subtract(sqrtKPrime, sqrtK), BASE), sqrtK)
       let liqPercentageAdj = JSBI.divide(JSBI.multiply(JSBI.subtract(sqrtKPrime, sqrtK), BASE), sqrtKPrime)
-      _amountOut = JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, liqPercentageAdj), reserveTranslated1), BASE)
-      trueAmountOut = JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, liqPercentage), reserveTranslated1), BASE)
+      _amountOut = JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, liqPercentageAdj), reserveTranslated0), BASE)
+      trueAmountOut = JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, liqPercentage), reserveTranslated0), BASE)
+      Pylon.logger(debug, "Async:: ", "liqPercentage", liqPercentage.toString(), "liqPercentageAdj", liqPercentageAdj.toString(), "amountOut:", _amountOut.toString(), "trueAmountOut:", trueAmountOut.toString())
     }
 
     amountOut = JSBI.add(amountOut, _amountOut)
