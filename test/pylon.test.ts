@@ -79,7 +79,7 @@ describe('Pylon', () => {
   describe('Test Cases', () => {
     CASES.forEach((testCase, i) => {
       it('Test Case ' + i, () => {
-        if (testCase.skip) {
+        if (!testCase.skip) {
           const pylon = new Pylon(
               new Pair(
                   new TokenAmount(USDC, testCase.resPair0),
@@ -137,7 +137,8 @@ describe('Pylon', () => {
                     ptb,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.timestamp
+                    testCase.timestamp,
+                    true
                 )
               } else {
                 let resPtEnergy = new TokenAmount(pylon.pair.liquidityToken, testCase.reservePtEnergy ?? '0')
@@ -153,7 +154,8 @@ describe('Pylon', () => {
                     pylonFactory,
                     testCase.timestamp,
                     resPtEnergy,
-                    resAnchorEnergy
+                    resAnchorEnergy,
+                    true
                 )
               }
             } else {
@@ -167,7 +169,8 @@ describe('Pylon', () => {
                     ptb,
                     testCase.blockNumber,
                     pylonFactory,
-                    testCase.timestamp
+                    testCase.timestamp,
+                    true
                 )
               } else {
                 let resPtEnergy = new TokenAmount(pylon.pair.liquidityToken, testCase.reservePtEnergy ?? '0')
@@ -183,7 +186,8 @@ describe('Pylon', () => {
                     pylonFactory,
                     testCase.timestamp,
                     resPtEnergy,
-                    resAnchorEnergy
+                    resAnchorEnergy,
+                    true
                 )
               }
               expect((result as BurnAsyncParams).amountOut2.raw.toString()).toEqual(testCase.amountOut2)
@@ -229,3 +233,6 @@ describe('Pylon', () => {
     })
   })
 })
+//2001195056609920394 3200605254295977812072 // p3x, p3y 3117338544047438500 4985644141688052146226
+//( 3299686700814222487 , 5482664313372160359530 ) P3 ( 8771943755510230681 , 26173042803749288218830 )
+// 2001188381855309838 3200594579284728349088  3117338536243437435 4985644141688052146226
