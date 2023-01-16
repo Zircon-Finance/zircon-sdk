@@ -17,8 +17,8 @@ export abstract class Library {
       let coefficients = this.calculateParabolaCoefficients(p2x, p2y, p3x, adjVAB, false)
 
       if (
-        !coefficients.isANegative ||
-        JSBI.greaterThan(coefficients.b, JSBI.divide(JSBI.multiply(TWO, JSBI.multiply(coefficients.a, p3x)), BASE))
+          !coefficients.isANegative ||
+          JSBI.greaterThan(coefficients.b, JSBI.divide(JSBI.multiply(TWO, JSBI.multiply(coefficients.a, p3x)), BASE))
       ) {
         ftv = this.getFTV(coefficients, x)
       } else {
@@ -39,12 +39,12 @@ export abstract class Library {
   }
 
   public static evaluateP2(
-    x: JSBI,
-    adjVAB: JSBI,
-    adjVFB: JSBI,
-    res0: JSBI,
-    res1: JSBI,
-    desiredFTV: JSBI
+      x: JSBI,
+      adjVAB: JSBI,
+      adjVFB: JSBI,
+      res0: JSBI,
+      res1: JSBI,
+      desiredFTV: JSBI
   ): { p2x: JSBI; p2y: JSBI } {
     let p3x = JSBI.divide(JSBI.exponentiate(adjVAB, TWO), res1)
     p3x = JSBI.divide(JSBI.multiply(p3x, BASE), res0)
@@ -60,13 +60,14 @@ export abstract class Library {
   }
 
   public static calculateParabolaCoefficients(
-    p2x: JSBI,
-    p2y: JSBI,
-    p3x: JSBI,
-    p3y: JSBI,
-    check: boolean
+      p2x: JSBI,
+      p2y: JSBI,
+      p3x: JSBI,
+      p3y: JSBI,
+      check: boolean
   ): Coefficients {
-    console.log("p2x", p2x)
+    console.log('P2 (', p2x.toString(), ',', p2y.toString(), ')' + ' P3 (', p3x.toString(), ',', p3y.toString(), ')')
+
     if (JSBI.lessThan(p3x, p2x) && JSBI.lessThan(p3y, p2y)) {
       if (!check) {
         throw new Error('p3x < p2x')
@@ -91,7 +92,7 @@ export abstract class Library {
       let aNumerator = JSBI.divide(JSBI.subtract(aPartial1, aPartial2), p2x)
       a = JSBI.divide(JSBI.multiply(aNumerator, BASE), aDenominator)
       if (
-        JSBI.lessThan(JSBI.divide(JSBI.multiply(BASE, p2y), p2x), JSBI.divide(JSBI.multiply(a, p2x), BASE))
+          JSBI.lessThan(JSBI.divide(JSBI.multiply(BASE, p2y), p2x), JSBI.divide(JSBI.multiply(a, p2x), BASE))
       ) {
         throw new Error('B negative')
       }
@@ -107,25 +108,27 @@ export abstract class Library {
     return { a, b, isANegative }
   }
 
+
   public static getFTV(coefficients: Coefficients, x: JSBI) {
-    return coefficients.isANegative
-        ? JSBI.subtract(
-            JSBI.multiply(coefficients.b, x),
-            JSBI.multiply(JSBI.divide(JSBI.multiply(coefficients.a, x), BASE), x)
-        )
-        : JSBI.add(
-            JSBI.multiply(coefficients.b, x),
-            JSBI.multiply(JSBI.divide(JSBI.multiply(coefficients.a, x), BASE), x)
-        )
+    return JSBI.divide(
+        coefficients.isANegative
+            ? JSBI.subtract(
+                JSBI.multiply(coefficients.b, x),
+                JSBI.multiply(JSBI.divide(JSBI.multiply(coefficients.a, x), BASE), x)
+            )
+            : JSBI.add(
+                JSBI.multiply(coefficients.b, x),
+                JSBI.multiply(JSBI.divide(JSBI.multiply(coefficients.a, x), BASE), x)
+            ), BASE)
   }
 
   public static calculateGamma(
-    resTR0: JSBI,
-    resTR1: JSBI,
-    adjVAB: JSBI,
-    p2x: JSBI,
-    p2y: JSBI,
-    debug: boolean = false
+      resTR0: JSBI,
+      resTR1: JSBI,
+      adjVAB: JSBI,
+      p2x: JSBI,
+      p2y: JSBI,
+      debug: boolean = false
   ): { gamma: JSBI; isLineFormula: boolean } {
     Pylon.logger(debug, 'CALCULATE GAMMA')
     let tpva = JSBI.multiply(resTR1, TWO)
@@ -135,9 +138,8 @@ export abstract class Library {
     let p3x = JSBI.divide(JSBI.exponentiate(adjVAB, TWO), resTR0)
     p3x = JSBI.divide(JSBI.multiply(p3x, BASE), resTR1)
     Pylon.logger(debug, 'P2 (', p2x.toString(), ',', p2y.toString(), ')' + ' P3 (', p3x.toString(), ',', adjVAB.toString(), ')')
-
     let x = JSBI.divide(JSBI.multiply(resTR1, BASE), resTR0)
-    console.log('x', x.toString())
+    Pylon.logger(debug, 'x::', x.toString())
     // TODO: linear when b neg
     if (JSBI.greaterThanOrEqual(x, p3x)) {
       Pylon.logger(debug, 'x over p3x')
@@ -147,18 +149,19 @@ export abstract class Library {
       let coefficients = Library.calculateParabolaCoefficients(p2x, p2y, p3x, adjVAB, false)
       Pylon.logger(debug, 'a', coefficients.a.toString(), 'b', coefficients.b.toString())
       if (
-        !coefficients.isANegative ||
-        JSBI.greaterThan(coefficients.b, JSBI.divide(JSBI.multiply(TWO, JSBI.multiply(coefficients.a, p3x)), BASE))
+          !coefficients.isANegative ||
+          JSBI.greaterThan(coefficients.b, JSBI.divide(JSBI.multiply(TWO, JSBI.multiply(coefficients.a, p3x)), BASE))
       ) {
         let ftv = this.getFTV(coefficients, x)
         Pylon.logger(debug, 'x under p3x =>', 'ftv: ', ftv.toString())
-        gamma = JSBI.divide(ftv, tpva)
+        gamma = JSBI.divide(JSBI.multiply(ftv, BASE), tpva)
         formulaSwitch = true
       } else {
         throw new Error('Float Error')
       }
     }
     return { gamma, isLineFormula: formulaSwitch }
+
   }
 
   public static translateToPylon(toTranslate: JSBI, ptb: JSBI, ptt: JSBI) {
@@ -205,6 +208,17 @@ export abstract class Library {
         return blockEMA
       }
     }
+  }
+
+  public static derivativeCheck(p2x: JSBI, p2y: JSBI, res0: JSBI, res1: JSBI, adjVAB: JSBI) : boolean {
+    let p3x = JSBI.divide(JSBI.exponentiate(adjVAB, TWO), res1)
+    p3x = JSBI.divide(JSBI.multiply(p3x, BASE), res0)
+    let coefficients = Library.calculateParabolaCoefficients(p2x, p2y, p3x, adjVAB, true)
+
+    if (JSBI.equal(coefficients.a, _42E45)) {
+      return true
+    }
+    return !(!coefficients.isANegative || JSBI.greaterThan(coefficients.b, JSBI.divide(JSBI.multiply(TWO, JSBI.multiply(coefficients.a, p3x)), BASE)));
   }
 
   public static getFeeByGamma(gamma: JSBI, minFee: JSBI, maxFee: JSBI): JSBI {

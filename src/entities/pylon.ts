@@ -353,6 +353,10 @@ export class Pylon {
     return [r0, r1]
   }
 
+  private getPrice(): JSBI {
+    return JSBI.divide(JSBI.multiply(this.getPairReserves()[1].raw, BASE), this.getPairReserves()[0].raw)
+  }
+
   /// @notice This calculates the Health Factor of the Pylon
   // The conditions are:
   // High -> Omega >= 1 && Price >= breakevenPrice
@@ -455,6 +459,62 @@ export class Pylon {
 
   // private calculate
 
+  private processFees(pylonInfo: PylonInfo, tpv: JSBI, feeValuePercentage: JSBI, ptb: JSBI, ts: JSBI, vab: JSBI, vfb: JSBI):
+      {p2x: JSBI, p2y: JSBI, feeFloat: JSBI, feeAnchor: JSBI}{
+    let feeToAnchor = JSBI.divide(
+        JSBI.multiply(
+            JSBI.divide(
+                JSBI.multiply(tpv, feeValuePercentage), BASE),
+            parseBigintIsh(pylonInfo.muMulDecimals)),
+        BASE)
+
+    let feeToFloat = JSBI.divide(
+        JSBI.multiply(
+            JSBI.divide(
+                JSBI.multiply(tpv, feeValuePercentage), BASE),
+            JSBI.subtract(BASE, parseBigintIsh(pylonInfo.muMulDecimals))),
+        BASE)
+
+    let feeValuePercentageIncreased = JSBI.add(feeValuePercentage, BASE)
+    console.log("vab", vab.toString())
+    let ftv = Library.getFTVForX(
+        this.getPrice(),
+        parseBigintIsh(pylonInfo.p2x),
+        parseBigintIsh(pylonInfo.p2y),
+        JSBI.divide(JSBI.multiply(this.getPairReservesTranslated(ptb, ts)[0], BASE), feeValuePercentageIncreased),
+        JSBI.divide(JSBI.multiply(this.getPairReservesTranslated(ptb, ts)[1], BASE), feeValuePercentageIncreased),
+        JSBI.subtract(vab, this.reserve1.raw)
+    )
+    console.log('ftv', ftv.toString(), "feeToFloat: ", feeToFloat.toString())
+    let p2 = Library.evaluateP2(
+        this.getPrice(),
+        JSBI.subtract(vab, this.reserve1.raw),
+        JSBI.subtract(vfb, this.reserve0.raw),
+        this.getPairReservesTranslated(ptb, ts)[0],
+        this.getPairReservesTranslated(ptb, ts)[1],
+        JSBI.add(ftv,feeToFloat)
+    )
+    let derivativeCheck = Library.derivativeCheck(
+        parseBigintIsh(p2.p2x),
+        parseBigintIsh(p2.p2y),
+        this.getPairReservesTranslated(ptb, ts)[0],
+        this.getPairReservesTranslated(ptb, ts)[1],
+        JSBI.subtract(JSBI.add(vab,feeToAnchor), this.reserve1.raw))
+    console.log('derivativeCheck', derivativeCheck)
+
+    if(!derivativeCheck){
+      feeToFloat = JSBI.divide(JSBI.multiply(vfb, feeToFloat), JSBI.add(ftv, JSBI.multiply(this.reserve0.raw, this.getPrice())))
+      return {feeFloat: feeToFloat, feeAnchor: feeToAnchor, p2x: p2.p2x, p2y: p2.p2y}
+    }else{
+      feeToAnchor = JSBI.divide(
+          JSBI.multiply(feeToAnchor, BASE),
+          parseBigintIsh(pylonInfo.muMulDecimals))
+      return {feeFloat: ZERO, feeAnchor: feeToAnchor, p2x: ZERO, p2y: ZERO}
+
+    }
+
+  }
+
   private updateSync(
       pylonInfo: PylonInfo,
       ptb: JSBI,
@@ -467,6 +527,7 @@ export class Pylon {
   ): {
     gamma: JSBI
     vab: JSBI
+    vfb: JSBI
     isLineFormula: boolean
     lastPrice: JSBI
   } {
@@ -508,25 +569,50 @@ export class Pylon {
         Pylon.logger(debug, "avg price: ", avgPrice.toString())
       }
     }
-
-    let feeValuePercentageAnchor = JSBI.divide(
-        JSBI.multiply(
-            JSBI.subtract(rootK, parseBigintIsh(pylonInfo.lastRootKTranslated)),
-            parseBigintIsh(pylonInfo.muMulDecimals)
-        ),
-        parseBigintIsh(pylonInfo.lastRootKTranslated)
-    )
-    Pylon.logger(debug, "fee value percentage anchor: ", feeValuePercentageAnchor.toString())
-
     let vabLast = parseBigintIsh(pylonInfo.virtualAnchorBalance)
-    if (JSBI.notEqual(feeValuePercentageAnchor, ZERO)) {
-      let feeToAnchor = JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, resTR1), feeValuePercentageAnchor), BASE)
-      vabLast = JSBI.add(vabLast, feeToAnchor)
-      Pylon.logger(debug, "new VAB: ", vabLast.toString())
+    let vfbLast = parseBigintIsh(pylonInfo.virtualFloatBalance)
 
+    if (JSBI.greaterThan(rootK, parseBigintIsh(pylonInfo.lastRootKTranslated))) {
+
+      let feeValuePercentage = JSBI.divide(
+          JSBI.multiply(
+              JSBI.subtract(rootK, parseBigintIsh(pylonInfo.lastRootKTranslated)),
+              BASE
+          ),
+          rootK
+      )
+
+      console.log("fvp", feeValuePercentage.toString())
+
+      let tpv = JSBI.multiply(TWO, this.getPairReservesTranslated(ptb, ptt)[1])
+      let pFees = this.processFees(
+          pylonInfo,
+          tpv,
+          feeValuePercentage,
+          ptb,
+          ptt,
+          vabLast,
+          parseBigintIsh(pylonInfo.virtualFloatBalance)
+      )
+
+      if (JSBI.notEqual(pFees.feeFloat, ZERO) && JSBI.notEqual(pFees.p2x, ZERO)) {
+        console.log("updates")
+        pylonInfo.p2x = pFees.p2x
+        pylonInfo.p2y = pFees.p2y
+        vabLast = JSBI.add(vabLast, pFees.feeAnchor)
+        vfbLast = JSBI.add(vfbLast, pFees.feeFloat)
+      }else{
+        vabLast = JSBI.add(vabLast, pFees.feeAnchor)
+      }
+      // Pylon.logger(debug, "fee value percentage anchor: ", feeValuePercentageAnchor.toString())
+      // if (JSBI.notEqual(feeValuePercentageAnchor, ZERO)) {
+      //   let feeToAnchor = JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, resTR1), feeValuePercentageAnchor), BASE)
+      //   vabLast = JSBI.add(vabLast, feeToAnchor)
+      //   Pylon.logger(debug, "new VAB: ", vabLast.toString())
+      // }
     }
+    //447817706268916784
     let adjVAB = JSBI.subtract(vabLast, this.reserve1.raw)
-
     let gamma = Library.calculateGamma(resTR0, resTR1, adjVAB, parseBigintIsh(pylonInfo.p2x), parseBigintIsh(pylonInfo.p2y), debug)
 
     Pylon.logger(
@@ -535,15 +621,17 @@ export class Pylon {
         gamma.gamma.toString(),
         'vab',
         vabLast.toString(),
+        'vfb',
+        vfbLast.toString(),
         'isLineFormula',
         gamma.isLineFormula,
         'lastPrice',
         avgPrice.toString()
     )
-
     return {
       gamma: gamma.gamma,
       vab: vabLast,
+      vfb: vfbLast,
       isLineFormula: gamma.isLineFormula,
       lastPrice: avgPrice
     }
@@ -1085,7 +1173,8 @@ export class Pylon {
         this.reserve1.raw,
         factory,
         newTotalSupply,
-        parseBigintIsh(pairInfo.kLast)
+        parseBigintIsh(pairInfo.kLast),
+        debug
     )
     let kLast = JSBI.multiply(this.getPairReserves()[0].raw, this.getPairReserves()[1].raw)
     let newPTB = JSBI.add(ptb.raw, updateRemovingExcess.liquidity)
@@ -1112,6 +1201,8 @@ export class Pylon {
       pylonInfo.p2x = newP2.p2x.toString()
       pylonInfo.p2y = newP2.p2y.toString()
     }
+
+
     let result = this.updateSync(
         pylonInfo,
         newPTB,
@@ -1493,7 +1584,10 @@ export class Pylon {
     let liquidity0 = ZERO
     let excess0 = ZERO
     let excess1 = ZERO
+    Pylon.logger(debug, "Update Removing Excess", balance0.toString(), balance1.toString(), max0.toString(), max1.toString())
 
+    //84150000000000000000
+    //178541772519736798010
     if (JSBI.greaterThan(balance0, max0)) {
       excess0 = JSBI.subtract(balance0, max0)
       liquidity = JSBI.add(
