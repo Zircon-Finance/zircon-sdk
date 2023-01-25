@@ -33,6 +33,11 @@ export interface BurnAsyncParams extends Params {
   omegaSlashingPercentage: JSBI
 }
 
+export interface Decimals {
+  float: BigintIsh
+  anchor: BigintIsh
+}
+
 export interface PylonInfo {
   virtualAnchorBalance: BigintIsh
   virtualFloatBalance: BigintIsh

@@ -41,5 +41,9 @@ export interface TestInput {
   lastPrice:  string
   p2x:  string,
   p2y:  string,
+  decimals: {
+    anchor: string,
+    float: string
+  }
 }
 export const CASES: TestInput[] = tests

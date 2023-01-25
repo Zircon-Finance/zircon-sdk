@@ -35,7 +35,7 @@ import { Pair, Library } from '../entities'
 import { PylonFactory } from 'entities/pylonFactory'
 import {
   BurnAsyncParams,
-  BurnParams,
+  BurnParams, Decimals,
   MintAsyncParams,
   MintSyncParams,
   PairInfo,
@@ -366,6 +366,7 @@ export class Pylon {
   public getHealthFactor(
       pylonInfo: PylonInfo,
       pairInfo: PairInfo,
+      decimals: Decimals,
       totalSupply: TokenAmount,
       ptb: TokenAmount,
       blockNumber: BigintIsh,
@@ -381,6 +382,7 @@ export class Pylon {
     let result = this.initSync(
         pylonInfo,
         pairInfo,
+        decimals,
         ptb,
         totalSupply,
         factory,
@@ -460,7 +462,7 @@ export class Pylon {
 
   // private calculate
 
-  private processFees(pylonInfo: PylonInfo, tpv: JSBI, feeValuePercentage: JSBI, ptb: JSBI, ts: JSBI, vab: JSBI):
+  private processFees(pylonInfo: PylonInfo, decimals: Decimals, tpv: JSBI, feeValuePercentage: JSBI, ptb: JSBI, ts: JSBI, vab: JSBI):
       {p2x: JSBI, p2y: JSBI, feeFloat: JSBI, feeAnchor: JSBI}{
     let feeToAnchor = JSBI.divide(
         JSBI.multiply(tpv, feeValuePercentage),
@@ -498,7 +500,9 @@ export class Pylon {
         parseBigintIsh(p2.p2y),
         this.getPairReservesTranslated(ptb, ts)[0],
         this.getPairReservesTranslated(ptb, ts)[1],
-        JSBI.subtract(JSBI.add(vab,feeToAnchor), this.reserve1.raw))
+        JSBI.subtract(JSBI.add(vab,feeToAnchor), this.reserve1.raw),
+        decimals,
+    )
 
     if (derivativeCheck) {
       feeToAnchor = JSBI.divide(
@@ -518,6 +522,7 @@ export class Pylon {
       priceCumulativeLast: JSBI,
       rootK: JSBI,
       constants: PylonFactory,
+      decimals: Decimals,
       debug: boolean = false
   ): {
     gamma: JSBI
@@ -559,7 +564,7 @@ export class Pylon {
             JSBI.divide(JSBI.subtract(currentFloatAccumulator, parseBigintIsh(pylonInfo.lastFloatAccumulator)),
                 JSBI.subtract(blockTimestamp, parseBigintIsh(pylonInfo.lastOracleTimestamp))),
             _56)
-        avgPrice = JSBI.signedRightShift(JSBI.multiply(avgPrice, BASE ), _56)
+        avgPrice = JSBI.signedRightShift(JSBI.multiply(avgPrice, parseBigintIsh(decimals.anchor)), _56)
         Pylon.logger(debug, "current float accumulator > last float accumulator")
         Pylon.logger(debug, "avg price: ", avgPrice.toString())
       }
@@ -581,6 +586,7 @@ export class Pylon {
       let tpv = JSBI.multiply(TWO, this.getPairReservesTranslated(ptb, ptt)[1])
       let pFees = this.processFees(
           pylonInfo,
+          decimals,
           tpv,
           feeValuePercentage,
           ptb,
@@ -605,7 +611,7 @@ export class Pylon {
     }
     //447817706268916784
     let adjVAB = JSBI.subtract(vabLast, this.reserve1.raw)
-    let gamma = Library.calculateGamma(resTR0, resTR1, adjVAB, parseBigintIsh(pylonInfo.p2x), parseBigintIsh(pylonInfo.p2y), debug)
+    let gamma = Library.calculateGamma(resTR0, resTR1, adjVAB, parseBigintIsh(pylonInfo.p2x), parseBigintIsh(pylonInfo.p2y), decimals, debug)
 
     Pylon.logger(
         debug,
@@ -831,9 +837,10 @@ export class Pylon {
       maxDerivative: JSBI,
       isSync: boolean,
       lastPrice: JSBI,
+      decimals: Decimals,
       debug: boolean = false
   ): { newAmount: JSBI; fee: JSBI; deltaApplied: boolean; blocked: boolean; asyncBlocked: boolean; feeBPS: JSBI } {
-    let instantPrice = JSBI.divide(JSBI.multiply(BASE, this.getPairReserves()[1].raw), this.getPairReserves()[0].raw)
+    let instantPrice = JSBI.divide(JSBI.multiply(parseBigintIsh(decimals.float), this.getPairReserves()[1].raw), this.getPairReserves()[0].raw)
     Pylon.logger(debug,'Instant Price =====> ', instantPrice.toString())
     Pylon.logger(debug,'Last Price =====> ', lastPrice.toString())
     let feeByGamma = Library.getFeeByGamma(gamma, pylonFactory.minFee, pylonFactory.maxFee)
@@ -1109,6 +1116,7 @@ export class Pylon {
   //     totalSupply: JSBI,
   //     p2x: JSBI,
   //     p2y: JSBI,
+  //     decimals: Decimals,
   //     isPercentage: boolean
   // ): JSBI {
   //   let [pairTR0, pairTR1] = this.getPairReservesTranslated(ptb, totalSupply)
@@ -1136,6 +1144,7 @@ export class Pylon {
   private initSync(
       pylonInfo: PylonInfo,
       pairInfo: PairInfo,
+      decimals: Decimals,
       ptb: TokenAmount,
       totalSupply: TokenAmount,
       factory: PylonFactory,
@@ -1208,6 +1217,7 @@ export class Pylon {
         ),
         rootK,
         factory,
+        decimals,
         debug
     )
 
@@ -1237,6 +1247,7 @@ export class Pylon {
   public mintSync(
       pylonInfo: PylonInfo,
       pairInfo: PairInfo,
+      decimals: Decimals,
       totalSupply: TokenAmount,
       ptTotalSupply: TokenAmount,
       tokenAmount: TokenAmount,
@@ -1272,6 +1283,7 @@ export class Pylon {
     let result = this.initSync(
         pylonInfo,
         pairInfo,
+        decimals,
         ptb,
         totalSupply,
         factory,
@@ -1292,6 +1304,7 @@ export class Pylon {
         result.ema,
         true,
         result.lastPrice,
+        decimals,
         debug
     )
     // If fee is blocked, time to return
@@ -1362,6 +1375,7 @@ export class Pylon {
   public mintAsync(
       pylonInfo: PylonInfo,
       pairInfo: PairInfo,
+      decimals: Decimals,
       totalSupply: TokenAmount,
       ptTotalSupply: TokenAmount,
       tokenAmountA: TokenAmount,
@@ -1398,6 +1412,7 @@ export class Pylon {
     let result = this.initSync(
         pylonInfo,
         pairInfo,
+        decimals,
         ptb,
         totalSupply,
         factory,
@@ -1418,6 +1433,7 @@ export class Pylon {
         result.ema,
         false,
         result.lastPrice,
+        decimals,
         debug
     )
     feeA.fee = JSBI.divide(JSBI.multiply(tokenAmountA.raw, JSBI.multiply(feeA.feeBPS, TWO)), _10000)
@@ -1647,6 +1663,7 @@ export class Pylon {
   public burnFloat(
       pylonInfo: PylonInfo,
       pairInfo: PairInfo,
+      decimals: Decimals,
       totalSupply: TokenAmount,
       floatTotalSupply: TokenAmount,
       poolTokensIn: TokenAmount,
@@ -1676,6 +1693,7 @@ export class Pylon {
     let result = this.initSync(
         pylonInfo,
         pairInfo,
+        decimals,
         ptb,
         totalSupply,
         factory,
@@ -1721,6 +1739,7 @@ export class Pylon {
         result.ema,
         true,
         result.lastPrice,
+        decimals,
         debug
     )
     let amounNofee = amount
@@ -1802,6 +1821,7 @@ export class Pylon {
   public burnAnchor(
       pylonInfo: PylonInfo,
       pairInfo: PairInfo,
+      decimals: Decimals,
       totalSupply: TokenAmount,
       anchorTotalSupply: TokenAmount,
       poolTokensIn: TokenAmount,
@@ -1833,6 +1853,7 @@ export class Pylon {
     let result = this.initSync(
         pylonInfo,
         pairInfo,
+        decimals,
         ptb,
         totalSupply,
         factory,
@@ -1859,6 +1880,7 @@ export class Pylon {
         result.ema,
         true,
         result.lastPrice,
+        decimals,
         debug
     )
 
@@ -1979,6 +2001,7 @@ export class Pylon {
   public burnAsyncAnchor(
       pylonInfo: PylonInfo,
       pairInfo: PairInfo,
+      decimals: Decimals,
       totalSupply: TokenAmount,
       anchorTotalSupply: TokenAmount,
       amountIn: TokenAmount,
@@ -2009,6 +2032,7 @@ export class Pylon {
     let result = this.initSync(
         pylonInfo,
         pairInfo,
+        decimals,
         ptb,
         totalSupply,
         factory,
@@ -2036,6 +2060,7 @@ export class Pylon {
         result.ema,
         false,
         result.lastPrice,
+        decimals,
         debug
     )
     let maxPoolTokens = JSBI.subtract(
@@ -2092,6 +2117,7 @@ export class Pylon {
   public burnAsyncFloat(
       pylonInfo: PylonInfo,
       pairInfo: PairInfo,
+      decimals: Decimals,
       totalSupply: TokenAmount,
       floatTotalSupply: TokenAmount,
       amountIn: TokenAmount,
@@ -2126,6 +2152,7 @@ export class Pylon {
     let result = this.initSync(
         pylonInfo,
         pairInfo,
+        decimals,
         ptb,
         totalSupply,
         factory,
@@ -2153,6 +2180,7 @@ export class Pylon {
         result.ema,
         false,
         result.lastPrice,
+        decimals,
         debug
     )
     //58104264783269400056
@@ -2197,6 +2225,7 @@ export class Pylon {
   public getLiquidityValue(
       pylonInfo: PylonInfo,
       pairInfo: PairInfo,
+      decimals: Decimals,
       totalSupply: TokenAmount,
       ptTotalSupply: TokenAmount,
       liquidity: TokenAmount,
@@ -2215,6 +2244,7 @@ export class Pylon {
     let result = this.initSync(
         pylonInfo,
         pairInfo,
+        decimals,
         ptb,
         totalSupply,
         factory,

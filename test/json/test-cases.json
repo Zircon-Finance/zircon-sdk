@@ -22,14 +22,14 @@
     "strikeBlock": "0",
     "lastFloatAccumulator": "0",
     "blockNumber": "20",
-    "timestamp": "1674578533",
+    "timestamp": "1674644643",
     "lastK": "190125000000000000000000000000000000000",
     "price0CumulativeLast": "31153781151208965771182977975320576",
     "price1CumulativeLast": "7788445287802241442795744493830144",
     "amountOut": "99989902573941081",
     "amountIn": "100000000000000000",
-    "lastOracleTimestamp": "1674578529",
-    "lastBlockTimestamp": "1674578532",
+    "lastOracleTimestamp": "1674644639",
+    "lastBlockTimestamp": "1674644642",
     "lastPrice": "2000000000000000000",
     "skip": false,
     "isSync": true,
@@ -37,7 +37,11 @@
     "p2x": "2000000000000000000",
     "p2y": "9500000000000000000",
     "reservePtEnergy": "0",
-    "reserveAnchorEnergy": "0"
+    "reserveAnchorEnergy": "0",
+    "decimals": {
+      "float": "1000000000000000000",
+      "anchor": "1000000000000000000"
+    }
   },
   {
     "resPair0": "19500000000000000000",
@@ -62,14 +66,14 @@
     "strikeBlock": "0",
     "lastFloatAccumulator": "0",
     "blockNumber": "92",
-    "timestamp": "1674578605",
+    "timestamp": "1674644715",
     "lastK": "190125000000000000000000000000000000000",
     "price0CumulativeLast": "7788445287802241442795744493830144",
     "price1CumulativeLast": "31153781151208965771182977975320576",
     "amountOut": "99990000000000000",
     "amountIn": "100000000000000000",
-    "lastOracleTimestamp": "1674578601",
-    "lastBlockTimestamp": "1674578604",
+    "lastOracleTimestamp": "1674644711",
+    "lastBlockTimestamp": "1674644714",
     "lastPrice": "500000000000000000",
     "skip": false,
     "isSync": true,
@@ -77,7 +81,11 @@
     "p2x": "500000000000000000",
     "p2y": "4750000000000000000",
     "reservePtEnergy": "0",
-    "reserveAnchorEnergy": "0"
+    "reserveAnchorEnergy": "0",
+    "decimals": {
+      "float": "1000000000000000000",
+      "anchor": "1000000000000000000"
+    }
   },
   {
     "resPair0": "9750000000000000000",
@@ -102,14 +110,14 @@
     "strikeBlock": "0",
     "lastFloatAccumulator": "0",
     "blockNumber": "164",
-    "timestamp": "1674578677",
+    "timestamp": "1674644787",
     "lastK": "190125000000000000000000000000000000000",
     "price0CumulativeLast": "31153781151208965771182977975320576",
     "price1CumulativeLast": "7788445287802241442795744493830144",
     "amountOut": "49995000000000000",
     "amountIn": "50000000000000000",
-    "lastOracleTimestamp": "1674578673",
-    "lastBlockTimestamp": "1674578676",
+    "lastOracleTimestamp": "1674644783",
+    "lastBlockTimestamp": "1674644786",
     "lastPrice": "2000000000000000000",
     "skip": false,
     "isSync": true,
@@ -117,7 +125,11 @@
     "p2x": "2000000000000000000",
     "p2y": "9500000000000000000",
     "reservePtEnergy": "0",
-    "reserveAnchorEnergy": "0"
+    "reserveAnchorEnergy": "0",
+    "decimals": {
+      "float": "1000000000000000000",
+      "anchor": "1000000000000000000"
+    }
   },
   {
     "resPair0": "19500000000000000000",
@@ -142,14 +154,14 @@
     "strikeBlock": "0",
     "lastFloatAccumulator": "0",
     "blockNumber": "236",
-    "timestamp": "1674578749",
+    "timestamp": "1674644859",
     "lastK": "380250000000000000000000000000000000000",
     "price0CumulativeLast": "15576890575604482885591488987660288",
     "price1CumulativeLast": "15576890575604482885591488987660288",
     "amountOut": "99989951286946808",
     "amountIn": "100000000000000000",
-    "lastOracleTimestamp": "1674578745",
-    "lastBlockTimestamp": "1674578748",
+    "lastOracleTimestamp": "1674644855",
+    "lastBlockTimestamp": "1674644858",
     "lastPrice": "1000000000000000000",
     "skip": false,
     "isSync": true,
@@ -157,7 +169,11 @@
     "p2x": "1000000000000000000",
     "p2y": "9500000000000000000",
     "reservePtEnergy": "0",
-    "reserveAnchorEnergy": "0"
+    "reserveAnchorEnergy": "0",
+    "decimals": {
+      "float": "1000000000000000000",
+      "anchor": "1000000000000000000"
+    }
   },
   {
     "resPair0": "1950000000000000000000",
@@ -182,14 +198,14 @@
     "strikeBlock": "0",
     "lastFloatAccumulator": "0",
     "blockNumber": "308",
-    "timestamp": "1674578821",
+    "timestamp": "1674644931",
     "lastK": "3802500000000000000000000000000000000000000",
     "price0CumulativeLast": "15576890575604482885591488987660288",
     "price1CumulativeLast": "15576890575604482885591488987660288",
     "amountOut": "9999000000000000000",
     "amountIn": "10000000000000000000",
-    "lastOracleTimestamp": "1674578817",
-    "lastBlockTimestamp": "1674578820",
+    "lastOracleTimestamp": "1674644927",
+    "lastBlockTimestamp": "1674644930",
     "lastPrice": "1000000000000000000",
     "skip": false,
     "isSync": true,
@@ -197,7 +213,11 @@
     "p2x": "1000000000000000000",
     "p2y": "950000000000000000000",
     "reservePtEnergy": "0",
-    "reserveAnchorEnergy": "0"
+    "reserveAnchorEnergy": "0",
+    "decimals": {
+      "float": "1000000000000000000",
+      "anchor": "1000000000000000000"
+    }
   },
   {
     "resPair0": "1615850000000000000000",
@@ -222,14 +242,14 @@
     "strikeBlock": "0",
     "lastFloatAccumulator": "0",
     "blockNumber": "410",
-    "timestamp": "1674578923",
+    "timestamp": "1674645033",
     "lastK": "8140086752500000000000000000000000000000000",
     "price0CumulativeLast": "48563247088649270172726406843882074",
     "price1CumulativeLast": "4996361128024079416133119109249526",
     "amountOut": "16998283010658747960",
     "amountIn": "17000000000000000000",
-    "lastOracleTimestamp": "1674578919",
-    "lastBlockTimestamp": "1674578922",
+    "lastOracleTimestamp": "1674645029",
+    "lastBlockTimestamp": "1674645032",
     "lastPrice": "3117647058823529411",
     "skip": false,
     "isSync": true,
@@ -237,7 +257,11 @@
     "p2x": "3117647058823529411",
     "p2y": "4984650000000000000000",
     "reservePtEnergy": "0",
-    "reserveAnchorEnergy": "0"
+    "reserveAnchorEnergy": "0",
+    "decimals": {
+      "float": "1000000000000000000",
+      "anchor": "1000000000000000000"
+    }
   },
   {
     "resPair0": "1599137523449763287266",
@@ -262,15 +286,15 @@
     "strikeBlock": "0",
     "lastFloatAccumulator": "0",
     "blockNumber": "414",
-    "timestamp": "1674578927",
+    "timestamp": "1674645037",
     "lastK": "8182534675015433325621338794908029733528240",
     "price0CumulativeLast": "113314175134958933766002506609661924",
     "price1CumulativeLast": "11658182968884495339149659489112898",
     "amountOut": "8254038728723794565",
     "amountOut2": "26411897587315646546",
     "amountIn": "16998283010658747960",
-    "lastOracleTimestamp": "1674578919",
-    "lastBlockTimestamp": "1674578926",
+    "lastOracleTimestamp": "1674645029",
+    "lastBlockTimestamp": "1674645036",
     "lastPrice": "3117647058823529411",
     "skip": false,
     "isSync": false,
@@ -278,6 +302,10 @@
     "p2x": "3117640503739024621",
     "p2y": "4997757289087875180113",
     "reservePtEnergy": "297008320525",
-    "reserveAnchorEnergy": "4233635552566965"
+    "reserveAnchorEnergy": "4233635552566965",
+    "decimals": {
+      "float": "1000000000000000000",
+      "anchor": "1000000000000000000"
+    }
   }
 ]
