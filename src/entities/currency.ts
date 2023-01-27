@@ -22,7 +22,8 @@ export class Currency {
     [ChainId.MOONBASE]: new Currency(18, 'DEV', 'DEV Token'),
     [ChainId.MOONROCK]: new Currency(18, 'DEV', 'DEV Token'),
     [ChainId.MOONSHADOW]: new Currency(18, 'DEV', 'DEV Token'),
-    [ChainId.BSC]: new Currency(18, 'BNB', 'BNB Token')
+    [ChainId.BSC]: new Currency(18, 'BNB', 'BNB Token'),
+    [ChainId.BSCT]: new Currency(18, 'BNB', 'BNB Token')
   }
 
   /**
