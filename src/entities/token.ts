@@ -1,5 +1,12 @@
 import invariant from 'tiny-invariant'
-import {BSC_ADDRESSES, BSCT_ADDRESSES, ChainId, MOONBASE_ADDRESSES, MOONRIVER_ADDRESSES} from '../constants'
+import {
+  ARBGOERLY_ADDRESSES,
+  BSC_ADDRESSES,
+  BSCT_ADDRESSES,
+  ChainId,
+  MOONBASE_ADDRESSES,
+  MOONRIVER_ADDRESSES
+} from '../constants'
 import { validateAndParseAddress } from '../utils'
 import { Currency } from './currency'
 
@@ -76,5 +83,6 @@ export const WDEV = {
   [ChainId.MOONBASE]: new Token(ChainId.MOONBASE, MOONBASE_ADDRESSES.WETH, 18, 'WDEV', 'Wrapped Dev'),
   [ChainId.MOONSHADOW]: new Token(ChainId.MOONSHADOW, MOONBASE_ADDRESSES.WETH, 18, 'WDEV', 'Wrapped Dev'),
   [ChainId.BSC]: new Token(ChainId.BSC, BSC_ADDRESSES.WETH, 18, 'WBNB', 'Wrapped BNB'),
-  [ChainId.BSCT]: new Token(ChainId.BSCT, BSCT_ADDRESSES.WETH, 18, 'WBNB', 'Wrapped BNB')
+  [ChainId.BSCT]: new Token(ChainId.BSCT, BSCT_ADDRESSES.WETH, 18, 'WBNB', 'Wrapped BNB'),
+  [ChainId.ARBGOERLY]: new Token(ChainId.BSCT, ARBGOERLY_ADDRESSES.WETH, 18, 'WETH', 'Wrapped ETH')
 }
