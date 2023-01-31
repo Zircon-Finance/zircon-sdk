@@ -14,11 +14,12 @@ export interface BurnParams extends Params {
   omegaSlashingPercentage: JSBI
   slippage: JSBI
   reservesPTU: JSBI
+  amountWithSlippage: JSBI
 }
 
 export interface MintSyncParams extends Params {
   amountsToInvest: { sync: JSBI; async: JSBI }
-  extraSlippagePercentage: JSBI
+  slippage: JSBI
   feePercentage: JSBI
   isDerivedVFB: boolean
 }
@@ -67,4 +68,5 @@ export interface SyncAsyncParams {
   trueAmountOut: JSBI
   amounts: { sync: JSBI; async: JSBI }
   syncMinting?: { newReserve0: JSBI; newReserve1: JSBI; liquidity: JSBI; px: JSBI; py: JSBI }
+  slippage: JSBI
 }

@@ -1,5 +1,7 @@
 import tests from './json/test-cases.json';
 export interface TestInput {
+  testCase: number
+  isFloatRes0: boolean
   resPair0:  string
   resPair1:  string
   resPylon0:  string
@@ -15,7 +17,6 @@ export interface TestInput {
   gEMA:  string
   fs: boolean
   isAnchor: boolean
-  isBlocked: boolean
   lrkt:  string
   thisBlockEMA:  string
   EMABlockNumber:  string
@@ -41,6 +42,7 @@ export interface TestInput {
   lastPrice:  string
   p2x:  string,
   p2y:  string,
+  isBlocked: boolean,
   decimals: {
     anchor: string,
     float: string

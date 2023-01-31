@@ -5,25 +5,33 @@ import {Decimals, PylonInfo} from "interfaces/pylonInterface";
 import {Pylon} from "../entities";
 interface Coefficients {a: JSBI; b: JSBI; isANegative: boolean, isBNegative: boolean}
 export abstract class Library {
-  public static getFTVForX(x: JSBI, p2x: JSBI, p2y: JSBI, reserve0: JSBI, reserve1: JSBI, adjVAB: JSBI, decimals: Decimals): { ftv: JSBI, reduceOnly: boolean, isLineFormula: boolean } {
+  public static getFTVForX(x: JSBI, p2x: JSBI, p2y: JSBI, reserve0: JSBI, reserve1: JSBI, adjVAB: JSBI, decimals: Decimals, debug: boolean): { ftv: JSBI, reduceOnly: boolean, isLineFormula: boolean } {
+    Pylon.logger(debug, "GET FTV FOR X")
     let ftv = ZERO
 
     let p3x = JSBI.divide(JSBI.exponentiate(adjVAB, TWO), reserve1)
     p3x = JSBI.divide(JSBI.multiply(p3x, parseBigintIsh(decimals.float)), reserve0)
 
     if (JSBI.greaterThanOrEqual(x, p3x)) {
+      Pylon.logger(debug, "x >= p3x", x.toString(), p3x.toString())
+
       ftv = JSBI.subtract(JSBI.multiply(TWO, sqrt(JSBI.multiply(JSBI.divide(JSBI.multiply(reserve0, reserve1), parseBigintIsh(decimals.float)), x))), adjVAB)
+      Pylon.logger(debug, "FTV", ftv.toString())
+
       return {ftv, isLineFormula: false, reduceOnly: false}
     } else {
-      let coefficients = this.calculateParabolaCoefficients(p2x, p2y, p3x, adjVAB, decimals, false)
-      console.log("coeff", coefficients.a.toString(), coefficients.b.toString(), coefficients.isANegative, coefficients.isBNegative);
+      Pylon.logger(debug, "x < p3x", x.toString(), p3x.toString())
+      let coefficients = this.calculateParabolaCoefficients(p2x, p2y, p3x, adjVAB, decimals, false, debug)
+      Pylon.logger(debug, coefficients.a.toString(), coefficients.b.toString(), coefficients.isANegative, coefficients.isBNegative);
       if (coefficients.isBNegative && JSBI.lessThanOrEqual(x, p2x)){
         ftv = JSBI.divide(
             JSBI.multiply(x, p2y),
             p2x)
+        Pylon.logger(debug, "FTV", ftv.toString())
         return {ftv, isLineFormula: true, reduceOnly: false}
       }
       ftv = this.getFTV(coefficients, x, decimals)
+      Pylon.logger(debug, "FTV", ftv.toString())
       if (
           !coefficients.isANegative ||
           JSBI.greaterThan(coefficients.b, JSBI.divide(JSBI.multiply(TWO, JSBI.multiply(coefficients.a, p3x)), parseBigintIsh(decimals.anchor)))
@@ -72,9 +80,11 @@ export abstract class Library {
       p3x: JSBI,
       p3y: JSBI,
       decimals: Decimals,
-      check: boolean
+      check: boolean,
+      debug: boolean
   ): Coefficients {
-    console.log('P2 (', p2x.toString(), ',', p2y.toString(), ')' + ' P3 (', p3x.toString(), ',', p3y.toString(), ')')
+    Pylon.logger(debug, "CALCULATE COEFFICIENTS:")
+    Pylon.logger(debug, "P2 (", p2x.toString(), ',', p2y.toString(), ')' + ' P3 (', p3x.toString(), ',', p3y.toString(), ')')
     let _1001P = JSBI.multiply(_1001, JSBI.divide(parseBigintIsh(decimals.anchor), _1E3))
     if(JSBI.lessThanOrEqual(JSBI.divide(JSBI.multiply(p3x, parseBigintIsh(decimals.anchor)), p2x), _1001P)) {
       return { a: ZERO, b: JSBI.divide(JSBI.multiply(p3y, parseBigintIsh(decimals.anchor)), p3x), isANegative: false, isBNegative: false }
@@ -148,14 +158,10 @@ export abstract class Library {
       p2x: JSBI,
       p2y: JSBI,
       decimals: Decimals,
-      debug: boolean = false
+      debug: boolean
   ): { gamma: JSBI; ftv: JSBI, isLineFormula: boolean, reduceOnly: boolean } {
     Pylon.logger(debug, 'CALCULATE GAMMA')
-    // let tpva = JSBI.multiply(resTR1, TWO)
-
-    // let p3x = JSBI.divide(JSBI.exponentiate(adjVAB, TWO), resTR0)
-    // p3x = JSBI.divide(JSBI.multiply(p3x, BASE), resTR1)
-    // Pylon.logger(debug, 'P2 (', p2x.toString(), ',', p2y.toString(), ')' + ' P3 (', p3x.toString(), ',', adjVAB.toString(), ')')
+    Pylon.logger(debug, "Reserves TR: S:", resTR1.toString(), "F:", resTR0.toString())
     let x = JSBI.divide(JSBI.multiply(resTR1, parseBigintIsh(decimals.float)), resTR0)
     Pylon.logger(debug, 'x::', x.toString())
     let ftvObject = this.getFTVForX(
@@ -165,7 +171,8 @@ export abstract class Library {
         resTR0,
         resTR1,
         adjVAB,
-        decimals
+        decimals,
+        debug
     )
     let gamma = JSBI.divide(
         JSBI.multiply(ftvObject.ftv, BASE),
@@ -242,10 +249,13 @@ export abstract class Library {
     }
   }
 
-  public static derivativeCheck(p2x: JSBI, p2y: JSBI, res0: JSBI, res1: JSBI, adjVAB: JSBI, decimals: Decimals) : boolean {
+  public static derivativeCheck(p2x: JSBI, p2y: JSBI, res0: JSBI, res1: JSBI, adjVAB: JSBI, decimals: Decimals, debug: boolean) : boolean {
+    Pylon.logger(debug, "DERIVATIVE CHECK:")
     let p3x = JSBI.divide(JSBI.exponentiate(adjVAB, TWO), res1)
+    Pylon.logger(debug, "Reserves: Stable:", res1.toString(), "Float:", res0.toString())
     p3x = JSBI.divide(JSBI.multiply(p3x, parseBigintIsh(decimals.float)), res0)
-    let coefficients = Library.calculateParabolaCoefficients(p2x, p2y, p3x, adjVAB, decimals, true)
+    Pylon.logger(debug, "P3 X:", p3x.toString(), "Y:", adjVAB.toString())
+    let coefficients = Library.calculateParabolaCoefficients(p2x, p2y, p3x, adjVAB, decimals, true, debug)
 
     if (JSBI.equal(coefficients.a, _42E45)) {
       return true
