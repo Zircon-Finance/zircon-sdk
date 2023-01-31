@@ -423,6 +423,82 @@ export class Pylon {
     }
   }
 
+  //Gets the delta of the current float position as JSBI percentage
+  //Delta is how closely the portfolio tracks the changes in the underlying price. E.g. delta of 100% = you own 1 ETH
+  //Delta > 100% == leverage/impermanent gain
+  //Delta < 100% == dilution/impermanent loss
+  public getDelta(
+      pylonInfo: PylonInfo,
+      pairInfo: PairInfo,
+      decimals: Decimals,
+      totalSupply: TokenAmount,
+      ptb: TokenAmount,
+      blockNumber: BigintIsh,
+      factory: PylonFactory,
+      blockTimestamp: BigintIsh,
+      debug: boolean = false
+  ): JSBI {
+    // Pylon.logger(debug, "DELTA: Decimals F:", decimals.float.toString(), " A:",decimals.anchor.toString())
+
+    if (JSBI.equal(parseBigintIsh(pylonInfo.lastRootKTranslated), ZERO)) {
+      return ZERO
+    }
+
+    let result = this.initSync(
+        pylonInfo,
+        pairInfo,
+        decimals,
+        ptb,
+        totalSupply,
+        factory,
+        parseBigintIsh(blockTimestamp),
+        parseBigintIsh(blockNumber),
+        debug
+    )
+
+    let resTR = this.getPairReservesTranslated(result.ptb, result.totalSupply)
+
+    //2 * gamma * res1/1e18
+    let ftv = JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, result.gamma), resTR[1]), BASE)
+
+    let price = JSBI.divide(JSBI.multiply(resTR[1], parseBigintIsh(decimals.float)), resTR[0])
+
+    let idealDelta = JSBI.divide(JSBI.multiply(ftv, parseBigintIsh(decimals.float)), price)
+
+    //Now we find the delta of the pylon, which is simply the derivative of the function defining ftv
+
+    let adjVAB = JSBI.subtract(result.vab, this.reserve1.raw)
+
+    let p3x = JSBI.divide(JSBI.exponentiate(adjVAB, TWO), resTR[1])
+    p3x = JSBI.divide(JSBI.multiply(p3x, parseBigintIsh(decimals.float)), resTR[0])
+
+    if(JSBI.greaterThan(price, p3x)) {
+      //derivative of 2*sqrt(kx) = k/sqrt(kx)
+
+      let k = JSBI.multiply(resTR[0], resTR[1])
+      //Divide by float decimals so that the end result is in float
+      let kx = JSBI.divide(JSBI.multiply(k, price), parseBigintIsh(decimals.float))
+
+      let realDelta = JSBI.divide(k, kx)
+
+      return JSBI.divide(JSBI.multiply(realDelta, BASE), idealDelta)
+
+
+    } else {
+
+      //derivative of the parabola, 2ax + b
+      //terms are all in anchor units -> need to convert them to float
+      let coefficients = Library.calculateParabolaCoefficients(result.p2x, result.p2y, p3x, adjVAB, decimals, false, debug)
+
+      let firstTerm = JSBI.divide(JSBI.multiply(coefficients.a, price), parseBigintIsh(decimals.anchor))
+
+      let derivative = JSBI.add(firstTerm, coefficients.b)
+      let derivativeFloat = JSBI.divide(JSBI.multiply(derivative, parseBigintIsh(decimals.float)), parseBigintIsh(decimals.anchor))
+
+      return JSBI.divide(JSBI.multiply(idealDelta, BASE), derivativeFloat)
+
+    }
+  }
 
   // private updateMU(blockNumber: JSBI, muBlockNumber: JSBI, factory: PylonFactory, gamma: JSBI, muOldGamma: JSBI, muMulDecimals: JSBI): JSBI {
   //     const _newBlockHeight = blockNumber;
