@@ -321,7 +321,7 @@ export const BASE = JSBI.exponentiate(TEN, EIGHTEEN)
 export const _1001 = JSBI.BigInt(1001)
 export const DOUBLE_BASE = JSBI.exponentiate(TEN, THIRTYSIX)
 export const _97 = JSBI.BigInt(97)
-export const _97P = JSBI.exponentiate(_97, SIXTEEN)
+export const _97P = JSBI.multiply(_97, JSBI.exponentiate(TEN, SIXTEEN))
 export const _1E3 = JSBI.exponentiate(TEN, THREE)
 export const _100 = JSBI.BigInt(100)
 export const _112 = JSBI.BigInt(112)
@@ -330,7 +330,7 @@ export const _200 = JSBI.BigInt(200)
 export const _997 = JSBI.BigInt(997)
 export const _1000 = JSBI.BigInt(1000)
 export const _10000 = JSBI.BigInt(10000)
-export const _42E45 = JSBI.exponentiate(UNIVERSE, FORTYFIVE)
+export const _42E45 = JSBI.multiply(UNIVERSE, JSBI.exponentiate(TEN, FORTYFIVE))
 
 export enum SolidityType {
   uint8 = 'uint8',

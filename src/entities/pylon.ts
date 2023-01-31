@@ -1035,6 +1035,7 @@ export class Pylon {
     return { omega: omegaSlashing, newAmount: JSBI.divide(JSBI.multiply(amount, omegaSlashing), BASE) }
   }
 
+
   public slashedTokens(
       energyPTBalance: JSBI,
       amountPTU: JSBI,
@@ -1044,11 +1045,17 @@ export class Pylon {
   ): { ptuToAdd: JSBI; slashAmount: JSBI } {
     if (JSBI.lessThan(omegaSlashing, BASE)) {
       let amountToAdd = JSBI.divide(JSBI.multiply(JSBI.subtract(BASE, omegaSlashing), amountPTU), BASE)
+
       if (JSBI.lessThan(amountToAdd, energyPTBalance)) {
         return { ptuToAdd: amountToAdd, slashAmount: ZERO }
       } else {
-        let slashAmount = JSBI.divide(JSBI.multiply(JSBI.subtract(amountToAdd, energyPTBalance),
+        let slashAmount = JSBI.divide(
+            JSBI.multiply(
+                JSBI.subtract(
+                    amountToAdd,
+                    energyPTBalance),
             JSBI.multiply(TWO, this.getPairReserves()[1].raw)), ts)
+
         slashAmount = JSBI.greaterThan(slashAmount, reserveAnchor) ? reserveAnchor : slashAmount
         return { ptuToAdd: energyPTBalance, slashAmount: slashAmount }
       }
@@ -2063,17 +2070,24 @@ export class Pylon {
 
 
 
-      Pylon.logger(debug, "Percentage Float Change:", percentageFloatChange.toString())
+      Pylon.logger(debug, "Percentage Float Change:", _97P.toString())
+
       if (JSBI.lessThan(percentageFloatChange, _97P)) {
         liquidity = JSBI.divide(JSBI.multiply(liquidity, percentageFloatChange), BASE)
       }
-      //JSBI.add(, slash.ptuToAdd)
-
-      let amount0 = JSBI.divide(JSBI.multiply(liquidity, this.getPairReserves()[0].raw), result.totalSupply)
-      let amount1 = JSBI.divide(JSBI.multiply(liquidity, this.getPairReserves()[1].raw), result.totalSupply)
+      let liqAndOmega = JSBI.add(liquidity, slash.ptuToAdd)
+      // 58617478640455333679
+      // 58617478640455333679
+      // 57365438136067998075
+      console.log("ptu to add", liqAndOmega.toString())
+      let amount0 = JSBI.divide(JSBI.multiply(liqAndOmega, this.getPairReserves()[0].raw), result.totalSupply)
+      let amount1 = JSBI.divide(JSBI.multiply(liqAndOmega, this.getPairReserves()[1].raw), result.totalSupply)
       console.log("a0, a1", amount0.toString(), amount1.toString())
-      // amount 40655262025814511065 84557149905607212276
-      // totalSupply 2774370485779025316953
+      console.log("ts", result.totalSupply.toString())
+
+      // 40655262025814511065 84557149905607212276
+      // 39786885409428395349 82751050324213266829
+      // 39786885631036083405 82751050785125669444
       let newPair = this.pair
       if (
           JSBI.lessThan(amount0, this.getPairReserves()[0].raw) &&
