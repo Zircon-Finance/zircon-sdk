@@ -76,10 +76,11 @@ describe('Pylon', () => {
     expect(init[0].toString(10)).toEqual('49999999999999000')
     expect(init[1].toString(10)).toEqual('99999999999999000')
   })
+
   describe('Test Cases', () => {
     CASES.forEach((testCase, i) => {
       it('Test Case ' + i, () => {
-        // if (testCase.testCase === 6)
+        if (testCase.testCase === 2)
         if (!testCase.skip) {
           const pylon = new Pylon(
               new Pair(

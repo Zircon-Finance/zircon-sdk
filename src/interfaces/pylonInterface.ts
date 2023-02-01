@@ -67,6 +67,6 @@ export interface SyncAsyncParams {
   amountPool: JSBI
   trueAmountOut: JSBI
   amounts: { sync: JSBI; async: JSBI }
-  syncMinting?: { newReserve0: JSBI; newReserve1: JSBI; liquidity: JSBI; px: JSBI; py: JSBI }
+  syncMinting?: { newReserve0: JSBI; newReserve1: JSBI; liquidity: JSBI; px: JSBI; py: JSBI, update: boolean }
   slippage: JSBI
 }

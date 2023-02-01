@@ -22,7 +22,7 @@ export abstract class Library {
     } else {
       Pylon.logger(debug, "x < p3x", x.toString(), p3x.toString())
       let coefficients = this.calculateParabolaCoefficients(p2x, p2y, p3x, adjVAB, decimals, false, debug)
-      Pylon.logger(debug, coefficients.a.toString(), coefficients.b.toString(), coefficients.isANegative, coefficients.isBNegative);
+      Pylon.logger(debug, "a:: b:: aNeg:: bNeg::", coefficients.a.toString(), coefficients.b.toString(), coefficients.isANegative, coefficients.isBNegative);
       if (coefficients.isBNegative && JSBI.lessThanOrEqual(x, p2x)){
         ftv = JSBI.divide(
             JSBI.multiply(x, p2y),
@@ -100,7 +100,6 @@ export abstract class Library {
 
     let a = ZERO
     let b = ZERO
-    let isANegative = false
 
     let aPartial1 = JSBI.multiply(p3y, p2x)
     let aPartial2 = JSBI.multiply(p2y, p3x)
@@ -113,22 +112,21 @@ export abstract class Library {
           JSBI.greaterThanOrEqual(JSBI.divide(JSBI.multiply(parseBigintIsh(decimals.anchor), p2y), p2x), JSBI.divide(JSBI.multiply(a, p2x), parseBigintIsh(decimals.anchor)))
       ) {
         b = JSBI.subtract(JSBI.divide(JSBI.multiply(parseBigintIsh(decimals.anchor), p2y), p2x), JSBI.divide(JSBI.multiply(a, p2x), parseBigintIsh(decimals.anchor)))
-        return {a, b, isANegative: false, isBNegative: true}
+        return {a, b, isANegative: false, isBNegative: false}
       }else{
         b = JSBI.subtract(
             JSBI.divide(JSBI.multiply(a, p2x), parseBigintIsh(decimals.anchor)),
             JSBI.divide(JSBI.multiply(parseBigintIsh(decimals.anchor), p2y), p2x)
         )
+        return {a, b, isANegative: false, isBNegative: true}
       }
-      isANegative = false
+
     } else {
       let aNumerator = JSBI.divide(JSBI.subtract(aPartial2, aPartial1), p2x)
       a = JSBI.divide(JSBI.multiply(aNumerator, parseBigintIsh(decimals.anchor)), aDenominator)
       b = JSBI.add(JSBI.divide(JSBI.multiply(parseBigintIsh(decimals.anchor), p2y), p2x), JSBI.divide(JSBI.multiply(a, p2x), parseBigintIsh(decimals.anchor)))
-      isANegative = true
+      return { a, b, isANegative: true, isBNegative: false }
     }
-
-    return { a, b, isANegative, isBNegative: false }
   }
 
 
@@ -178,27 +176,7 @@ export abstract class Library {
         JSBI.multiply(ftvObject.ftv, BASE),
         JSBI.multiply(resTR1, TWO))
     Pylon.logger(debug, "ftv:: ", ftvObject.ftv.toString(), resTR1.toString())
-
-    // TODO: linear when b neg
-    // if (JSBI.greaterThanOrEqual(x, p3x)) {
-    //   Pylon.logger(debug, 'x over p3x')
-    //   gamma = JSBI.subtract(BASE, JSBI.divide(JSBI.multiply(adjVAB, BASE), tpva))
-    //   formulaSwitch = false
-    // } else {
-    //   let coefficients = Library.calculateParabolaCoefficients(p2x, p2y, p3x, adjVAB, false)
-    //   Pylon.logger(debug, 'a', coefficients.a.toString(), 'b', coefficients.b.toString())
-    //   if (
-    //       !coefficients.isANegative ||
-    //       JSBI.greaterThan(coefficients.b, JSBI.divide(JSBI.multiply(TWO, JSBI.multiply(coefficients.a, p3x)), BASE))
-    //   ) {
-    //     let ftv = this.getFTV(coefficients, x)
-    //     Pylon.logger(debug, 'x under p3x =>', 'ftv: ', ftv.toString())
-    //     gamma = JSBI.divide(JSBI.multiply(ftv, BASE), tpva)
-    //     formulaSwitch = true
-    //   } else {
-    //     throw new Error('Float Error')
-    //   }
-    // }
+    Pylon.logger(debug, "new gamma", gamma.toString())
     return { ...ftvObject, gamma }
 
   }
