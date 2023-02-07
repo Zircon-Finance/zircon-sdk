@@ -534,7 +534,13 @@ export class Pylon {
       let realDelta = JSBI.divide(k, kx)
       Pylon.logger(debug, "realDelta: ", realDelta.toString())
 
-      return JSBI.divide(JSBI.multiply(realDelta, BASE), idealDelta)
+      return JSBI.multiply(
+          JSBI.divide(
+              JSBI.multiply(
+                  realDelta,
+                  BASE),
+              idealDelta),
+          _100)
 
 
     } else {
@@ -551,8 +557,13 @@ export class Pylon {
       let derivativeFloat = JSBI.divide(JSBI.multiply(derivative, parseBigintIsh(decimals.float)), parseBigintIsh(decimals.anchor))
       Pylon.logger(debug, "derivativeFloat: ", derivativeFloat.toString())
 
-      return JSBI.divide(JSBI.multiply(idealDelta, BASE), derivativeFloat)
-
+      return JSBI.multiply(
+          JSBI.divide(
+              JSBI.multiply(
+                  idealDelta,
+                  BASE),
+              derivativeFloat),
+          _100)
     }
   }
 
