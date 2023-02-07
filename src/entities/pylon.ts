@@ -533,6 +533,7 @@ export class Pylon {
 
       let realDelta = JSBI.divide(k, kx)
       Pylon.logger(debug, "realDelta: ", realDelta.toString())
+      Pylon.logger(debug, "idealDelta: ", idealDelta.toString())
 
       return JSBI.multiply(
           JSBI.divide(
