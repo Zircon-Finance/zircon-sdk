@@ -528,7 +528,8 @@ export class Pylon {
 
       let k = JSBI.multiply(resTR[0], resTR[1])
       //Divide by float decimals so that the end result is in float
-      let kx = JSBI.multiply(JSBI.divide(k, parseBigintIsh(decimals.float)), price)
+
+      let kx = sqrt(JSBI.multiply(JSBI.divide(k, parseBigintIsh(decimals.float)), price))
 
       let realDelta = JSBI.divide(k, kx)
       Pylon.logger(debug, "realDelta: ", realDelta.toString())
@@ -544,6 +545,7 @@ export class Pylon {
       let coefficients = Library.calculateParabolaCoefficients(result.p2x, result.p2y, p3x, adjVAB, decimals, false, debug)
 
       let firstTerm = JSBI.divide(JSBI.multiply(coefficients.a, price), parseBigintIsh(decimals.anchor))
+      firstTerm = JSBI.multiply(TWO, firstTerm)
 
       let derivative = JSBI.add(firstTerm, coefficients.b)
       let derivativeFloat = JSBI.divide(JSBI.multiply(derivative, parseBigintIsh(decimals.float)), parseBigintIsh(decimals.anchor))
