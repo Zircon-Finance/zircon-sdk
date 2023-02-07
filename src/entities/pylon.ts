@@ -473,10 +473,10 @@ export class Pylon {
     }
   }
 
-  //Gets the delta of the current float position as JSBI percentage
-  //Delta is how closely the portfolio tracks the changes in the underlying price. E.g. delta of 100% = you own 1 ETH
-  //Delta > 100% == leverage/impermanent gain
-  //Delta < 100% == dilution/impermanent loss
+  // Gets the delta of the current float position as JSBI percentage
+  // Delta is how closely the portfolio tracks the changes in the underlying price. E.g. delta of 100% = you own 1 ETH
+  // Delta > 100% == leverage/impermanent gain
+  // Delta < 100% == dilution/impermanent loss
   public getDelta(
       pylonInfo: PylonInfo,
       pairInfo: PairInfo,
@@ -488,7 +488,7 @@ export class Pylon {
       blockTimestamp: BigintIsh,
       debug: boolean = false
   ): JSBI {
-    // Pylon.logger(debug, "DELTA: Decimals F:", decimals.float.toString(), " A:",decimals.anchor.toString())
+    Pylon.logger(debug, "DELTA")
 
     if (JSBI.equal(parseBigintIsh(pylonInfo.lastRootKTranslated), ZERO)) {
       return ZERO
@@ -523,18 +523,21 @@ export class Pylon {
     p3x = JSBI.divide(JSBI.multiply(p3x, parseBigintIsh(decimals.float)), resTR[0])
 
     if(JSBI.greaterThan(price, p3x)) {
+      Pylon.logger(debug, "price > p3x")
       //derivative of 2*sqrt(kx) = k/sqrt(kx)
 
       let k = JSBI.multiply(resTR[0], resTR[1])
       //Divide by float decimals so that the end result is in float
-      let kx = JSBI.divide(JSBI.multiply(k, price), parseBigintIsh(decimals.float))
+      let kx = JSBI.multiply(JSBI.divide(k, parseBigintIsh(decimals.float)), price)
 
       let realDelta = JSBI.divide(k, kx)
+      Pylon.logger(debug, "realDelta: ", realDelta.toString())
 
       return JSBI.divide(JSBI.multiply(realDelta, BASE), idealDelta)
 
 
     } else {
+      Pylon.logger(debug, "price < p3x")
 
       //derivative of the parabola, 2ax + b
       //terms are all in anchor units -> need to convert them to float
@@ -544,6 +547,7 @@ export class Pylon {
 
       let derivative = JSBI.add(firstTerm, coefficients.b)
       let derivativeFloat = JSBI.divide(JSBI.multiply(derivative, parseBigintIsh(decimals.float)), parseBigintIsh(decimals.anchor))
+      Pylon.logger(debug, "derivativeFloat: ", derivativeFloat.toString())
 
       return JSBI.divide(JSBI.multiply(idealDelta, BASE), derivativeFloat)
 
