@@ -26,7 +26,7 @@ import {
   _200,
   MIGRATION_PYLONS,
   PT_BYTECODE,
-  _112, _56, _97P, TEN
+  _112, _56, _97P, TEN, _28, _84
 } from '../constants'
 import { sqrt, parseBigintIsh } from '../utils'
 import { InsufficientReservesError, InsufficientInputAmountError } from '../errors'
@@ -407,7 +407,7 @@ export class Pylon {
     Pylon.logger(debug, "Health Factor: ptbInAnchor=", ptbInAnchor.toString())
     Pylon.logger(debug, "PTB: anchorOnTPV=", anchorOnTPV.toString())
 
-    if (JSBI.greaterThanOrEqual(omega, BASE) && !result.isLineFormula) {
+    if (JSBI.greaterThanOrEqual(omega, BASE)) {
       return 'high'
     } else if (
         JSBI.greaterThanOrEqual(omega, JSBI.subtract(BASE, JSBI.BigInt(4000000000000000))) ||
@@ -698,9 +698,12 @@ export class Pylon {
 
         let resPair1 = JSBI.leftShift(resTR1, _112)
 
+        let addingFloatAcc = JSBI.multiply(JSBI.divide(resPair1, resTR0), timeElapsed)
+        Pylon.logger(debug, "addingFloatAcc", addingFloatAcc.toString())
+
         currentFloatAccumulator = JSBI.add(
             currentFloatAccumulator,
-            JSBI.multiply(JSBI.divide(resPair1, resTR0), timeElapsed)
+            addingFloatAcc
         )
       }
 
@@ -708,11 +711,16 @@ export class Pylon {
         Pylon.logger(debug, "lastFloatAccumulator:", pylonInfo.lastFloatAccumulator.toString())
         Pylon.logger(debug, "currentFloatAccumulator:", currentFloatAccumulator.toString())
         avgPrice = JSBI.signedRightShift(
-            JSBI.divide(JSBI.subtract(currentFloatAccumulator, parseBigintIsh(pylonInfo.lastFloatAccumulator)),
-                JSBI.subtract(blockTimestamp, parseBigintIsh(pylonInfo.lastOracleTimestamp))),
-            _56)
+            JSBI.divide(
+                JSBI.subtract(
+                    currentFloatAccumulator,
+                    parseBigintIsh(pylonInfo.lastFloatAccumulator)),
+                JSBI.subtract(
+                    blockTimestamp,
+                    parseBigintIsh(pylonInfo.lastOracleTimestamp))),
+            _28)
         Pylon.logger(debug,"AVG PRICE:: only _56 shifted", avgPrice.toString())
-        avgPrice = JSBI.signedRightShift(JSBI.multiply(avgPrice, parseBigintIsh(decimals.float)), _56)
+        avgPrice = JSBI.signedRightShift(JSBI.multiply(avgPrice, parseBigintIsh(decimals.float)), _84)
         Pylon.logger(debug, "current float accumulator > last float accumulator")
         Pylon.logger(debug, "avg price: ", avgPrice.toString())
       }
@@ -786,7 +794,12 @@ export class Pylon {
 
   private changePairReserveOnFloatSwap(fee: JSBI) {
     if (JSBI.greaterThan(fee, ZERO)) {
-      let outputAmount = this.pair.getOutputAmount(new TokenAmount(this.token0, fee))
+      let outputAmount;
+      try{
+        outputAmount = this.pair.getOutputAmount(new TokenAmount(this.token0, fee))
+      }catch (e) {
+        return
+      }
       // console.log("SDK:: fee", fee.toString(), outputAmount.toString());
 
       let reserves = this.getPairReserves()
@@ -1505,12 +1518,10 @@ export class Pylon {
 
     // Changing total supply and pair reserves because when paying float fees we are doing a swap
     if (!isAnchor) this.changePairReserveOnFloatSwap(fee.fee)
-    let feePercentage = JSBI.multiply(
-        JSBI.divide(
+    let feePercentage = JSBI.divide(
             JSBI.multiply(
-                fee.fee,
+                fee.feeBPS,
                 BASE),
-            fee.newAmount),
         _100) // This is the percentage to show in the UI
 
     // Calculating Derived VFB
@@ -1653,12 +1664,7 @@ export class Pylon {
 
 
     // Changing total supply and pair reserves because when paying float fees we are doing a swap
-    let feePercentage = JSBI.multiply(
-        JSBI.divide(
-            JSBI.multiply(
-                feeA.fee,
-                BASE),
-            feeA.newAmount), _100) // This is the percentage to show in the UI
+    let feePercentage = JSBI.divide(JSBI.multiply(feeA.feeBPS, BASE), _100) // This is the percentage to show in the UI
 
     // Calculating Derived VFB
     let [pairReserveTranslated0, pairReserveTranslated1] = this.getPairReservesTranslated(result.ptb, result.totalSupply)

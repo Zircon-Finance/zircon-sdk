@@ -1,5 +1,5 @@
 import JSBI from 'jsbi'
-import {_1001, _1E3, _42E45, BASE, DOUBLE_BASE, ONE, TEN, TWO, ZERO} from '../constants'
+import {_1001, _1E3, _42E45, _EFIVE, BASE, DOUBLE_BASE, ONE, TEN, TWO, ZERO} from '../constants'
 import {parseBigintIsh, sqrt} from '../utils'
 import {Decimals, PylonInfo} from "interfaces/pylonInterface";
 import {Pylon} from "../entities";
@@ -103,10 +103,10 @@ export abstract class Library {
 
     let aPartial1 = JSBI.multiply(p3y, p2x)
     let aPartial2 = JSBI.multiply(p2y, p3x)
-    let aDenominator = JSBI.divide(JSBI.multiply(JSBI.subtract(p3x, p2x), p3x), parseBigintIsh(decimals.anchor))
+    let aDenominator = JSBI.divide(JSBI.multiply(JSBI.multiply(JSBI.subtract(p3x, p2x), p3x), _EFIVE ), parseBigintIsh(decimals.anchor))
 
     if (JSBI.greaterThanOrEqual(aPartial1, aPartial2)) {
-      let aNumerator = JSBI.divide(JSBI.subtract(aPartial1, aPartial2), p2x)
+      let aNumerator = JSBI.multiply(JSBI.divide(JSBI.subtract(aPartial1, aPartial2), p2x), _EFIVE)
       a = JSBI.divide(JSBI.multiply(aNumerator, parseBigintIsh(decimals.anchor)), aDenominator)
       if (
           JSBI.greaterThanOrEqual(JSBI.divide(JSBI.multiply(parseBigintIsh(decimals.anchor), p2y), p2x), JSBI.divide(JSBI.multiply(a, p2x), parseBigintIsh(decimals.anchor)))
@@ -122,7 +122,7 @@ export abstract class Library {
       }
 
     } else {
-      let aNumerator = JSBI.divide(JSBI.subtract(aPartial2, aPartial1), p2x)
+      let aNumerator = JSBI.multiply(JSBI.divide(JSBI.subtract(aPartial2, aPartial1), p2x), _EFIVE)
       a = JSBI.divide(JSBI.multiply(aNumerator, parseBigintIsh(decimals.anchor)), aDenominator)
       b = JSBI.add(JSBI.divide(JSBI.multiply(parseBigintIsh(decimals.anchor), p2y), p2x), JSBI.divide(JSBI.multiply(a, p2x), parseBigintIsh(decimals.anchor)))
       return { a, b, isANegative: true, isBNegative: false }
