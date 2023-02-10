@@ -390,29 +390,50 @@ export class Pylon {
         debug
     )
 
-    let resTR1 = this.getPairReservesTranslated(result.ptb, result.totalSupply)[1]
+    // let resTR1 = this.getPairReservesTranslated(result.ptb, result.totalSupply)[1]
 
     let ptbInAnchor = JSBI.multiply(
         TWO,
         JSBI.divide(JSBI.multiply(parseBigintIsh(ptbEnergy), this.getPairReserves()[1].raw), result.totalSupply)
     )
 
-    let anchorOnTPV = JSBI.divide(
-        JSBI.multiply(JSBI.add(parseBigintIsh(reserveAnchorEnergy), ptbInAnchor), BASE),
-        JSBI.multiply(TWO, resTR1)
-    )
+    //reserveAnchor + ptbAnchor * 1e18/2 * tr1
+    let energySumAnchor = JSBI.add(parseBigintIsh(reserveAnchorEnergy), ptbInAnchor);
 
     let omega = this.getOmegaSlashing(result.gamma, result.vab, result.ptb, result.totalSupply, BASE).newAmount
+
+    //how much you can extract without suffering omega
+    //includes all sync reserve + energy reserves divided by 1-omega (which gives us how much liability they can cover)
+    let maxNoOmega = JSBI.add(
+        this.reserve1.raw,
+        JSBI.divide(
+            JSBI.multiply(energySumAnchor, BASE),
+            JSBI.subtract(BASE, omega)
+        )
+    )
+
+    //max no omega as a percentage of full vab
+    let maxOfVab = JSBI.divide(JSBI.multiply(maxNoOmega, BASE), result.vab)
+
     Pylon.logger(debug, "Health Factor: Omega=", omega.toString())
     Pylon.logger(debug, "Health Factor: ptbInAnchor=", ptbInAnchor.toString())
-    Pylon.logger(debug, "PTB: anchorOnTPV=", anchorOnTPV.toString())
+    Pylon.logger(debug, "PTB: maxNoOmega=", maxNoOmega.toString())
+    Pylon.logger(debug, "HF: maxOfVab=", maxOfVab.toString())
 
-    if (JSBI.greaterThanOrEqual(omega, BASE)) {
+
+    // max withdrawal no omega: Sync1 + sumOfEnergyMoney/(1-omega)
+    //
+    // hf high = maxWithdrawal ≥ 50% of VAB
+    //
+    // hf medium = max ≥ 20% of VAB
+    //
+    // else hf low
+
+
+    //if maxofvab > 50%
+    if (JSBI.greaterThanOrEqual(maxOfVab, JSBI.BigInt(500000000000000000))) {
       return 'high'
-    } else if (
-        JSBI.greaterThanOrEqual(omega, JSBI.subtract(BASE, JSBI.BigInt(4000000000000000))) ||
-        JSBI.greaterThanOrEqual(anchorOnTPV, JSBI.subtract(BASE, omega))
-    ) {
+    } else if (JSBI.greaterThanOrEqual(maxOfVab, JSBI.BigInt(200000000000000000))) { //if maxofvab > 20%
       return 'medium'
     } else {
       return 'low'
@@ -532,6 +553,7 @@ export class Pylon {
       let kx = sqrt(JSBI.multiply(JSBI.divide(k, parseBigintIsh(decimals.float)), price))
 
       let realDelta = JSBI.divide(k, kx)
+      realDelta = JSBI.add(this.reserve0.raw, realDelta);
       Pylon.logger(debug, "realDelta: ", realDelta.toString())
       Pylon.logger(debug, "idealDelta: ", idealDelta.toString())
 
@@ -556,6 +578,7 @@ export class Pylon {
 
       let derivative = JSBI.add(firstTerm, coefficients.b)
       let derivativeFloat = JSBI.divide(JSBI.multiply(derivative, parseBigintIsh(decimals.float)), parseBigintIsh(decimals.anchor))
+      derivativeFloat = JSBI.add(this.reserve0.raw, derivativeFloat); //adds sync reserves to the delta
       Pylon.logger(debug, "derivativeFloat: ", derivativeFloat.toString())
 
       return JSBI.multiply(
