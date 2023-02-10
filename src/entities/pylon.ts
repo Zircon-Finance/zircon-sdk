@@ -538,6 +538,7 @@ export class Pylon {
     let price = JSBI.divide(JSBI.multiply(resTR[1], parseBigintIsh(decimals.float)), resTR[0])
 
     let idealDelta = JSBI.divide(JSBI.multiply(ftv, parseBigintIsh(decimals.float)), price)
+    idealDelta = JSBI.add(idealDelta, this.reserve0.raw)
 
     //Now we find the delta of the pylon, which is simply the derivative of the function defining ftv
 
@@ -587,9 +588,9 @@ export class Pylon {
       return JSBI.multiply(
           JSBI.divide(
               JSBI.multiply(
-                  idealDelta,
+                  derivativeFloat,
                   BASE),
-              derivativeFloat),
+              idealDelta),
           _100)
     }
   }
