@@ -401,19 +401,22 @@ export class Pylon {
     let energySumAnchor = JSBI.add(parseBigintIsh(reserveAnchorEnergy), ptbInAnchor);
 
     let omega = this.getOmegaSlashing(result.gamma, result.vab, result.ptb, result.totalSupply, BASE).newAmount
-
+    let maxOfVab = BASE;
+    let maxNoOmega = result.vab
     //how much you can extract without suffering omega
     //includes all sync reserve + energy reserves divided by 1-omega (which gives us how much liability they can cover)
-    let maxNoOmega = JSBI.add(
-        this.reserve1.raw,
-        JSBI.divide(
-            JSBI.multiply(energySumAnchor, BASE),
-            JSBI.subtract(BASE, omega)
-        )
-    )
+    if(JSBI.lessThanOrEqual(omega, JSBI.subtract(BASE, MINIMUM_LIQUIDITY))) {
+      maxNoOmega = JSBI.add(
+          this.reserve1.raw,
+          JSBI.divide(
+              JSBI.multiply(energySumAnchor, BASE),
+              JSBI.subtract(BASE, omega)
+          )
+      )
 
-    //max no omega as a percentage of full vab
-    let maxOfVab = JSBI.divide(JSBI.multiply(maxNoOmega, BASE), result.vab)
+      //max no omega as a percentage of full vab
+      maxOfVab = JSBI.divide(JSBI.multiply(maxNoOmega, BASE), result.vab)
+    }
 
     Pylon.logger(debug, "Health Factor: Omega=", omega.toString())
     Pylon.logger(debug, "Health Factor: ptbInAnchor=", ptbInAnchor.toString())
