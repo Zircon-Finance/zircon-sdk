@@ -580,7 +580,18 @@ export class Pylon {
       let firstTerm = JSBI.divide(JSBI.multiply(coefficients.a, price), parseBigintIsh(decimals.anchor))
       firstTerm = JSBI.multiply(TWO, firstTerm)
 
-      let derivative = JSBI.add(firstTerm, coefficients.b)
+      //very awkward way of flipping sign
+      if(coefficients.isANegative) {
+        firstTerm = JSBI.subtract(firstTerm, JSBI.multiply(TWO, firstTerm))
+      }
+
+      let b = coefficients.b
+
+      if(coefficients.isBNegative) {
+        b = JSBI.subtract(b, JSBI.multiply(TWO, b))
+      }
+
+      let derivative = JSBI.add(firstTerm, b)
       let derivativeFloat = JSBI.divide(JSBI.multiply(derivative, parseBigintIsh(decimals.float)), parseBigintIsh(decimals.anchor))
       derivativeFloat = JSBI.add(this.reserve0.raw, derivativeFloat); //adds sync reserves to the delta
       Pylon.logger(debug, "derivativeFloat: ", derivativeFloat.toString())
