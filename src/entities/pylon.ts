@@ -35,7 +35,7 @@ import { Pair, Library } from '../entities'
 import { PylonFactory } from 'entities/pylonFactory'
 import {
   BurnAsyncParams,
-  BurnParams, Decimals,
+  BurnParams, Decimals, HealthFactorParams,
   MintAsyncParams,
   MintSyncParams,
   PairInfo,
@@ -375,7 +375,7 @@ export class Pylon {
       ptbEnergy: BigintIsh,
       reserveAnchorEnergy: BigintIsh,
       debug: boolean = false
-  ): String {
+  ):  HealthFactorParams {
     Pylon.logger(debug, "HEALTH FACTOR: Decimals F:", decimals.float.toString(), " A:",decimals.anchor.toString())
 
     let result = this.initSync(
@@ -399,8 +399,9 @@ export class Pylon {
 
     //reserveAnchor + ptbAnchor * 1e18/2 * tr1
     let energySumAnchor = JSBI.add(parseBigintIsh(reserveAnchorEnergy), ptbInAnchor);
-
-    let omega = this.getOmegaSlashing(result.gamma, result.vab, result.ptb, result.totalSupply, BASE).newAmount
+    let o = this.getOmegaSlashing(result.gamma, result.vab, result.ptb, result.totalSupply, BASE)
+    let omega = o.newAmount
+    let omegaPercentage = o.omega
     let maxOfVab = BASE;
     let maxNoOmega = result.vab
     //how much you can extract without suffering omega
@@ -414,7 +415,7 @@ export class Pylon {
           )
       )
 
-      //max no omega as a percentage of full vab
+      // max no omega as a percentage of full vab
       maxOfVab = JSBI.divide(JSBI.multiply(maxNoOmega, BASE), result.vab)
     }
 
@@ -432,14 +433,14 @@ export class Pylon {
     //
     // else hf low
 
-
+    let ret = {maxNoOmega, maxOfVab: JSBI.multiply(maxOfVab, _100), omega: omegaPercentage}
     //if maxofvab > 50%
     if (JSBI.greaterThanOrEqual(maxOfVab, JSBI.BigInt(500000000000000000))) {
-      return 'high'
+      return {...ret, healthFactor: 'high'}
     } else if (JSBI.greaterThanOrEqual(maxOfVab, JSBI.BigInt(200000000000000000))) { //if maxofvab > 20%
-      return 'medium'
+      return {...ret, healthFactor: 'medium'}
     } else {
-      return 'low'
+      return {...ret, healthFactor: 'low'}
     }
   }
 
@@ -1500,6 +1501,7 @@ export class Pylon {
       debug: boolean = false
   ): MintSyncParams {
     Pylon.logger(debug, 'Mint Sync: ' + (isAnchor ? "Anchor" : "Float") + " Decimals F:", decimals.float.toString(), " A:",decimals.anchor.toString())
+    Pylon.logger(debug, this.token0.symbol, this.token1.symbol)
     const blockedReturn = {
       isDerivedVFB: false,
       blocked: true,

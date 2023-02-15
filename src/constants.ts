@@ -223,6 +223,7 @@ export const PYLON_FACTORY_ADDRESS: { [key: string]: string } = {
   [ChainId.MOONBASE]: MOONBASE_ADDRESSES.pylonFactory,
   [ChainId.MOONROCK]: MOONBASE_ADDRESSES.pylonFactory,
   [ChainId.MOONSHADOW]: MOONBASE_ADDRESSES.pylonFactory,
+  [ChainId.BSC]: BSC_ADDRESSES.pylonFactory,
   [ChainId.BSCT]: BSCT_ADDRESSES.pylonFactory,
   [ChainId.ARBGOERLY]: ARBGOERLY_ADDRESSES.pylonFactory
 }

@@ -70,3 +70,10 @@ export interface SyncAsyncParams {
   syncMinting?: { newReserve0: JSBI; newReserve1: JSBI; liquidity: JSBI; px: JSBI; py: JSBI, update: boolean }
   slippage: JSBI
 }
+
+export interface HealthFactorParams {
+  healthFactor: String,
+  omega: JSBI,
+  maxOfVab: JSBI,
+  maxNoOmega: JSBI
+}
