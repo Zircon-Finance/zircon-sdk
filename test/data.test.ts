@@ -1,4 +1,4 @@
-import { ChainId, WDEV, Token, Fetcher } from '../src'
+import { ChainId, Fetcher } from '../src'
 
 // TODO: replace the provider in these tests
 describe.skip('data', () => {
@@ -12,9 +12,9 @@ describe.skip('data', () => {
     expect(token.decimals).toEqual(9)
   })
 
-  it('Pair', async () => {
-    const token = new Token(ChainId.MOONBASE, '0xc7AD46e0b8a400Bb3C915120d284AafbA8fc4735', 18) // DAI
-    const pair = await Fetcher.fetchPairData(WDEV[ChainId.MOONBASE], token)
-    expect(pair.liquidityToken.address).toEqual('0x8B22F85d0c844Cf793690F6D9DFE9F11Ddb35449')
-  })
+  // it('Pair', async () => {
+  //   const token = new Token(ChainId.MOONBASE, '0xc7AD46e0b8a400Bb3C915120d284AafbA8fc4735', 18) // DAI
+  //   const pair = await Fetcher.fetchPairData(WDEV[ChainId.MOONBASE], token)
+  //   expect(pair.liquidityToken.address).toEqual('0x8B22F85d0c844Cf793690F6D9DFE9F11Ddb35449')
+  // })
 })

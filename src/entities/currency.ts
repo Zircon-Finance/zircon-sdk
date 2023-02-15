@@ -1,6 +1,6 @@
 import JSBI from 'jsbi'
 
-import { SolidityType } from '../constants'
+import { ChainId, SolidityType } from '../constants'
 import { validateSolidityTypeInstance } from '../utils'
 
 /**
@@ -16,7 +16,16 @@ export class Currency {
   /**
    * The only instance of the base class `Currency`.
    */
-  public static readonly DEV: Currency = new Currency(18, 'DEV', 'Dev')
+  public static readonly NATIVE_TOKEN: { [key: string]: Currency } = {
+    [ChainId.STANDALONE]: new Currency(18, 'DEV', 'DEV Token'),
+    [ChainId.MOONRIVER]: new Currency(18, 'MOVR', 'Moonriver Token'),
+    [ChainId.MOONBASE]: new Currency(18, 'DEV', 'DEV Token'),
+    [ChainId.MOONROCK]: new Currency(18, 'DEV', 'DEV Token'),
+    [ChainId.MOONSHADOW]: new Currency(18, 'DEV', 'DEV Token'),
+    [ChainId.BSC]: new Currency(18, 'BNB', 'BNB Token'),
+    [ChainId.BSCT]: new Currency(18, 'BNB', 'BNB Token'),
+    [ChainId.ARBGOERLY]: new Currency(18, 'AETH', 'AETH Token'),
+  }
 
   /**
    * Constructs an instance of the base class `Currency`. The only instance of the base class `Currency` is `Currency.ETHER`.
@@ -33,5 +42,5 @@ export class Currency {
   }
 }
 
-const DEV = Currency.DEV
-export { DEV }
+const NATIVE_TOKEN = Currency.NATIVE_TOKEN
+export { NATIVE_TOKEN }

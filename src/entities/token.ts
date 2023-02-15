@@ -1,8 +1,14 @@
 import invariant from 'tiny-invariant'
-import { ChainId } from '../constants'
+import {
+  ARBGOERLY_ADDRESSES,
+  BSC_ADDRESSES,
+  BSCT_ADDRESSES,
+  ChainId,
+  MOONBASE_ADDRESSES,
+  MOONRIVER_ADDRESSES
+} from '../constants'
 import { validateAndParseAddress } from '../utils'
 import { Currency } from './currency'
-import { WETH } from '../moonbase_address.json'
 
 /**
  * Represents an ERC20 token with a unique address and some metadata.
@@ -72,7 +78,11 @@ export const WDEV = {
     'WDEV',
     'Wrapped Dev'
   ),
-  [ChainId.MOONROCK]: new Token(ChainId.MOONROCK, WETH, 18, 'WDEV', 'Wrapped Dev'),
-  [ChainId.MOONBASE]: new Token(ChainId.MOONBASE, WETH, 18, 'WDEV', 'Wrapped Dev'),
-  [ChainId.MOONSHADOW]: new Token(ChainId.MOONSHADOW, WETH, 18, 'WDEV', 'Wrapped Dev')
+  [ChainId.MOONRIVER]: new Token(ChainId.MOONRIVER, MOONRIVER_ADDRESSES.WETH, 18, 'WMOVR', 'Wrapped MoonRiver'),
+  [ChainId.MOONROCK]: new Token(ChainId.MOONRIVER, MOONBASE_ADDRESSES.WETH, 18, 'WDEV', 'Wrapped Dev'),
+  [ChainId.MOONBASE]: new Token(ChainId.MOONBASE, MOONBASE_ADDRESSES.WETH, 18, 'WDEV', 'Wrapped Dev'),
+  [ChainId.MOONSHADOW]: new Token(ChainId.MOONSHADOW, MOONBASE_ADDRESSES.WETH, 18, 'WDEV', 'Wrapped Dev'),
+  [ChainId.BSC]: new Token(ChainId.BSC, BSC_ADDRESSES.WETH, 18, 'WBNB', 'Wrapped BNB'),
+  [ChainId.BSCT]: new Token(ChainId.BSCT, BSCT_ADDRESSES.WETH, 18, 'WBNB', 'Wrapped BNB'),
+  [ChainId.ARBGOERLY]: new Token(ChainId.ARBGOERLY, ARBGOERLY_ADDRESSES.WETH, 18, 'WETH', 'Wrapped ETH')
 }

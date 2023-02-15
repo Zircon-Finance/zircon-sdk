@@ -1,5 +1,5 @@
 import invariant from 'tiny-invariant'
-import {ChainId, WDEV as _WDEV, TradeType, Rounding, Token, TokenAmount, Pair, Route, Trade} from '../src'
+import { ChainId, WDEV as _WDEV, TradeType, Rounding, Token, TokenAmount, Pair, Route, Trade } from '../src'
 
 const ADDRESSES = [
   '0x0000000000000000000000000000000000000001',
@@ -36,15 +36,21 @@ describe('entities', () => {
         pairs = [
           new Pair(
             new TokenAmount(tokens[0], decimalize(1, tokens[0].decimals)),
-            new TokenAmount(tokens[1], decimalize(1, tokens[1].decimals))
+            new TokenAmount(tokens[1], decimalize(1, tokens[1].decimals)),
+            '0',
+            '30'
           ),
           new Pair(
             new TokenAmount(tokens[1], decimalize(1, tokens[1].decimals)),
-            new TokenAmount(tokens[2], decimalize(1, tokens[2].decimals))
+            new TokenAmount(tokens[2], decimalize(1, tokens[2].decimals)),
+            '0',
+            '30'
           ),
           new Pair(
             new TokenAmount(tokens[2], decimalize(1, tokens[2].decimals)),
-            new TokenAmount(WDEV, decimalize(1234, WDEV.decimals))
+            new TokenAmount(WDEV, decimalize(1234, WDEV.decimals)),
+            '0',
+            '30'
           )
         ]
       })
@@ -61,11 +67,11 @@ describe('entities', () => {
       it('Price:Route.midPrice', () => {
         invariant(route.input instanceof Token)
         invariant(route.output instanceof Token)
-        expect(route.midPrice.quote(new TokenAmount(route.input, decimalize(1, route.input.decimals)))).toEqual(
+        expect(route.midPrice.quote(new TokenAmount(route.input, decimalize(1, route.input.decimals)), route.chainId)).toEqual(
           new TokenAmount(route.output, decimalize(1234, route.output.decimals))
         )
         expect(
-          route.midPrice.invert().quote(new TokenAmount(route.output, decimalize(1234, route.output.decimals)))
+          route.midPrice.invert().quote(new TokenAmount(route.output, decimalize(1234, route.output.decimals)), route.chainId)
         ).toEqual(new TokenAmount(route.input, decimalize(1, route.input.decimals)))
 
         expect(route.midPrice.toSignificant(1)).toEqual('1000')
@@ -104,7 +110,9 @@ describe('entities', () => {
             [
               new Pair(
                 new TokenAmount(tokens[1], decimalize(5, tokens[1].decimals)),
-                new TokenAmount(WDEV, decimalize(10, WDEV.decimals))
+                new TokenAmount(WDEV, decimalize(10, WDEV.decimals)),
+                '0',
+                '30'
               )
             ],
             tokens[1]
@@ -119,8 +127,8 @@ describe('entities', () => {
 
           expect(trade.executionPrice.toSignificant(18)).toEqual('1.66249791562447891')
           expect(trade.executionPrice.invert().toSignificant(18)).toEqual('0.601504513540621866')
-          expect(trade.executionPrice.quote(inputAmount)).toEqual(expectedOutputAmount)
-          expect(trade.executionPrice.invert().quote(expectedOutputAmount)).toEqual(inputAmount)
+          expect(trade.executionPrice.quote(inputAmount, route.chainId)).toEqual(expectedOutputAmount)
+          expect(trade.executionPrice.invert().quote(expectedOutputAmount, route.chainId)).toEqual(inputAmount)
 
           expect(trade.nextMidPrice.toSignificant(18)).toEqual('1.38958368072925352')
           expect(trade.nextMidPrice.invert().toSignificant(18)).toEqual('0.71964')
@@ -139,8 +147,8 @@ describe('entities', () => {
 
           expect(trade.executionPrice.toSignificant(18)).toEqual('1.66249791562447891')
           expect(trade.executionPrice.invert().toSignificant(18)).toEqual('0.601504513540621866')
-          expect(trade.executionPrice.quote(expectedInputAmount)).toEqual(outputAmount)
-          expect(trade.executionPrice.invert().quote(outputAmount)).toEqual(expectedInputAmount)
+          expect(trade.executionPrice.quote(expectedInputAmount, route.chainId)).toEqual(outputAmount)
+          expect(trade.executionPrice.invert().quote(outputAmount, route.chainId)).toEqual(expectedInputAmount)
 
           expect(trade.nextMidPrice.toSignificant(18)).toEqual('1.38958368072925352')
           expect(trade.nextMidPrice.invert().toSignificant(18)).toEqual('0.71964')
@@ -158,7 +166,9 @@ describe('entities', () => {
                     WDEV,
                     decimalize(10, WDEV.decimals) +
                       (tokens[1].decimals === 9 ? BigInt('30090280812437312') : BigInt('30090270812437322'))
-                  )
+                  ),
+                  '0',
+                  '30'
                 )
               ],
               tokens[1]
