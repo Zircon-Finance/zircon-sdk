@@ -37,6 +37,7 @@ export interface BurnAsyncParams extends Params {
 export interface Decimals {
   float: BigintIsh
   anchor: BigintIsh
+  priceMultiplier: BigintIsh
 }
 
 export interface PylonInfo {

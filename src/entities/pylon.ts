@@ -536,17 +536,18 @@ export class Pylon {
     //2 * gamma * res1/1e18
     let ftv = JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, result.gamma), resTR[1]), BASE)
 
-    let price = JSBI.divide(JSBI.multiply(resTR[1], parseBigintIsh(decimals.float)), resTR[0])
+    let price = Library.getPrice(decimals, this.getPairReserves()[0].raw, this.getPairReserves()[1].raw)
 
-    let idealDelta = JSBI.divide(JSBI.multiply(ftv, parseBigintIsh(decimals.float)), price)
+    let idealDelta = Library.getPrice(decimals, price, ftv) // bit hackish jejje
+
+        // JSBI.divide(JSBI.multiply(ftv, parseBigintIsh(decimals.priceMultiplier)), price)
     idealDelta = JSBI.add(idealDelta, this.reserve0.raw)
 
     //Now we find the delta of the pylon, which is simply the derivative of the function defining ftv
 
     let adjVAB = JSBI.subtract(result.vab, this.reserve1.raw)
 
-    let p3x = JSBI.divide(JSBI.exponentiate(adjVAB, TWO), resTR[1])
-    p3x = JSBI.divide(JSBI.multiply(p3x, parseBigintIsh(decimals.float)), resTR[0])
+    let p3x = Library.getP3x(adjVAB, resTR[0], resTR[1], decimals)
 
     if(JSBI.greaterThan(price, p3x)) {
       Pylon.logger(debug, "price > p3x")
@@ -555,7 +556,7 @@ export class Pylon {
       let k = JSBI.multiply(resTR[0], resTR[1])
       //Divide by float decimals so that the end result is in float
 
-      let kx = sqrt(JSBI.multiply(JSBI.divide(k, parseBigintIsh(decimals.float)), price))
+      let kx = Library.getKX(k, price, decimals)
 
       let realDelta = JSBI.divide(k, kx)
       realDelta = JSBI.add(this.reserve0.raw, realDelta);
@@ -593,7 +594,8 @@ export class Pylon {
       }
 
       let derivative = JSBI.add(firstTerm, b)
-      let derivativeFloat = JSBI.divide(JSBI.multiply(derivative, parseBigintIsh(decimals.float)), parseBigintIsh(decimals.anchor))
+      let derivativeFloat = Library.getPrice(decimals, parseBigintIsh(decimals.anchor), derivative) // Just to use the division with the price
+
       derivativeFloat = JSBI.add(this.reserve0.raw, derivativeFloat); //adds sync reserves to the delta
       Pylon.logger(debug, "derivativeFloat: ", derivativeFloat.toString())
 
@@ -749,17 +751,7 @@ export class Pylon {
       if (JSBI.greaterThan(currentFloatAccumulator, parseBigintIsh(pylonInfo.lastFloatAccumulator))) {
         Pylon.logger(debug, "lastFloatAccumulator:", pylonInfo.lastFloatAccumulator.toString())
         Pylon.logger(debug, "currentFloatAccumulator:", currentFloatAccumulator.toString())
-        avgPrice = JSBI.signedRightShift(
-            JSBI.divide(
-                JSBI.subtract(
-                    currentFloatAccumulator,
-                    parseBigintIsh(pylonInfo.lastFloatAccumulator)),
-                JSBI.subtract(
-                    blockTimestamp,
-                    parseBigintIsh(pylonInfo.lastOracleTimestamp))),
-            _28)
-        Pylon.logger(debug,"AVG PRICE:: only _56 shifted", avgPrice.toString())
-        avgPrice = JSBI.signedRightShift(JSBI.multiply(avgPrice, parseBigintIsh(decimals.float)), _84)
+        avgPrice = Library.getAvgPrice(pylonInfo, currentFloatAccumulator, blockTimestamp, decimals, debug)
         Pylon.logger(debug, "current float accumulator > last float accumulator")
         Pylon.logger(debug, "avg price: ", avgPrice.toString())
       }
@@ -805,7 +797,8 @@ export class Pylon {
       //   Pylon.logger(debug, "new VAB: ", vabLast.toString())
       // }
     }
-    //447817706268916784
+    Pylon.logger(debug, "P2 ", pylonInfo.p2x.toString(), ", ", pylonInfo.p2y.toString())
+
     let adjVAB = JSBI.subtract(vabLast, this.reserve1.raw)
     let gamma = Library.calculateGamma(resTR0, resTR1, adjVAB, parseBigintIsh(pylonInfo.p2x), parseBigintIsh(pylonInfo.p2y), decimals, debug)
 
@@ -1059,7 +1052,7 @@ export class Pylon {
       decimals: Decimals,
       debug: boolean = false
   ): { newAmount: JSBI; fee: JSBI; deltaApplied: boolean; blocked: boolean; asyncBlocked: boolean; feeBPS: JSBI } {
-    let instantPrice = JSBI.divide(JSBI.multiply(parseBigintIsh(decimals.float), this.getPairReserves()[1].raw), this.getPairReserves()[0].raw)
+    let instantPrice = Library.getPrice(decimals, this.getPairReserves()[0].raw, this.getPairReserves()[1].raw)
     Pylon.logger(debug,'Instant Price =====> ', instantPrice.toString())
     Pylon.logger(debug,'Last Price =====> ', lastPrice.toString())
     let feeByGamma = Library.getFeeByGamma(gamma, pylonFactory.minFee, pylonFactory.maxFee)
@@ -1220,6 +1213,7 @@ export class Pylon {
         JSBI.multiply(JSBI.subtract(BASE, gamma), JSBI.multiply(pairRSTR, TWO)),
         JSBI.subtract(vab, this.reserve1.raw)
     )
+
     omegaSlashing = JSBI.lessThan(omegaSlashing, BASE) ? omegaSlashing : BASE
 
     return { omega: omegaSlashing, newAmount: JSBI.divide(JSBI.multiply(amount, omegaSlashing), BASE) }
@@ -2452,7 +2446,9 @@ export class Pylon {
                 ptuWithFee),
             _100)
         : ZERO
-
+    console.log("ga", result.gamma.toString());
+    console.log("rt1", result.vab.toString());
+    console.log("vab", result.totalSupply.toString(), ptuWithFee.toString());
     let omegaPTU = this.getOmegaSlashing(result.gamma, result.vab, result.ptb, result.totalSupply, ptuWithFee)
     Pylon.logger(debug, "omega", omegaPTU.omega.toString())
 
@@ -2460,10 +2456,7 @@ export class Pylon {
     Pylon.logger(debug, "amountToAdd", slash.ptuToAdd.toString())
 
     let liq = JSBI.add(omegaPTU.newAmount, slash.ptuToAdd)
-    // let omegaSlashingPercentage = JSBI.multiply(
-    //     JSBI.divide(JSBI.multiply(JSBI.subtract(ptuWithFee, liq), BASE), ptuWithFee),
-    //     _100
-    // )
+
     let omegaSlashingPercentage = JSBI.subtract(
         JSBI.subtract(BASE, omegaPTU.omega),
         JSBI.divide(JSBI.multiply(slash.ptuToAdd, BASE), lptu),
@@ -2476,6 +2469,7 @@ export class Pylon {
         JSBI.multiply(liq, this.getPairReserves()[0].raw),
         result.totalSupply
     )
+
     let amount1 = JSBI.divide(
         JSBI.multiply(liq, this.getPairReserves()[1].raw),
         result.totalSupply

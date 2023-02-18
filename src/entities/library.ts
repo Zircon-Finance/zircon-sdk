@@ -1,21 +1,33 @@
 import JSBI from 'jsbi'
-import {_1001, _1E3, _42E45, _EFIVE, BASE, DOUBLE_BASE, ONE, TEN, TWO, ZERO} from '../constants'
+import {_1001, _1E3, _28, _42E45, _84, _EFIVE, BASE, DOUBLE_BASE, ONE, TEN, TWO, ZERO} from '../constants'
 import {parseBigintIsh, sqrt} from '../utils'
 import {Decimals, PylonInfo} from "interfaces/pylonInterface";
 import {Pylon} from "../entities";
 interface Coefficients {a: JSBI; b: JSBI; isANegative: boolean, isBNegative: boolean}
 export abstract class Library {
+
+  public static getKX(k: JSBI, price: JSBI, decimals: Decimals) {
+    return sqrt(JSBI.multiply(JSBI.divide(k, parseBigintIsh(decimals.priceMultiplier)), price))
+  }
+
+  public static getP3x(adjVAB: JSBI, reserve0: JSBI, reserve1: JSBI, decimals: Decimals) {
+    let p3x = JSBI.divide(JSBI.exponentiate(adjVAB, TWO), reserve1)
+    return  JSBI.divide(JSBI.multiply(p3x, parseBigintIsh(decimals.priceMultiplier)), reserve0)
+
+  }
   public static getFTVForX(x: JSBI, p2x: JSBI, p2y: JSBI, reserve0: JSBI, reserve1: JSBI, adjVAB: JSBI, decimals: Decimals, debug: boolean): { ftv: JSBI, reduceOnly: boolean, isLineFormula: boolean } {
     Pylon.logger(debug, "GET FTV FOR X")
     let ftv = ZERO
-
-    let p3x = JSBI.divide(JSBI.exponentiate(adjVAB, TWO), reserve1)
-    p3x = JSBI.divide(JSBI.multiply(p3x, parseBigintIsh(decimals.float)), reserve0)
+    let p3x = this.getP3x(adjVAB, reserve0, reserve1, decimals)
 
     if (JSBI.greaterThanOrEqual(x, p3x)) {
       Pylon.logger(debug, "x >= p3x", x.toString(), p3x.toString())
+      let sqrtV = JSBI.multiply(JSBI.divide(JSBI.multiply(reserve0, reserve1), parseBigintIsh(decimals.float)), x)
+      sqrtV = JSBI.greaterThan(parseBigintIsh(decimals.anchor), BASE) ?
+          JSBI.divide(JSBI.multiply(sqrtV, parseBigintIsh(decimals.anchor)), BASE) :
+          JSBI.divide(sqrtV, JSBI.divide(BASE, parseBigintIsh(decimals.anchor)))
 
-      ftv = JSBI.subtract(JSBI.multiply(TWO, sqrt(JSBI.multiply(JSBI.divide(JSBI.multiply(reserve0, reserve1), parseBigintIsh(decimals.float)), x))), adjVAB)
+      ftv = JSBI.subtract(JSBI.multiply(TWO, sqrt(sqrtV)), adjVAB)
       Pylon.logger(debug, "FTV", ftv.toString())
 
       return {ftv, isLineFormula: false, reduceOnly: false}
@@ -30,11 +42,11 @@ export abstract class Library {
         Pylon.logger(debug, "FTV", ftv.toString())
         return {ftv, isLineFormula: true, reduceOnly: false}
       }
-      ftv = this.getFTV(coefficients, x, decimals)
+      ftv = this.getFTV(coefficients, x)
       Pylon.logger(debug, "FTV", ftv.toString())
       if (
           !coefficients.isANegative ||
-          JSBI.greaterThan(coefficients.b, JSBI.divide(JSBI.multiply(TWO, JSBI.multiply(coefficients.a, p3x)), parseBigintIsh(decimals.anchor)))
+          JSBI.greaterThan(coefficients.b, JSBI.divide(JSBI.multiply(TWO, JSBI.multiply(coefficients.a, p3x)), BASE))
       ) {
         return {ftv, isLineFormula: true, reduceOnly: false}
       } else {
@@ -47,7 +59,7 @@ export abstract class Library {
   public static calculateP2(k: JSBI, vab: JSBI, vfb: JSBI, decimals: Decimals): { p2x: JSBI; p2y: JSBI } {
     let p2y = JSBI.subtract(JSBI.divide(JSBI.multiply(k, TWO), vfb), vab)
     return {
-      p2x: JSBI.divide(JSBI.multiply(p2y, parseBigintIsh(decimals.float)), vfb),
+      p2x: JSBI.divide(JSBI.multiply(p2y, parseBigintIsh(decimals.priceMultiplier)), vfb),
       p2y
     }
   }
@@ -61,8 +73,7 @@ export abstract class Library {
       desiredFTV: JSBI,
       decimals: Decimals
   ): { p2x: JSBI; p2y: JSBI } {
-    let p3x = JSBI.divide(JSBI.exponentiate(adjVAB, TWO), res1)
-    p3x = JSBI.divide(JSBI.multiply(p3x, parseBigintIsh(decimals.float)), res0)
+    let p3x = this.getP3x(adjVAB, res0, res1, decimals)
 
     if (JSBI.lessThan(x, p3x)) {
       return {
@@ -87,7 +98,7 @@ export abstract class Library {
     Pylon.logger(debug, "P2 (", p2x.toString(), ',', p2y.toString(), ')' + ' P3 (', p3x.toString(), ',', p3y.toString(), ')')
     let _1001P = JSBI.multiply(_1001, JSBI.divide(parseBigintIsh(decimals.anchor), _1E3))
     if(JSBI.lessThanOrEqual(JSBI.divide(JSBI.multiply(p3x, parseBigintIsh(decimals.anchor)), p2x), _1001P)) {
-      return { a: ZERO, b: JSBI.divide(JSBI.multiply(p3y, parseBigintIsh(decimals.anchor)), p3x), isANegative: false, isBNegative: false }
+      return { a: ZERO, b: JSBI.divide(JSBI.multiply(p3y, BASE), p3x), isANegative: false, isBNegative: false }
     }
 
     if (JSBI.lessThan(p3x, p2x)) {
@@ -103,36 +114,36 @@ export abstract class Library {
 
     let aPartial1 = JSBI.multiply(p3y, p2x)
     let aPartial2 = JSBI.multiply(p2y, p3x)
-    let aDenominator = JSBI.divide(JSBI.multiply(JSBI.multiply(JSBI.subtract(p3x, p2x), p3x), _EFIVE ), parseBigintIsh(decimals.anchor))
+    let aDenominator = JSBI.divide(JSBI.multiply(JSBI.divide(JSBI.multiply(JSBI.subtract(p3x, p2x), p3x), BASE), parseBigintIsh(decimals.anchor)), BASE)
 
     if (JSBI.greaterThanOrEqual(aPartial1, aPartial2)) {
-      let aNumerator = JSBI.multiply(JSBI.divide(JSBI.subtract(aPartial1, aPartial2), p2x), _EFIVE)
+      let aNumerator = JSBI.divide(JSBI.subtract(aPartial1, aPartial2), p2x)
       a = JSBI.divide(JSBI.multiply(aNumerator, parseBigintIsh(decimals.anchor)), aDenominator)
       if (
-          JSBI.greaterThanOrEqual(JSBI.divide(JSBI.multiply(parseBigintIsh(decimals.anchor), p2y), p2x), JSBI.divide(JSBI.multiply(a, p2x), parseBigintIsh(decimals.anchor)))
+          JSBI.greaterThanOrEqual(JSBI.divide(JSBI.multiply(BASE, p2y), p2x), JSBI.divide(JSBI.multiply(a, p2x), BASE))
       ) {
-        b = JSBI.subtract(JSBI.divide(JSBI.multiply(parseBigintIsh(decimals.anchor), p2y), p2x), JSBI.divide(JSBI.multiply(a, p2x), parseBigintIsh(decimals.anchor)))
+        b = JSBI.subtract(JSBI.divide(JSBI.multiply(BASE, p2y), p2x), JSBI.divide(JSBI.multiply(a, p2x), BASE))
         return {a, b, isANegative: false, isBNegative: false}
       }else{
         b = JSBI.subtract(
-            JSBI.divide(JSBI.multiply(a, p2x), parseBigintIsh(decimals.anchor)),
-            JSBI.divide(JSBI.multiply(parseBigintIsh(decimals.anchor), p2y), p2x)
+            JSBI.divide(JSBI.multiply(a, p2x), BASE),
+            JSBI.divide(JSBI.multiply(BASE, p2y), p2x)
         )
         return {a, b, isANegative: false, isBNegative: true}
       }
 
     } else {
-      let aNumerator = JSBI.multiply(JSBI.divide(JSBI.subtract(aPartial2, aPartial1), p2x), _EFIVE)
+      let aNumerator = JSBI.divide(JSBI.subtract(aPartial2, aPartial1), p2x)
       a = JSBI.divide(JSBI.multiply(aNumerator, parseBigintIsh(decimals.anchor)), aDenominator)
-      b = JSBI.add(JSBI.divide(JSBI.multiply(parseBigintIsh(decimals.anchor), p2y), p2x), JSBI.divide(JSBI.multiply(a, p2x), parseBigintIsh(decimals.anchor)))
+      b = JSBI.add(JSBI.divide(JSBI.multiply(BASE, p2y), p2x), JSBI.divide(JSBI.multiply(a, p2x), BASE))
       return { a, b, isANegative: true, isBNegative: false }
     }
   }
 
 
-  public static getFTV(coefficients: Coefficients, x: JSBI, decimals: Decimals) {
+  public static getFTV(coefficients: Coefficients, x: JSBI) {
     let bCoeff = JSBI.multiply(coefficients.b, x)
-    let aCoeff = JSBI.multiply(JSBI.divide(JSBI.multiply(coefficients.a, x), parseBigintIsh(decimals.anchor)), x)
+    let aCoeff = JSBI.multiply(JSBI.divide(JSBI.multiply(coefficients.a, x), BASE), x)
     return JSBI.divide(
         coefficients.isANegative
             ? JSBI.subtract(
@@ -146,7 +157,7 @@ export abstract class Library {
                 ) : JSBI.add(
                     bCoeff,
                     aCoeff
-                ), parseBigintIsh(decimals.anchor))
+                ), BASE)
   }
 
   public static calculateGamma(
@@ -160,7 +171,7 @@ export abstract class Library {
   ): { gamma: JSBI; ftv: JSBI, isLineFormula: boolean, reduceOnly: boolean } {
     Pylon.logger(debug, 'CALCULATE GAMMA')
     Pylon.logger(debug, "Reserves TR: S:", resTR1.toString(), "F:", resTR0.toString())
-    let x = JSBI.divide(JSBI.multiply(resTR1, parseBigintIsh(decimals.float)), resTR0)
+    let x = JSBI.divide(JSBI.multiply(resTR1, parseBigintIsh(decimals.priceMultiplier)), resTR0)
     Pylon.logger(debug, 'x::', x.toString())
     let ftvObject = this.getFTVForX(
         x,
@@ -178,11 +189,13 @@ export abstract class Library {
     Pylon.logger(debug, "ftv:: ", ftvObject.ftv.toString(), resTR1.toString())
     Pylon.logger(debug, "new gamma", gamma.toString())
     return { ...ftvObject, gamma }
-
   }
 
   public static translateToPylon(toTranslate: JSBI, ptb: JSBI, ptt: JSBI) {
     return JSBI.divide(JSBI.multiply(toTranslate, ptb), ptt)
+  }
+  public static getPrice(decimals: Decimals, reserve0: JSBI, reserve1: JSBI) {
+    return JSBI.divide(JSBI.multiply(reserve1, parseBigintIsh(decimals.priceMultiplier)), reserve0)
   }
 
   public static calculateEMA(pylonInfo: PylonInfo, currentBlockNumber: JSBI, EMASamples: JSBI, gamma: JSBI): JSBI {
@@ -231,14 +244,14 @@ export abstract class Library {
     Pylon.logger(debug, "DERIVATIVE CHECK:")
     let p3x = JSBI.divide(JSBI.exponentiate(adjVAB, TWO), res1)
     Pylon.logger(debug, "Reserves: Stable:", res1.toString(), "Float:", res0.toString())
-    p3x = JSBI.divide(JSBI.multiply(p3x, parseBigintIsh(decimals.float)), res0)
+    p3x = JSBI.divide(JSBI.multiply(p3x, parseBigintIsh(decimals.priceMultiplier)), res0)
     Pylon.logger(debug, "P3 X:", p3x.toString(), "Y:", adjVAB.toString())
     let coefficients = Library.calculateParabolaCoefficients(p2x, p2y, p3x, adjVAB, decimals, true, debug)
 
     if (JSBI.equal(coefficients.a, _42E45)) {
       return true
     }
-    return !(!coefficients.isANegative || coefficients.isBNegative || JSBI.greaterThan(coefficients.b, JSBI.divide(JSBI.multiply(TWO, JSBI.multiply(coefficients.a, p3x)),parseBigintIsh(decimals.anchor))));
+    return !(!coefficients.isANegative || coefficients.isBNegative || JSBI.greaterThan(coefficients.b, JSBI.divide(JSBI.multiply(TWO, JSBI.multiply(coefficients.a, p3x)), BASE)));
   }
 
   public static getFeeByGamma(gamma: JSBI, minFee: JSBI, maxFee: JSBI): JSBI {
@@ -260,6 +273,20 @@ export abstract class Library {
           minFee
       )
     }
+  }
+
+  public static getAvgPrice(pylonInfo: PylonInfo, currentFloatAccumulator: JSBI, blockTimestamp: JSBI, decimals: Decimals, debug: boolean): JSBI {
+    let avgPrice = JSBI.signedRightShift(
+        JSBI.divide(
+            JSBI.subtract(
+                currentFloatAccumulator,
+                parseBigintIsh(pylonInfo.lastFloatAccumulator)),
+            JSBI.subtract(
+                blockTimestamp,
+                parseBigintIsh(pylonInfo.lastOracleTimestamp))),
+        _28)
+    Pylon.logger(debug,"AVG PRICE:: only _56 shifted", avgPrice.toString())
+    return JSBI.signedRightShift(JSBI.multiply(avgPrice, parseBigintIsh(decimals.priceMultiplier)), _84)
   }
 
 

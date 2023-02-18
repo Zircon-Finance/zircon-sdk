@@ -45,7 +45,8 @@ export interface TestInput {
   isBlocked: boolean,
   decimals: {
     anchor: string,
-    float: string
+    float: string,
+    priceMultiplier: string
   }
 }
 export const CASES: TestInput[] = tests

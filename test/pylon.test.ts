@@ -80,7 +80,7 @@ describe('Pylon', () => {
   describe('Test Cases', () => {
     CASES.forEach((testCase, i) => {
       it('Test Case ' + i, () => {
-        if (testCase.testCase === 43)
+        // if (testCase.testCase === 31)
         if (!testCase.skip) {
           const pylon = new Pylon(
               new Pair(
