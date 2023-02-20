@@ -1,45 +1,50 @@
 //TODO: add reduce only rejection
-import { TokenAmount } from './fractions/tokenAmount'
+import {TokenAmount} from './fractions/tokenAmount'
 import invariant from 'tiny-invariant'
 import JSBI from 'jsbi'
-import { AbiCoder } from '@ethersproject/abi'
-import { pack, keccak256 } from '@ethersproject/solidity'
-import { getCreate2Address } from '@ethersproject/address'
+import {AbiCoder} from '@ethersproject/abi'
+import {keccak256, pack} from '@ethersproject/solidity'
+import {getCreate2Address} from '@ethersproject/address'
 import {
-  BigintIsh,
-  PYLON_CODE_HASH,
-  MINIMUM_LIQUIDITY,
-  ZERO,
-  ONE,
-  _997,
-  _1000,
-  ChainId,
-  PYLON_FACTORY_ADDRESS,
-  TWO,
-  BASE,
-  PT_FACTORY_ADDRESS,
-  FOUR,
   _100,
+  _1000,
   _10000,
-  EN_FACTORY_ADDRESS,
-  EN_CODE_HASH,
+  _112,
   _200,
+  _97P,
+  _997,
+  BASE,
+  BigintIsh,
+  ChainId,
+  EN_CODE_HASH,
+  EN_FACTORY_ADDRESS,
+  FOUR,
   MIGRATION_PYLONS,
+  MINIMUM_LIQUIDITY,
+  ONE,
   PT_BYTECODE,
-  _112, _56, _97P, TEN, _28, _84
+  PT_FACTORY_ADDRESS,
+  PYLON_CODE_HASH,
+  PYLON_FACTORY_ADDRESS,
+  TEN,
+  TWO,
+  ZERO
 } from '../constants'
-import { sqrt, parseBigintIsh } from '../utils'
-import { InsufficientReservesError, InsufficientInputAmountError } from '../errors'
-import { Token } from './token'
-import { Pair, Library } from '../entities'
-import { PylonFactory } from 'entities/pylonFactory'
+import {parseBigintIsh, sqrt} from '../utils'
+import {InsufficientInputAmountError, InsufficientReservesError} from '../errors'
+import {Token} from './token'
+import {Library, LibraryBSC, Pair} from '../entities'
+import {PylonFactory} from 'entities/pylonFactory'
 import {
   BurnAsyncParams,
-  BurnParams, Decimals, HealthFactorParams,
+  BurnParams,
+  Decimals,
+  HealthFactorParams,
   MintAsyncParams,
   MintSyncParams,
   PairInfo,
-  PylonInfo, SyncAsyncParams
+  PylonInfo,
+  SyncAsyncParams
 } from 'interfaces/pylonInterface'
 
 let PYLON_ADDRESS_CACHE: { [pair: string]: { [tokenAddress: string]: string } } = {}
@@ -54,6 +59,14 @@ export class Pylon {
   public tokenAmounts: [TokenAmount, TokenAmount]
   public readonly address: string
 
+  public getLibrary() {
+    if(this.pair.chainId === ChainId.BSC) {
+      return LibraryBSC
+    }else{
+      return Library
+    }
+  }
+  // Pylon Factory and get migration level instead of having all the pylons
   public static getAddress(tokenA: Token, tokenB: Token): string {
     const pairAddress: string = Pair.getAddress(tokenA, tokenB)
     if (PYLON_ADDRESS_CACHE?.[pairAddress]?.[tokenA.address] === undefined) {
@@ -102,18 +115,32 @@ export class Pylon {
           [pack(['bytes', 'bytes'], [PT_BYTECODE[chainId], new AbiCoder().encode(['address'], [migrationAddress])])]
       )
 
-  public static ptCodeHash = (token: Token): string =>
-      keccak256(
+  public static ptCodeHash = (token: Token, name: string, symbol: string): string => {
+    if (token.chainId === ChainId.BSC) {
+      return keccak256(
           ['bytes'],
           [
             pack(
                 ['bytes', 'bytes'],
-                [PT_BYTECODE[token.chainId], new AbiCoder().encode(['address'], [PYLON_FACTORY_ADDRESS[token.chainId]])]
+                [PT_BYTECODE[token.chainId], new AbiCoder().encode(['address', 'string', 'string'], [PYLON_FACTORY_ADDRESS[token.chainId], name, symbol])]
             )
           ]
       )
+    }
+    return keccak256(
+        ['bytes'],
+        [
+          pack(
+              ['bytes', 'bytes'],
+              [PT_BYTECODE[token.chainId], new AbiCoder().encode(['address'], [PYLON_FACTORY_ADDRESS[token.chainId]])]
+          )
+        ]
+    )
+  }
 
   private static getPTAddress(tokenA: Token, tokenB: Token, isAnchor: boolean): string {
+    let name =  'Zircon ' + tokenA.symbol + "-" + tokenB.symbol + (isAnchor ? " ZPT-Float" : ' ZPT-Stable');
+    let symbol = (isAnchor ? "f" : "s") + tokenA.symbol + "-" + tokenB.symbol;
     let token = isAnchor ? tokenB : tokenA
     let pylonAddress = this.getAddress(tokenA, tokenB)
     if (PT_ADDRESS_CACHE?.[token.address]?.[pylonAddress] === undefined) {
@@ -124,7 +151,7 @@ export class Pylon {
           [pylonAddress]: getCreate2Address(
               PT_FACTORY_ADDRESS[token.chainId],
               keccak256(['bytes'], [pack(['address', 'address'], [token.address, pylonAddress])]),
-              Pylon.ptCodeHash(token)
+              Pylon.ptCodeHash(token, name, symbol)
           )
         }
       }
@@ -349,8 +376,8 @@ export class Pylon {
   }
 
   private getPairReservesTranslated(ptb: JSBI, totalSupply: JSBI): [JSBI, JSBI] {
-    let r0 = Library.translateToPylon(this.getPairReserves()[0].raw, ptb, totalSupply)
-    let r1 = Library.translateToPylon(this.getPairReserves()[1].raw, ptb, totalSupply)
+    let r0 = this.getLibrary().translateToPylon(this.getPairReserves()[0].raw, ptb, totalSupply)
+    let r1 = this.getLibrary().translateToPylon(this.getPairReserves()[1].raw, ptb, totalSupply)
     return [r0, r1]
   }
 
@@ -536,18 +563,18 @@ export class Pylon {
     //2 * gamma * res1/1e18
     let ftv = JSBI.divide(JSBI.multiply(JSBI.multiply(TWO, result.gamma), resTR[1]), BASE)
 
-    let price = Library.getPrice(decimals, this.getPairReserves()[0].raw, this.getPairReserves()[1].raw)
+    let price = this.getLibrary().getPrice(decimals, this.getPairReserves()[0].raw, this.getPairReserves()[1].raw)
 
-    let idealDelta = Library.getPrice(decimals, price, ftv) // bit hackish jejje
+    let idealDelta = this.getLibrary().getPrice(decimals, price, ftv) // bit hackish jejje
 
-        // JSBI.divide(JSBI.multiply(ftv, parseBigintIsh(decimals.priceMultiplier)), price)
+    // JSBI.divide(JSBI.multiply(ftv, parseBigintIsh(decimals.priceMultiplier)), price)
     idealDelta = JSBI.add(idealDelta, this.reserve0.raw)
 
     //Now we find the delta of the pylon, which is simply the derivative of the function defining ftv
 
     let adjVAB = JSBI.subtract(result.vab, this.reserve1.raw)
 
-    let p3x = Library.getP3x(adjVAB, resTR[0], resTR[1], decimals)
+    let p3x = this.getLibrary().getP3x(adjVAB, resTR[0], resTR[1], decimals)
 
     if(JSBI.greaterThan(price, p3x)) {
       Pylon.logger(debug, "price > p3x")
@@ -556,7 +583,7 @@ export class Pylon {
       let k = JSBI.multiply(resTR[0], resTR[1])
       //Divide by float decimals so that the end result is in float
 
-      let kx = Library.getKX(k, price, decimals)
+      let kx = this.getLibrary().getKX(k, price, decimals)
 
       let realDelta = JSBI.divide(k, kx)
       realDelta = JSBI.add(this.reserve0.raw, realDelta);
@@ -577,7 +604,7 @@ export class Pylon {
 
       //derivative of the parabola, 2ax + b
       //terms are all in anchor units -> need to convert them to float
-      let coefficients = Library.calculateParabolaCoefficients(result.p2x, result.p2y, p3x, adjVAB, decimals, false, debug)
+      let coefficients = this.getLibrary().calculateParabolaCoefficients(result.p2x, result.p2y, p3x, adjVAB, decimals, false, debug)
 
       let firstTerm = JSBI.divide(JSBI.multiply(coefficients.a, price), parseBigintIsh(decimals.anchor))
       firstTerm = JSBI.multiply(TWO, firstTerm)
@@ -594,7 +621,7 @@ export class Pylon {
       }
 
       let derivative = JSBI.add(firstTerm, b)
-      let derivativeFloat = Library.getPrice(decimals, parseBigintIsh(decimals.anchor), derivative) // Just to use the division with the price
+      let derivativeFloat = this.getLibrary().getPrice(decimals, parseBigintIsh(decimals.anchor), derivative) // Just to use the division with the price
 
       derivativeFloat = JSBI.add(this.reserve0.raw, derivativeFloat); //adds sync reserves to the delta
       Pylon.logger(debug, "derivativeFloat: ", derivativeFloat.toString())
@@ -683,7 +710,7 @@ export class Pylon {
     }
     Pylon.logger(debug, "P2: X:", p2.p2x.toString(), "Y:", p2.p2y.toString())
 
-    let derivativeCheck = Library.derivativeCheck(
+    let derivativeCheck = this.getLibrary().derivativeCheck(
         parseBigintIsh(p2.p2x),
         parseBigintIsh(p2.p2y),
         pairTR0,
@@ -751,7 +778,7 @@ export class Pylon {
       if (JSBI.greaterThan(currentFloatAccumulator, parseBigintIsh(pylonInfo.lastFloatAccumulator))) {
         Pylon.logger(debug, "lastFloatAccumulator:", pylonInfo.lastFloatAccumulator.toString())
         Pylon.logger(debug, "currentFloatAccumulator:", currentFloatAccumulator.toString())
-        avgPrice = Library.getAvgPrice(pylonInfo, currentFloatAccumulator, blockTimestamp, decimals, debug)
+        avgPrice = this.getLibrary().getAvgPrice(pylonInfo, currentFloatAccumulator, blockTimestamp, decimals, debug)
         Pylon.logger(debug, "current float accumulator > last float accumulator")
         Pylon.logger(debug, "avg price: ", avgPrice.toString())
       }
@@ -800,7 +827,7 @@ export class Pylon {
     Pylon.logger(debug, "P2 ", pylonInfo.p2x.toString(), ", ", pylonInfo.p2y.toString())
 
     let adjVAB = JSBI.subtract(vabLast, this.reserve1.raw)
-    let gamma = Library.calculateGamma(resTR0, resTR1, adjVAB, parseBigintIsh(pylonInfo.p2x), parseBigintIsh(pylonInfo.p2y), decimals, debug)
+    let gamma = this.getLibrary().calculateGamma(resTR0, resTR1, adjVAB, parseBigintIsh(pylonInfo.p2x), parseBigintIsh(pylonInfo.p2y), decimals, debug)
 
     Pylon.logger(
         debug,
@@ -1052,10 +1079,10 @@ export class Pylon {
       decimals: Decimals,
       debug: boolean = false
   ): { newAmount: JSBI; fee: JSBI; deltaApplied: boolean; blocked: boolean; asyncBlocked: boolean; feeBPS: JSBI } {
-    let instantPrice = Library.getPrice(decimals, this.getPairReserves()[0].raw, this.getPairReserves()[1].raw)
+    let instantPrice = this.getLibrary().getPrice(decimals, this.getPairReserves()[0].raw, this.getPairReserves()[1].raw)
     Pylon.logger(debug,'Instant Price =====> ', instantPrice.toString())
     Pylon.logger(debug,'Last Price =====> ', lastPrice.toString())
-    let feeByGamma = Library.getFeeByGamma(gamma, pylonFactory.minFee, pylonFactory.maxFee)
+    let feeByGamma = this.getLibrary().getFeeByGamma(gamma, pylonFactory.minFee, pylonFactory.maxFee)
 
     let feeBPS
     if (isSync) {
@@ -1357,7 +1384,7 @@ export class Pylon {
   // ): JSBI {
   //   let [pairTR0, pairTR1] = this.getPairReservesTranslated(ptb, totalSupply)
   //
-  //   let desiredFTV = Library.getFTVForX(
+  //   let desiredFTV = this.getLibrary().getFTVForX(
   //       JSBI.divide(JSBI.multiply(pairTR1, BASE), pairTR0),
   //       p2x,
   //       p2y,
@@ -1432,7 +1459,7 @@ export class Pylon {
     //       false
     //   )
     //
-    //   let newP2 = Library.evaluateP2(
+    //   let newP2 = this.getLibrary().evaluateP2(
     //       JSBI.divide(JSBI.multiply(pairReserveTranslated1, BASE), pairReserveTranslated0),
     //       JSBI.subtract(parseBigintIsh(pylonInfo.virtualAnchorBalance), this.reserve1.raw),
     //       JSBI.subtract(parseBigintIsh(pylonInfo.virtualFloatBalance), this.reserve0.raw),
@@ -1458,7 +1485,7 @@ export class Pylon {
     )
 
 
-    let ema = Library.calculateEMA(pylonInfo, parseBigintIsh(blockNumber), factory.EMASamples, result.gamma)
+    let ema = this.getLibrary().calculateEMA(pylonInfo, parseBigintIsh(blockNumber), factory.EMASamples, result.gamma)
 
     return {
       kLast: kLast,
@@ -1553,9 +1580,9 @@ export class Pylon {
     // Changing total supply and pair reserves because when paying float fees we are doing a swap
     if (!isAnchor) this.changePairReserveOnFloatSwap(fee.fee)
     let feePercentage = JSBI.divide(
-            JSBI.multiply(
-                fee.feeBPS,
-                BASE),
+        JSBI.multiply(
+            fee.feeBPS,
+            BASE),
         _100) // This is the percentage to show in the UI
 
     // Calculating Derived VFB
@@ -2164,7 +2191,7 @@ export class Pylon {
         parseBigintIsh(blockNumber),
         debug
     )
-    // let pairReserveTranslated0 = Library.translateToPylon(this.getPairReserves()[0].raw, ptb.raw, result.totalSupply)
+    // let pairReserveTranslated0 = this.getLibrary().translateToPylon(this.getPairReserves()[0].raw, ptb.raw, result.totalSupply)
     let reservePTU = JSBI.divide(JSBI.multiply(this.reserve1.raw, anchorTotalSupply.raw), result.vab)
 
     let ptAmount = reservePTU
@@ -2706,7 +2733,7 @@ export class Pylon {
 //       parseBigintIsh(blockNumber)
 //   )
 //
-//   let pairReserveTranslated0 = Library.translateToPylon(this.getPairReserves()[0].raw, result.ptb, result.totalSupply)
+//   let pairReserveTranslated0 = this.getLibrary().translateToPylon(this.getPairReserves()[0].raw, result.ptb, result.totalSupply)
 //
 //   let percentageFloatChange = BASE
 //
@@ -2868,7 +2895,7 @@ export class Pylon {
 //   console.log('fee', fee.fee.toString())
 //   console.log('fee amount', fee.newAmount.toString())
 //
-//   // let desiredFtv = Library.de
+//   // let desiredFtv = this.getLibrary().de
 //
 //   // If fee is blocked, time to return
 //   if (fee.blocked) {
@@ -2988,12 +3015,12 @@ export class Pylon {
 //     newPTB.toString(),
 //     newTotalSupply.toString()
 //   )
-//   pairReserveTranslated0 = Library.translateToPylon(this.getPairReserves()[0].raw, newPTB, newTotalSupply)
-//   pairReserveTranslated1 = Library.translateToPylon(this.getPairReserves()[1].raw, newPTB, newTotalSupply)
+//   pairReserveTranslated0 = this.getLibrary().translateToPylon(this.getPairReserves()[0].raw, newPTB, newTotalSupply)
+//   pairReserveTranslated1 = this.getLibrary().translateToPylon(this.getPairReserves()[1].raw, newPTB, newTotalSupply)
 //   // 16051039208396446316601 29713596568840393285  3035022567202931309857
 //   // 16051039677596299082732 29713641002305508996  3035022611625291373769
 //   let adjustedVab = JSBI.subtract(result.vab, newReserve1)
-//   let newGamma = Library.calculateGamma(
+//   let newGamma = this.getLibrary().calculateGamma(
 //     pairReserveTranslated1,
 //     parseBigintIsh(anchorKFactor),
 //     adjustedVab,
@@ -3054,8 +3081,8 @@ export class Pylon {
 //   oldK: JSBI,
 //   async100: boolean
 // ): JSBI {
-//   let pairReserveTranslated0 = Library.translateToPylon(this.getPairReserves()[0].raw, ptb, totalSupply)
-//   let pairReserveTranslated1 = Library.translateToPylon(this.getPairReserves()[1].raw, ptb, totalSupply)
+//   let pairReserveTranslated0 = this.getLibrary().translateToPylon(this.getPairReserves()[0].raw, ptb, totalSupply)
+//   let pairReserveTranslated1 = this.getLibrary().translateToPylon(this.getPairReserves()[1].raw, ptb, totalSupply)
 //
 //   let ftv = JSBI.multiply(JSBI.multiply(TWO, gamma), async100 ? pairReserveTranslated0 : pairReserveTranslated1)
 //   let amountTR = JSBI.divide(
@@ -3306,7 +3333,7 @@ export class Pylon {
 //   )
 //
 //   let adjustedVab = JSBI.subtract(result.vab, this.reserve1.raw)
-//   let newGamma = Library.calculateGamma(
+//   let newGamma = this.getLibrary().calculateGamma(
 //     pairReserveTranslated1,
 //     parseBigintIsh(anchorKFactor),
 //     adjustedVab,
@@ -3463,8 +3490,8 @@ export class Pylon {
 //
 //   // if (JSBI.greaterThan(amountsToInvest.async, ZERO)) {
 //   //
-//   //   let pairReserveTranslated0 = Library.translateToPylon(this.getPairReserves()[0].raw, ptb.raw, newTotalSupply)
-//   //   let pairReserveTranslated1 = Library.translateToPylon(this.getPairReserves()[1].raw, ptb.raw, newTotalSupply)
+//   //   let pairReserveTranslated0 = this.getLibrary().translateToPylon(this.getPairReserves()[0].raw, ptb.raw, newTotalSupply)
+//   //   let pairReserveTranslated1 = this.getLibrary().translateToPylon(this.getPairReserves()[1].raw, ptb.raw, newTotalSupply)
 //   //
 //   //   let sqrtK = sqrt(JSBI.multiply(pairReserveTranslated0, pairReserveTranslated1))
 //   //   let amounInWithFee = JSBI.divide(
@@ -3603,8 +3630,8 @@ export class Pylon {
 // ): JSBI {
 //   let amount: JSBI
 //
-//   let pairReserveTranslated0 = Library.translateToPylon(this.getPairReserves()[0].raw, ptb, totalSupply)
-//   let pairReserveTranslated1 = Library.translateToPylon(this.getPairReserves()[1].raw, ptb, totalSupply)
+//   let pairReserveTranslated0 = this.getLibrary().translateToPylon(this.getPairReserves()[0].raw, ptb, totalSupply)
+//   let pairReserveTranslated1 = this.getLibrary().translateToPylon(this.getPairReserves()[1].raw, ptb, totalSupply)
 //   if (isAnchor) {
 //     let amountA = JSBI.divide(
 //         JSBI.multiply(pairReserveTranslated1, JSBI.multiply(tokenAmountA, TWO)),

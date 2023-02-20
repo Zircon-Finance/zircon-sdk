@@ -3,8 +3,8 @@ import JSBI from 'jsbi'
 import { CASES } from './helper'
 import {BurnAsyncParams, Decimals, Params, PylonInfo} from 'interfaces/pylonInterface'
 describe('Pylon', () => {
-  const USDC = new Token(ChainId.STANDALONE, '0x21dF544947ba3E8b3c32561399E88B52Dc8b2823', 18, 'USDC', 'USD Coin')
-  const DAI = new Token(ChainId.STANDALONE, '0x4C4a2f8c81640e47606d3fd77B353E87Ba015584', 18, 'DAI', 'DAI Stablecoin')
+  const USDC = new Token(ChainId.BSC, '0x21dF544947ba3E8b3c32561399E88B52Dc8b2823', 18, 'USDC', 'USD Coin')
+  const DAI = new Token(ChainId.BSC, '0x4C4a2f8c81640e47606d3fd77B353E87Ba015584', 18, 'DAI', 'DAI Stablecoin')
 
   // const FP = new Token(ChainId.STANDALONE, '0xCF9a47aEf447639899cE2b7dFB77C33f8e07cc64', 18, 'ZR-FT', 'Zircon FT')
   // const AP = new Token(ChainId.STANDALONE, '0xd0eab14eF374344dA2732a871423470EDbA5915D', 18, 'ZR-AT', 'Zircon AT')
@@ -59,8 +59,8 @@ describe('Pylon', () => {
   })
 
   it('initPylon:!1', async () => {
-    const tokenA = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000001', 18)
-    const tokenB = new Token(ChainId.MOONBASE, '0x0000000000000000000000000000000000000002', 18)
+    const tokenA = new Token(ChainId.BSC, '0x0000000000000000000000000000000000000001', 18)
+    const tokenB = new Token(ChainId.BSC, '0x0000000000000000000000000000000000000002', 18)
     const pair = new Pair(
         new TokenAmount(tokenA, '5000000000000000000'),
         new TokenAmount(tokenB, '10000000000000000000'),
