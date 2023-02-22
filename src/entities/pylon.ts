@@ -139,8 +139,8 @@ export class Pylon {
   }
 
   private static getPTAddress(tokenA: Token, tokenB: Token, isAnchor: boolean): string {
-    let name =  'Zircon ' + tokenA.symbol + "-" + tokenB.symbol + (isAnchor ? " ZPT-Float" : ' ZPT-Stable');
-    let symbol = (isAnchor ? "f" : "s") + tokenA.symbol + "-" + tokenB.symbol;
+    let name =  'Zircon ' + tokenA.symbol + "-" + tokenB.symbol + (isAnchor ? " ZPT-Stable" : ' ZPT-Float');
+    let symbol = (isAnchor ? "s" : "f") + tokenA.symbol + "-" + tokenB.symbol;
     let token = isAnchor ? tokenB : tokenA
     let pylonAddress = this.getAddress(tokenA, tokenB)
     if (PT_ADDRESS_CACHE?.[token.address]?.[pylonAddress] === undefined) {
