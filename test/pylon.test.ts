@@ -1,39 +1,10 @@
 import {ChainId, Token, Pylon, Pair, TokenAmount, PylonFactory} from '../src'
 import JSBI from 'jsbi'
-import { CASES } from './helper'
+import {getOnlineCases, TestInput} from './helper'
 import {BurnAsyncParams, Decimals, Params, PylonInfo} from 'interfaces/pylonInterface'
 describe('Pylon', () => {
   const USDC = new Token(ChainId.BSC, '0x21dF544947ba3E8b3c32561399E88B52Dc8b2823', 18, 'USDC', 'USD Coin')
   const DAI = new Token(ChainId.BSC, '0x4C4a2f8c81640e47606d3fd77B353E87Ba015584', 18, 'DAI', 'DAI Stablecoin')
-
-  // const FP = new Token(ChainId.STANDALONE, '0xCF9a47aEf447639899cE2b7dFB77C33f8e07cc64', 18, 'ZR-FT', 'Zircon FT')
-  // const AP = new Token(ChainId.STANDALONE, '0xd0eab14eF374344dA2732a871423470EDbA5915D', 18, 'ZR-AT', 'Zircon AT')
-  // maximumPercentageSync: BigintIsh, deltaGammaThreshold: BigintIsh, deltaGammaMinFee: BigintIsh,  EMASamples: BigintIsh,
-  //     muUpdatePeriod: BigintIsh, muChangeFactor: BigintIsh, liquidityFee: BigintIsh, dynamicRatio: BigintIsh,
-  //     feePercentageRev: BigintIsh, feePercentageEnergy: BigintIsh, minFee: BigintIsh, maxFee: BigintIsh
-
-  // function checkApproximation(a: JSBI, b: JSBI, error: number) {
-  //   const diff = JSBI.subtract(a, b)
-  //   const diffAbs = JSBI.greaterThan(diff, JSBI.BigInt(0)) ? diff : JSBI.unaryMinus(diff)
-  //   const errorAbs = JSBI.BigInt(error)
-  //   expect(JSBI.lessThanOrEqual(diffAbs, errorAbs)).toBeTruthy()
-  // }
-  // checkApproximation(result.amountOut.raw, JSBI.BigInt(testCase.amountOut), 1e15)
-
-  // maximumPercentageSync: BigintIsh,
-  //     deltaGammaThreshold: BigintIsh,
-  //     deltaGammaMinFee: BigintIsh,
-  //     EMASamples: BigintIsh,
-  //     muUpdatePeriod: BigintIsh,
-  //     muChangeFactor: BigintIsh,
-  //     oracleUpdateSecs: BigintIsh,
-  //     liquidityFee: BigintIsh,
-  //     dynamicRatio: BigintIsh,
-  //     feePercentageRev: BigintIsh,
-  //     feePercentageEnergy: BigintIsh,
-  //     minFee: BigintIsh,
-  //     maxFee: BigintIsh
-
   const pylonFactory = new PylonFactory(
       JSBI.BigInt(10),
       JSBI.BigInt(4e16),
@@ -49,6 +20,12 @@ describe('Pylon', () => {
       JSBI.BigInt(1),
       JSBI.BigInt(50),
   )
+
+  let CASES: TestInput[] = []
+  beforeEach(async () => {
+    console.log("getting cases")
+    CASES = await getOnlineCases()
+  })
 
   describe('Pool tokens', () => {
     it('Calculating FPT and APT', () => {
@@ -77,10 +54,11 @@ describe('Pylon', () => {
     expect(init[1].toString(10)).toEqual('99999999999999000')
   })
 
-  describe('Test Cases', () => {
-    CASES.forEach((testCase, i) => {
-      it('Test Case ' + i, () => {
-        // if (testCase.testCase === 31)
+  describe('Test Cases',  () => {
+    it('Test Case ', () => {
+      CASES.forEach((testCase) => {
+
+        console.log("Test Case " + testCase.toString())
         if (!testCase.skip) {
           const pylon = new Pylon(
               new Pair(
