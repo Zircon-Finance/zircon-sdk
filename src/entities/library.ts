@@ -1,9 +1,8 @@
 import JSBI from 'jsbi'
 import {_1001, _1E3, _28, _42E45, _84, _EFIVE, BASE, DOUBLE_BASE, ONE, TEN, TWO, ZERO} from '../constants'
 import {parseBigintIsh, sqrt} from '../utils'
-import {Decimals, PylonInfo} from "interfaces/pylonInterface";
+import {Coefficients, Decimals, PylonInfo} from "interfaces/pylonInterface";
 import {Pylon} from "../entities";
-interface Coefficients {a: JSBI; b: JSBI; isANegative: boolean, isBNegative: boolean}
 export abstract class Library {
   public static getKX(k: JSBI, price: JSBI, decimals: Decimals) {
     return sqrt(JSBI.multiply(JSBI.divide(k, parseBigintIsh(decimals.float)), price))

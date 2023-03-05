@@ -1,6 +1,6 @@
 import invariant from 'tiny-invariant'
 import {
-  ARBGOERLY_ADDRESSES,
+  ARBGOERLY_ADDRESSES, ARBITRUM_ADDRESSES,
   BSC_ADDRESSES,
   BSCT_ADDRESSES,
   ChainId,
@@ -84,5 +84,6 @@ export const WDEV = {
   [ChainId.MOONSHADOW]: new Token(ChainId.MOONSHADOW, MOONBASE_ADDRESSES.WETH, 18, 'WDEV', 'Wrapped Dev'),
   [ChainId.BSC]: new Token(ChainId.BSC, BSC_ADDRESSES.WETH, 18, 'WBNB', 'Wrapped BNB'),
   [ChainId.BSCT]: new Token(ChainId.BSCT, BSCT_ADDRESSES.WETH, 18, 'WBNB', 'Wrapped BNB'),
-  [ChainId.ARBGOERLY]: new Token(ChainId.ARBGOERLY, ARBGOERLY_ADDRESSES.WETH, 18, 'WETH', 'Wrapped ETH')
+  [ChainId.ARBGOERLY]: new Token(ChainId.ARBGOERLY, ARBGOERLY_ADDRESSES.WETH, 18, 'WETH', 'Wrapped ETH'),
+  [ChainId.ARBITRUM]: new Token(ChainId.ARBITRUM, ARBITRUM_ADDRESSES.WETH, 18, 'WETH', 'Wrapped ETH')
 }

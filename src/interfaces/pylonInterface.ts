@@ -8,7 +8,7 @@ export interface Params {
   fee: TokenAmount
   deltaApplied: boolean
 }
-
+export interface Coefficients {a: JSBI; b: JSBI; isANegative: boolean, isBNegative: boolean}
 export interface BurnParams extends Params {
   feePercentage: JSBI
   omegaSlashingPercentage: JSBI

@@ -25,6 +25,7 @@ export class Currency {
     [ChainId.BSC]: new Currency(18, 'BNB', 'BNB Token'),
     [ChainId.BSCT]: new Currency(18, 'BNB', 'BNB Token'),
     [ChainId.ARBGOERLY]: new Currency(18, 'AETH', 'AETH Token'),
+    [ChainId.ARBITRUM]: new Currency(18, 'ETH', 'ETH Token'),
   }
 
   /**

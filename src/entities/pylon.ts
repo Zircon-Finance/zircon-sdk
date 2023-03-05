@@ -37,7 +37,7 @@ import {Library, LibraryBSC, Pair} from '../entities'
 import {PylonFactory} from 'entities/pylonFactory'
 import {
   BurnAsyncParams,
-  BurnParams,
+  BurnParams, Coefficients,
   Decimals,
   HealthFactorParams,
   MintAsyncParams,
@@ -116,31 +116,33 @@ export class Pylon {
       )
 
   public static ptCodeHash = (token: Token, name: string, symbol: string): string => {
-    if (token.chainId === ChainId.BSC) {
+    if (token.chainId === ChainId.MOONRIVER || token.chainId === ChainId.BSCT || token.chainId === ChainId.MOONBASE) {
       return keccak256(
           ['bytes'],
           [
             pack(
                 ['bytes', 'bytes'],
-                [PT_BYTECODE[token.chainId], new AbiCoder().encode(['address', 'string', 'string'], [PYLON_FACTORY_ADDRESS[token.chainId], name, symbol])]
+                [PT_BYTECODE[token.chainId], new AbiCoder().encode(['address'], [PYLON_FACTORY_ADDRESS[token.chainId]])]
             )
           ]
       )
+
     }
+
     return keccak256(
         ['bytes'],
         [
           pack(
               ['bytes', 'bytes'],
-              [PT_BYTECODE[token.chainId], new AbiCoder().encode(['address'], [PYLON_FACTORY_ADDRESS[token.chainId]])]
+              [PT_BYTECODE[token.chainId], new AbiCoder().encode(['address', 'string', 'string'], [PYLON_FACTORY_ADDRESS[token.chainId], name, symbol])]
           )
         ]
     )
+
+
   }
 
-  private static getPTAddress(tokenA: Token, tokenB: Token, isAnchor: boolean): string {
-    let name =  'Zircon ' + tokenA.symbol + "-" + tokenB.symbol + (isAnchor ? " ZPT-Stable" : ' ZPT-Float');
-    let symbol = (isAnchor ? "s" : "f") + tokenA.symbol + "-" + tokenB.symbol;
+  private static getPTAddress(tokenA: Token, tokenB: Token, isAnchor: boolean, name: string, symbol: string): string {
     let token = isAnchor ? tokenB : tokenA
     let pylonAddress = this.getAddress(tokenA, tokenB)
     if (PT_ADDRESS_CACHE?.[token.address]?.[pylonAddress] === undefined) {
@@ -212,6 +214,11 @@ export class Pylon {
     let floatLiquidityAddress
     let anchorLiquidityAddress
     let migrationInformation = MIGRATION_PYLONS[pylonAddress]
+    let aName =  'Zircon ' + tokenA.symbol + "-" + tokenB.symbol + " ZPT-Stable";
+    let fName =  'Zircon ' + tokenA.symbol + "-" + tokenB.symbol + ' ZPT-Float';
+    let aSymbol = ("s" ) + tokenA.symbol + "-" + tokenB.symbol;
+    let fSymbol = ( "f") + tokenA.symbol + "-" + tokenB.symbol;
+
     if (migrationInformation) {
       floatLiquidityAddress = Pylon.getMigratedPTAddress(
           tokenA,
@@ -228,10 +235,23 @@ export class Pylon {
           migrationInformation.bytecode
       )
     } else {
-      floatLiquidityAddress = Pylon.getPTAddress(tokenA, tokenB, false)
-      anchorLiquidityAddress = Pylon.getPTAddress(tokenA, tokenB, true)
+
+      floatLiquidityAddress = Pylon.getPTAddress(tokenA, tokenB, false, fName, fSymbol)
+      anchorLiquidityAddress = Pylon.getPTAddress(tokenA, tokenB, true, aName, aSymbol)
     }
     return [floatLiquidityAddress, anchorLiquidityAddress]
+  }
+
+  public static calculateParabola(p2x: BigintIsh, p2y: BigintIsh, p3x: BigintIsh, p3y: BigintIsh,check: boolean, decimals: Decimals): Coefficients {
+    return Library.calculateParabolaCoefficients(
+        parseBigintIsh(p2x),
+        parseBigintIsh(p2y),
+        parseBigintIsh(p3x),
+        parseBigintIsh(p3y),
+        decimals,
+        check,
+        true,
+        "CALCULATE_PARABOLA")
   }
 
   public constructor(pair: Pair, tokenAmount0: TokenAmount, tokenAmount1: TokenAmount) {
@@ -241,6 +261,11 @@ export class Pylon {
     let floatLiquidityAddress
     let anchorLiquidityAddress
     let migrationInformation = MIGRATION_PYLONS[this.address]
+    let aName =  'Zircon ' + tokenAmount0.token.symbol + "-" + tokenAmount1.token.symbol + " ZPT-Stable";
+    let fName =  'Zircon ' + tokenAmount0.token.symbol + "-" + tokenAmount1.token.symbol + ' ZPT-Float';
+    let aSymbol = ("s" ) + tokenAmount0.token.symbol + "-" + tokenAmount1.token.symbol;
+    let fSymbol = ( "f") + tokenAmount0.token.symbol + "-" + tokenAmount1.token.symbol;
+
     if (migrationInformation) {
       floatLiquidityAddress = Pylon.getMigratedPTAddress(
           tokenAmount0.token,
@@ -257,8 +282,8 @@ export class Pylon {
           migrationInformation.bytecode
       )
     } else {
-      floatLiquidityAddress = Pylon.getPTAddress(tokenAmount0.token, tokenAmount1.token, false)
-      anchorLiquidityAddress = Pylon.getPTAddress(tokenAmount0.token, tokenAmount1.token, true)
+      floatLiquidityAddress = Pylon.getPTAddress(tokenAmount0.token, tokenAmount1.token, false, fName, fSymbol)
+      anchorLiquidityAddress = Pylon.getPTAddress(tokenAmount0.token, tokenAmount1.token, true, aName, aSymbol)
     }
 
     this.floatLiquidityToken = new Token(tokenAmounts[0].token.chainId, floatLiquidityAddress, 18, 'ZR-FT', 'Zircon FT')

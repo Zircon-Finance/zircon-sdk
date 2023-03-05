@@ -1,9 +1,8 @@
 import JSBI from 'jsbi'
 import {_1001, _1E3, _28, _42E45, _84, _EFIVE, BASE, DOUBLE_BASE, ONE, TEN, TWO, ZERO} from '../constants'
 import {parseBigintIsh, sqrt} from '../utils'
-import {Decimals, PylonInfo} from "interfaces/pylonInterface";
+import {Coefficients, Decimals, PylonInfo} from "interfaces/pylonInterface";
 import {Pylon} from "../entities";
-interface Coefficients {a: JSBI; b: JSBI; isANegative: boolean, isBNegative: boolean}
 export abstract class LibraryBSC {
 
     public static getKX(k: JSBI, price: JSBI, decimals: Decimals) {
@@ -92,7 +91,8 @@ export abstract class LibraryBSC {
         p3y: JSBI,
         decimals: Decimals,
         check: boolean,
-        debug: boolean, where: string
+        debug: boolean,
+        where: string
     ): Coefficients {
         Pylon.logger(debug, where, "CALCULATE COEFFICIENTS:")
         Pylon.logger(debug, where, "P2 (", p2x.toString(), ',', p2y.toString(), ')' + ' P3 (', p3x.toString(), ',', p3y.toString(), ')')
